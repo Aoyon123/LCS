@@ -142,9 +142,10 @@ class AuthController extends Controller
     }
     public function logout()
     {
-        // return auth()->user();
         auth()->logout();
-        return response()->json(['message' => 'User successfully signed out']);
+        //return response()->json(['message' => 'User successfully signed out']);
+        $message = "User successfully signed out";
+        return $this->responseSuccess(200, true, $message, []);
     }
 
     public function refresh()
@@ -175,5 +176,5 @@ class AuthController extends Controller
             //  return $this->responseSuccess(200, true, $message, $data);
         ]);
     }
-     
+
 }

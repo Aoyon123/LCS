@@ -3,12 +3,13 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Models\User;
-use App\Traits\ResponseTrait;
 use Illuminate\Http\Request;
+use App\Traits\ResponseTrait;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
 use App\Http\Controllers\Controller;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Response;
 use Spatie\Permission\Models\Permission;
 
 class PermissionController extends Controller
@@ -23,7 +24,26 @@ class PermissionController extends Controller
         $message = "Succesfully Data Shown";
         return $this->responseSuccess(200, true, $message, $data);
     }
+    public function store(Request $request)
+    {
 
+        DB::beginTransaction();
+        try {
+            $data = Permission::create([
+                'name' => $request->name,
+                'guard_name' => $request->guard_name,
+                'module_name' => $request->module_name,
+
+            ]);
+            DB::commit();
+            $message = "Data Inserted Successfull";
+            return $this->responseSuccess(200, true, $message, $data);
+
+        } catch (QueryException $e) {
+            DB::rollBack();
+            return $this->responseError(Response::HTTP_INTERNAL_SERVER_ERROR, false, $e->getMessage());
+        }
+    }
     public function retrieve($id)
     {
         DB::beginTransaction();

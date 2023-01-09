@@ -7,8 +7,9 @@ use random;
 use App\Models\User;
 use App\Models\Experience;
 use Illuminate\Http\Request;
+use App\Traits\ResponseTrait;
+
 use Illuminate\Http\Response;
-use Illuminate\Http\ResponseTrait;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
@@ -17,6 +18,7 @@ use Illuminate\Support\Facades\Hash;
 use App\Models\AcademicQualification;
 use App\Http\Requests\RegisterRequest;
 use Illuminate\Database\QueryException;
+use App\Http\Controllers\Helpers\FileHandler;
 use Symfony\Component\HttpFoundation\Session\Session;
 
 class ProfileController extends Controller
@@ -49,9 +51,32 @@ class ProfileController extends Controller
             // $image->move($destinationPath, $imageName);
             // $image_path_save = '/uploads/profile/' . $imageName;
 
+
+
+            /////  right
+            // if ($request->profile_image) {
+            //     $image_parts = explode(";base64,", $request->profile_image);
+            //     $filename_path = md5(time() . '_' . $request->phone) . ".png";
+            //     if (isset($image_parts[1])) {
+            //         $decoded = base64_decode($image_parts[1]);
+            //         file_put_contents(public_path() . "/uploads/profile/" . $filename_path, $decoded);
+            //         $profile_image_path = "/uploads/profile/" . $filename_path;
+            //         if (File::exists($profile_image_path)) {
+            //             File::delete($profile_image_path);
+            //         }
+            //     } else {
+            //         $profile_image_path = $user->profile_image;
+            //     }
+
+            // } else {
+            //     $profile_image_path = $user->profile_image;
+            // }
+
+
+
             if ($request->profile_image) {
                 $image_parts = explode(";base64,", $request->profile_image);
-                $filename_path = md5(time() . '_' . $request->phone) . ".png";
+                $filename_path = $request->type . '_' . $request->phone . ".png";
                 if (isset($image_parts[1])) {
                     $decoded = base64_decode($image_parts[1]);
                     file_put_contents(public_path() . "/uploads/profile/" . $filename_path, $decoded);
@@ -66,6 +91,14 @@ class ProfileController extends Controller
             } else {
                 $profile_image_path = $user->profile_image;
             }
+
+            // if ($request->file('profile_image')) {
+            //     $image_path = FileHandler::upload($request->profile_image, 'user_images', ['width' => '84', 'height' => '84']);
+            //     $user->image()->create([
+            //         'url' => Storage::url($image_path),
+            //         'base_path' => $image_path,
+            //     ]);
+            // }
 
 
             if ($request->type === 'consultant') {
@@ -86,10 +119,12 @@ class ProfileController extends Controller
                         'nid_back' => 'required|max:2024|mimes:jpeg,jpg,png,gif',
                     ]);
                 }
+
+
                 //nid_front
                 if ($request->nid_front) {
                     $image_parts = explode(";base64,", $request->nid_front);
-                    $filename_path = md5(time() . uniqid()) . ".png";
+                    $filename_path = $request->type . '_' . $request->email . ".png";
                     if (isset($image_parts[1])) {
                         $decoded = base64_decode($image_parts[1]);
                         file_put_contents(public_path() . "/uploads/nid_front/" . $filename_path, $decoded);
@@ -107,7 +142,7 @@ class ProfileController extends Controller
                 //nid_back
                 if ($request->nid_back) {
                     $image_parts = explode(";base64,", $request->nid_back);
-                    $filename_path = md5(time() . uniqid()) . ".png";
+                    $filename_path = $request->type . '_' . $request->email . ".png";
                     if (isset($image_parts[1])) {
                         $decoded = base64_decode($image_parts[1]);
                         file_put_contents(public_path() . "/uploads/nid_back/" . $filename_path, $decoded);
@@ -293,4 +328,16 @@ class ProfileController extends Controller
         }
     }
 
+    public function profile()
+    {
+        $user = User::with('experiances', 'academics')->where('id', auth()->user()->id)->first();
+        $data = [
+            'user' => $user,
+            'role' => $user->getRoleNames(),
+            'permissions' => $user->getAllPermissions()->pluck('name')
+        ];
+
+        $message = " ";
+        return $this->responseSuccess(200, true, $message, $data);
+    }
 }

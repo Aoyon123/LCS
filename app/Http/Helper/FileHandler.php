@@ -21,10 +21,17 @@ class FileHandler
         Storage::disk('public')->put($image_path, $resized_image);
         return $image_path;
     }
-    public static function uploadImage($image_path,){
 
+    public static function uploadImage($image,$path,$size=null){
+          
     }
-
+            // if ($request->file('image')) {
+            //     $image_path = FileHandler::upload($request->image, 'user_images', ['width' => '84', 'height' => '84']);
+            //     $user->image()->create([
+            //         'url' => Storage::url($image_path),
+            //         'base_path' => $image_path,
+            //     ]);
+            // }
     // if ($request->profile_image) {
     //     $image_parts = explode(";base64,", $request->profile_image);
     //     $filename_path = md5(time() . '_' . $request->phone) . ".png";
