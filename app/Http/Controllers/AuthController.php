@@ -48,11 +48,36 @@ class AuthController extends Controller
         DB::beginTransaction();
 
         try {
+            if (!$request->password) {
+                $message = "Password Field Required!";
+                return $this->responseError(403, false, $message);
+            }
+            if ($request->email_or_phone) {
+                if (preg_match("/(^(\+88|0088)?(01){1}[3456789]{1}(\d){8})$/", $request->email_or_phone)) {
+                    $credentials = ['phone' => $request->email_or_phone, 'password' => $request->password];
+                } elseif (preg_match("/^([a-z0-9\+_\-]+)(\.[a-z0-9\+_\-]+)*@([a-z0-9\-]+\.)+[a-z]{2,6}$/ix", $request->email_or_phone)) {
+                    $credentials = ['email' => $request->email_or_phone, 'password' => $request->password];
+                } else {
+                    $message = "Your Phone Or Email Not Valid!";
+                    return $this->responseError(403, false, $message);
+                }
 
-            if (preg_match("/(^(\+88|0088)?(01){1}[3456789]{1}(\d){8})$/", $request->email_or_phone)) {
-                $credentials = ['phone' => $request->email_or_phone, 'password' => $request->password];
+                $user = User::orWhere('phone', $request->email_or_phone)->orWhere('email', $request->email_or_phone)->first();
+                if ($user) {
+                    if (Hash::check($request->password, $user->password)) {
+                        if (!$token = auth()->attempt($credentials)) {
+                            $message = "Invalid Credentials!";
+                            return $this->responseError(403, false, $message);
+                        }
+                        return $this->createNewToken($token);
+                    } else {
+                        $message = "Your Password Not Match!";
+                        return $this->responseError(403, false, $message);
+                    }
+                }
             } else {
-                $credentials = ['email' => $request->email_or_phone, 'password' => $request->password];
+                $message = "Please Enter Your Phone Or Email!";
+                return $this->responseError(403, false, $message);
             }
 
             DB::commit();
@@ -61,31 +86,47 @@ class AuthController extends Controller
             DB::rollBack();
             return $this->responseError(Response::HTTP_INTERNAL_SERVER_ERROR, $e->getMessage(), []);
         }
-
-        if (!$token = auth()->attempt($credentials)) {
-            $message = "Invalid Credentials";
-            return $this->responseError(403, false, $message);
-        }
-
-        return $this->createNewToken($token);
+        $message = "Invalid Credentials!";
+        return $this->responseError(403, false, $message);
     }
 
 
     public function register(Request $request)
     {
         if ($request->type === 'citizen') {
+
+            $citizenTotalData = User::select(DB::raw('count(id) as total'))
+                ->where('type', 'citizen')
+                ->first();
+            $citizenData = $citizenTotalData->total+1;
+            $citizenCodeNo = 'cit-' . date('d-m-y-') . str_pad($citizenData, 4, '0', STR_PAD_LEFT);
+            //return $citizenCodeNo;
+
             $request->validate([
                 'name' => 'required|string|max:50',
-                'phone' => 'max:11|min:11|regex:/(01)[0-9]{9}/|unique:users',
+                'phone' => 'required|max:11|min:11|regex:/(01)[0-9]{9}/|unique:users',
                 'password' => 'required|min:8',
                 'type' => 'required',
+                'rates' => 'nullable',
+
+
             ]);
         } elseif ($request->type === 'consultant') {
+
+            $consultantTotalData = User::select(DB::raw('count(id) as total'))
+                ->where('type', 'consultant')
+                ->first();
+            $consultantData = $consultantTotalData->total+1;
+            $consultantCodeNo = 'con-' . date('d-m-y-') . str_pad($consultantData, 4, '0', STR_PAD_LEFT);
+            //  return $consultantCodeNo;
+
             $request->validate([
                 'name' => 'required|string|max:50',
                 'email' => 'email|unique:users,email',
                 'password' => 'required|min:8',
                 'type' => 'required',
+                'rates' => 'nullable',
+
             ]);
         }
 
@@ -97,13 +138,14 @@ class AuthController extends Controller
                 'phone' => $request->phone ?? null,
                 'email' => $request->email ?? null,
                 'type' => $request->type,
+                'rates' => $request->rates,
+                'code'=>  $citizenCodeNo ?? $consultantCodeNo,
                 'password' => Hash::make($request->password)
             ]);
 
             $role = Role::where('name', $request->type)->first();
 
             $user->assignRole($role);
-
             DB::commit();
             $message = $request->type . " Registration Successfull";
             return $this->responseSuccess(200, true, $message, $user);

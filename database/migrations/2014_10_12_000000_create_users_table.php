@@ -33,6 +33,10 @@ return new class extends Migration
             $table->string('current_profession')->nullable();
             $table->string('nid_front')->nullable();
             $table->string('nid_back')->nullable();
+            $table->string('code')->nullable();
+            $table->string('rates')->nullable();
+            $table->tinyInteger('approval')->default(0);;
+            $table->unsignedBigInteger('approved_by')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });

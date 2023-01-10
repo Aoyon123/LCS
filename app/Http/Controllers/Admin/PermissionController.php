@@ -58,6 +58,15 @@ class PermissionController extends Controller
 
     }
 
+    public function setPermission($user, $permission)
+    {
+        $user = User::where('id', $user)->first();
+        $permission = Permission::where('id', $permission)->first();
+
+        $user->assignPermission($permission);
+        return $user;
+    }
+
     public function update(Request $request, $id)
     {
         $input = Permission::findOrFail($id);

@@ -45,7 +45,6 @@ class RoleController extends Controller
         } catch (QueryException $e) {
             DB::rollBack();
         }
-
     }
 
     public function setRole($user, $role)
@@ -59,7 +58,6 @@ class RoleController extends Controller
 
     public function update(Request $request, $id)
     {
-
         $input = Role::findOrFail($id);
         DB::beginTransaction();
         try {
