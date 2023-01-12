@@ -93,8 +93,8 @@ class AuthController extends Controller
 
     public function register(Request $request)
     {
-        if ($request->type === 'citizen') {
-
+        $type=strtolower($request->type);
+        if ($type === 'citizen') {
             $citizenTotalData = User::select(DB::raw('count(id) as total'))
                 ->where('type', 'citizen')
                 ->first();
@@ -111,7 +111,7 @@ class AuthController extends Controller
 
 
             ]);
-        } elseif ($request->type === 'consultant') {
+        } elseif ($type === 'consultant') {
 
             $consultantTotalData = User::select(DB::raw('count(id) as total'))
                 ->where('type', 'consultant')
@@ -137,7 +137,7 @@ class AuthController extends Controller
                 'name' => $request->name,
                 'phone' => $request->phone ?? null,
                 'email' => $request->email ?? null,
-                'type' => $request->type,
+                'type' => strtolower($request->type),
                 'rates' => $request->rates,
                 'code'=>  $citizenCodeNo ?? $consultantCodeNo,
                 'password' => Hash::make($request->password)
@@ -195,6 +195,8 @@ class AuthController extends Controller
         return $this->createNewToken(auth()->refresh());
     }
 
+
+
     public function userProfile()
     {
         return response()->json(auth()->user());
@@ -209,7 +211,7 @@ class AuthController extends Controller
             'status' => true,
             'access_token' => $token,
             'token_type' => 'bearer',
-            'expires_in' => auth()->factory()->getTTL() * 60,
+            'expires_in' => auth()->factory()->getTTL() * 120,
             'user' => [
                 'data' => auth()->user(),
                 'role' => User::where('id', auth()->user()->id)->first()->getRoleNames(),

@@ -1,4 +1,5 @@
 <?php
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
@@ -8,6 +9,7 @@ use App\Http\Controllers\Common\ProfileController;
 use App\Http\Controllers\Admin\ConsultantController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\AcademicQualificationController;
+use App\Http\Controllers\Consultant\ConsultantRateController;
 
 /*
 |--------------------------------------------------------------------------
@@ -25,6 +27,7 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::post('/index', [AuthController::class, 'index']);
 Route::post('/destroy', [AuthController::class, 'destroy']);
 Route::post('/logout', [AuthController::class, 'logout']);
+
 Route::post('/refresh', [AuthController::class, 'refresh']);
 
 
@@ -32,6 +35,8 @@ Route::group(["middleware" => ["auth:api"]], function () {
     ///////// Consultant   ////////////
     Route::get('/admin/consultants', [ConsultantController::class, 'index']);
 
+
+    //Route::get('/admins', [RegisterController::class, 'index']);
     ////////////  Profile //////////////
     Route::get('/profile', [ProfileController::class, 'profile']);
     Route::post('/profile/update', [ProfileController::class, 'update']);
@@ -70,4 +75,10 @@ Route::group(["middleware" => ["auth:api"]], function () {
     Route::put('/permission/{id}/update', [PermissionController::class, 'update']);
     Route::get('/permission/{id}/retrieve', [PermissionController::class, 'retrieve']);
     Route::post('/permission/delete', [PermissionController::class, 'destroy']);
+
+    /////////// Consultant Rate ///////////////
+   // Route::get('/consultantRate', [ConsultantRateController::class, 'index']);
+
+
+
 });

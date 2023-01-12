@@ -2,25 +2,21 @@
 
 namespace App\Http\Controllers\Common;
 
-use random;
-//use Illuminate\Http\File;
 use App\Models\User;
 use App\Models\Experience;
 use Illuminate\Http\Request;
 use App\Traits\ResponseTrait;
-
-use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
 use App\Models\AcademicQualification;
-use App\Http\Requests\RegisterRequest;
 use Illuminate\Database\QueryException;
-use App\Http\Controllers\Helpers\FileHandler;
+use App\Http\Helper\FileHandler;
 
-use Symfony\Component\HttpFoundation\Session\Session;
+
+
+
 
 class ProfileController extends Controller
 {
@@ -40,17 +36,19 @@ class ProfileController extends Controller
                 'gender' => 'required|max:10',
             ]);
 
-            if ($request->hasFile('profile_image')) {
-                $request->validate([
-                    'profile_image' => 'max:2024|mimes:jpeg,jpg,png,gif',
-                ]);
-            }
+            // if ($request->hasFile('profile_image')) {
+            //     $request->validate([
+            //         'profile_image' => 'max:2024|mimes:jpeg,jpg,png,gif',
+            //     ]);
+            // }
 
-            // if ($request->profile_image) {
-            //     $image_parts = explode(";base64,", $request->profile_image);
+            // return $request->profile_image;
+
+            // if ($request->profile_image){
+            //   //  $image_parts = explode(";base64,", $request->profile_image);
             //     $filename_path = $request->type . '_' . $request->phone . ".png";
-            //     if (isset($image_parts[1])) {
-            //         $decoded = base64_decode($image_parts[1]);
+            //     if (isset($request->profile_image)) {
+            //         $decoded = base64_decode($request->profile_image);
             //         file_put_contents(public_path() . "/uploads/profile/" . $filename_path, $decoded);
             //         $profile_image_path = "/uploads/profile/" . $filename_path;
             //         if (File::exists($profile_image_path)) {
@@ -59,41 +57,43 @@ class ProfileController extends Controller
             //     } else {
             //         $profile_image_path = $user->profile_image;
             //     }
-
             // } else {
             //     $profile_image_path = $user->profile_image;
             // }
 
+
+            //   return $profile_image_path;
+          //  return $request->profile_image;
             if ($request->profile_image) {
-                $profile_image_path = FileHandler::uploadImage($request->profile_image, $request->type, $request->phone, 'profile', ['width' => '84', 'height' => '84']);
+                $profile_image_path = FileHandler::uploadImage($request->profile_image, $request->type, $request->phone, 'profile');
                 if (File::exists($profile_image_path)) {
                     File::delete($profile_image_path);
                 }
             } else {
                 $profile_image_path = $user->profile_image;
             }
+          //  return $profile_image_path;
 
 
-
-            if ($request->type === 'consultant') {
+            if (strtolower($request->type) === 'consultant') {
                 $request->validate([
                     'years_of_experience' => 'required',
                     'current_profession' => 'nullable',
                     'email' => 'required|email|unique:users,email,' . $user->id,
+                    'phone' => 'required|unique:users,phone,' . $user->id,
                 ]);
 
-                if ($request->hasFile('nid_front')) {
+                if ($request->nid_front) {
                     $request->validate([
-                        'nid_front' => 'required|max:2024|mimes:jpeg,jpg,png,gif',
+                        'nid_front' => 'required',
                     ]);
                 }
 
-                if ($request->hasFile('nid_back')) {
+                if ($request->nid_back) {
                     $request->validate([
-                        'nid_back' => 'required|max:2024|mimes:jpeg,jpg,png,gif',
+                        'nid_back' => 'required',
                     ]);
                 }
-
 
                 //nid_front
                 // if ($request->file('image')) {
@@ -104,46 +104,68 @@ class ProfileController extends Controller
                 //     ]);
                 // }
 
+                // if ($request->nid_front) {
+                //     //  $image_parts = explode(";base64,", $request->nid_front);
+                //     $filename_path = $request->type . '_' . $request->email . ".png";
+                //     if (isset($request->nid_front)) {
+                //         $decoded = base64_decode($request->nid_front);
+                //         file_put_contents(public_path() . "/uploads/nid_front/" . $filename_path, $decoded);
+                //         $nid_front_image_path = "/uploads/nid_front/" . $filename_path;
+                //         if (File::exists($nid_front_image_path)) {
+                //             File::delete($nid_front_image_path);
+                //         }
+                //     } else {
+                //         $nid_front_image_path = $user->nid_front;
+                //     }
+                // } else {
+                //     $nid_front_image_path = $user->nid_front;
+                // }
 
+                // nid_front
                 if ($request->nid_front) {
-                    $image_parts = explode(";base64,", $request->nid_front);
-                    $filename_path = $request->type . '_' . $request->email . ".png";
-                    if (isset($image_parts[1])) {
-                        $decoded = base64_decode($image_parts[1]);
-                        file_put_contents(public_path() . "/uploads/nid_front/" . $filename_path, $decoded);
-                        $nid_front_image_path = "/uploads/nid_front/" . $filename_path;
-                        if (File::exists($nid_front_image_path)) {
-                            File::delete($nid_front_image_path);
-                        }
-                    } else {
-                        $nid_front_image_path = $user->nid_front;
+                    $nid_front_image_path = FileHandler::uploadImage($request->nid_front, $request->type, $request->email, 'nid_front');
+                    if (File::exists($nid_front_image_path)) {
+                        File::delete($nid_front_image_path);
                     }
                 } else {
                     $nid_front_image_path = $user->nid_front;
                 }
 
+
+
                 //nid_back
+                // if ($request->nid_back) {
+                //     // $image_parts = explode(";base64,", $request->nid_back);
+                //     $filename_path = $request->type . '_' . $request->email . ".png";
+                //     if (isset($request->nid_back)) {
+                //         $decoded = base64_decode($request->nid_back);
+                //         file_put_contents(public_path() . "/uploads/nid_back/" . $filename_path, $decoded);
+                //         $nid_back_image_path = "/uploads/nid_back/" . $filename_path;
+                //         if (File::exists($nid_back_image_path)) {
+                //             File::delete($nid_back_image_path);
+                //         }
+                //     } else {
+                //         $nid_back_image_path = $user->nid_back;
+                //     }
+                // } else {
+                //     $nid_back_image_path = $user->nid_back;
+                // }
+
+                //nid_back
+             //   return $request->nid_back;
                 if ($request->nid_back) {
-                    $image_parts = explode(";base64,", $request->nid_back);
-                    $filename_path = $request->type . '_' . $request->email . ".png";
-                    if (isset($image_parts[1])) {
-                        $decoded = base64_decode($image_parts[1]);
-                        file_put_contents(public_path() . "/uploads/nid_back/" . $filename_path, $decoded);
-                        $nid_back_image_path = "/uploads/nid_back/" . $filename_path;
-                        if (File::exists($nid_back_image_path)) {
-                            File::delete($nid_back_image_path);
-                        }
-                    } else {
-                        $nid_back_image_path = $user->nid_back;
+                    $nid_back_image_path = FileHandler::uploadImage($request->nid_back, $request->type, $request->email, 'nid_back');
+                    if (File::exists($nid_back_image_path)) {
+                        File::delete($nid_back_image_path);
                     }
                 } else {
                     $nid_back_image_path = $user->nid_back;
                 }
-
             }
+         //   return  $nid_back_image_path;
 
             $user->update([
-                'name' => $request->name ?? $user->name,
+                'name' => $request->name,
                 'phone' => $request->phone ?? $user->phone,
                 'email' => $request->email ?? $user->email,
                 'password' => $request->password ? Hash::make($request->password) : $user->password,
@@ -152,25 +174,28 @@ class ProfileController extends Controller
                 'dob' => $request->dob ?? $user->dob,
                 'status' => $request->status ?? $user->status,
                 'gender' => $request->gender ?? $user->gender,
-                'profile_image' => $profile_image_path,
+                'profile_image' => $profile_image_path ?? $user->profile_image,
+
                 'years_of_experience' => $request->years_of_experience ?? $user->years_of_experience,
                 'current_profession' => $request->current_profession ?? $user->current_profession,
-                'nid_front' => $nid_front_image_path,
-                'nid_back' => $nid_back_image_path,
+                'nid_front' => $nid_front_image_path ?? $user->nid_front,
+                'nid_back' => $nid_back_image_path ?? $user->nid_back,
             ]);
 
-            if ($user->type === 'consultant') {
+         //   return $user;
+
+            if (strtolower($user->type) === 'consultant') {
                 if (is_array($request->experiances)) {
-                    // $user->experiances()->delete();
+
                     foreach ($request->experiances as $key => $experiance) {
                         $existId = isset($request->experiances[$key]['id']);
-                        // return $existId;
+
                         if ($existId) {
                             $experianceId = $request->experiances[$key]['id'];
                             $experiance = Experience::where('id', $experianceId)->first();
 
                             if ($experiance) {
-                                // info($request->experiances[$key]['designation']);
+
                                 $experiance->update([
                                     'institute_name' => $request->experiances[$key]['institute_name'],
                                     'designation' => $request->experiances[$key]['designation'],

@@ -19,4 +19,7 @@ class Experience extends Model
         'current_working',
         'user_id'
     ];
+    public function user(){
+        return $this->belongsTo(User::class);
+    }
 }
