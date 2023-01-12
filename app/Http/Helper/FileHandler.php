@@ -26,9 +26,9 @@ class FileHandler
         // $image_parts = explode(";base64,", $image);
         $filename_path = $type . '_' . $unique . ".png";
         if (isset($image)) {
-            $image_path = "uploads/$path/$filename_path";
+            $image_path = "/uploads/$path/$filename_path";
             $decoded = base64_decode($image);
-            file_put_contents(public_path() . "/uploads/$path/" . $filename_path, $decoded);
+            file_put_contents(public_path() . $image_path, $decoded);
             return $image_path;
         }
     }
