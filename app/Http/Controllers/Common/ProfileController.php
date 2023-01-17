@@ -215,18 +215,14 @@ class ProfileController extends Controller
                     'old_password' => 'required|min:8',
                     'new_password' => 'required|min:8',
                 ]);
-               $requestpassword=Hash::make($request->new_password);
+               //$requestpassword=Hash::make($request->new_password);
               //  return $requestpassword;
               //  return auth()->user()->password;
-                if ($requestpassword == auth()->user()->password) {
-                    $message = "Your current password can't be with new password";
-                    return $this->responseError(400, false, $message);
-                }
-               // return $requestpassword;
-                // if ($user && Hash::check($request->new_password,auth()->user()->password)) {
+                // if ($requestpassword == auth()->user()->password) {
                 //     $message = "Your current password can't be with new password";
                 //     return $this->responseError(400, false, $message);
                 // }
+
               ///  return auth()->user()->password;
                 if ($user && Hash::check($request->old_password, $user->password)) {
                     $user->update([

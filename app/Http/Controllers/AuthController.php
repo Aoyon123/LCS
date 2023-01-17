@@ -93,15 +93,17 @@ class AuthController extends Controller
 
     public function register(Request $request)
     {
+        //check request->type is empty or not
         if ($request->type != null) {
+            //converts all the uppercase english alphabets present in the string to lowercase
             $type = strtolower($request->type);
+
             if ($type === 'citizen') {
                 $citizenTotalData = User::select(DB::raw('count(id) as total'))
                     ->where('type', 'citizen')
                     ->first();
                 $citizenData = $citizenTotalData->total + 1;
                 $citizenCodeNo = 'cit-' . date('d-m-y-') . str_pad($citizenData, 4, '0', STR_PAD_LEFT);
-                //return $citizenCodeNo;
 
                 $request->validate([
                     'name' => 'required|string|max:50',
@@ -112,7 +114,8 @@ class AuthController extends Controller
 
 
                 ]);
-            } elseif ($type === 'consultant') {
+            }
+             elseif ($type === 'consultant') {
 
                 $consultantTotalData = User::select(DB::raw('count(id) as total'))
                     ->where('type', 'consultant')
@@ -139,7 +142,6 @@ class AuthController extends Controller
 
         DB::beginTransaction();
         try {
-
             $user = User::create([
                 'name' => $request->name,
                 'phone' => $request->phone ?? null,
@@ -190,14 +192,13 @@ class AuthController extends Controller
             DB::rollBack();
         }
     }
+
     public function logout()
     {
         auth()->logout();
-        //return response()->json(['message' => 'User successfully signed out']);
         $message = "User successfully logout";
         return $this->responseSuccess(200, true, $message, []);
     }
-
     public function refresh()
     {
         return $this->createNewToken(auth()->refresh());
@@ -210,7 +211,6 @@ class AuthController extends Controller
 
     protected function createNewToken($token)
     {
-
         return response()->json([
             'status_code' => 200,
             'message' => 'Login Succesfull',
@@ -226,5 +226,4 @@ class AuthController extends Controller
             //  return $this->responseSuccess(200, true, $message, $data);
         ]);
     }
-
 }
