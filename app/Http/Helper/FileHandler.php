@@ -8,29 +8,32 @@ use Illuminate\Support\Facades\Storage;
 
 class FileHandler
 {
-    // public static function uploadImage($image, $type, $unique, $path,$size = null)
-    // {
-    //    // $image_parts = explode(";base64,", $image);
-    //     $filename_path = $type . $size['width'] . 'x' . $size['height'] . '_' . $unique . ".png";
-    //     if(isset($image)){
-    //         $image_path = "uploads/$path/$filename_path";
-
-    //         $decoded = Image::make($image)->resize($size['width'], $size['height'])->base64_decode($image);
-
-    //         Storage::disk('public')->put($image_path, $decoded);
-    //         return $image_path;
-    //     }
-    // }
     public static function uploadImage($image, $type, $unique, $path)
     {
-        // $image_parts = explode(";base64,", $image);
+        $image_parts = explode(";base64,", $image);
         $filename_path = $type . '_' . $unique . ".png";
-        if (isset($image)) {
+        if (isset($image_parts[1])) {
             $image_path = "/uploads/$path/$filename_path";
-            $decoded = base64_decode($image);
+            $decoded = base64_decode($image_parts[1]);
             file_put_contents(public_path() . $image_path, $decoded);
             return $image_path;
         }
-    }
 
+        // if ($request->academics[$key]['certification_copy']) {
+        //     //return $request->academics[$key]['certification_copy'];
+        //     $image_parts = explode(";base64,", $request->academics[$key]['certification_copy']);
+        //     $filename_path = md5(time() . uniqid()) . ".png";
+        //     if (isset($image_parts[1])) {
+        //         $decoded = base64_decode($image_parts[1]);
+        //         file_put_contents(public_path() . "/uploads/certificate/" . $filename_path, $decoded);
+        //         $certification_copy = "/uploads/certificate/" . $filename_path;
+        //         if (File::exists($certification_copy)) {
+        //             File::delete($certification_copy);
+        //         }
+        //     } else {
+        //         $certification_copy = $academic->certification_copy;
+        //     }
+        // }
+
+    }
 }

@@ -22,7 +22,9 @@ class ProfileController extends Controller
     {
         DB::beginTransaction();
         try {
+
             $user = User::findOrFail($request->id);
+
             $request->validate([
                 'name' => 'required|string|max:50',
                 'phone' => 'max:15|min:11|regex:/(01)[0-9]{9}/',
@@ -50,6 +52,7 @@ class ProfileController extends Controller
                     'phone' => 'required|unique:users,phone,' . $user->id,
                 ]);
 
+
                 if ($request->nid_front) {
                     $request->validate([
                         'nid_front' => 'required',
@@ -62,7 +65,6 @@ class ProfileController extends Controller
                     ]);
                 }
 
-                //nid_front
                 if ($request->nid_front) {
                     $nid_front_image_path = FileHandler::uploadImage($request->nid_front, $request->type, $request->email, 'nid_front');
                     if (File::exists($nid_front_image_path)) {
@@ -72,7 +74,6 @@ class ProfileController extends Controller
                     $nid_front_image_path = $user->nid_front;
                 }
 
-                // nid_back
                 if ($request->nid_back) {
                     $nid_back_image_path = FileHandler::uploadImage($request->nid_back, $request->type, $request->email, 'nid_back');
                     if (File::exists($nid_back_image_path)) {
@@ -103,7 +104,6 @@ class ProfileController extends Controller
 
             if (strtolower($user->type) === 'consultant') {
                 if (is_array($request->experiances)) {
-
                     foreach ($request->experiances as $key => $experiance) {
                         $existId = isset($request->experiances[$key]['id']);
 
@@ -215,7 +215,19 @@ class ProfileController extends Controller
                     'old_password' => 'required|min:8',
                     'new_password' => 'required|min:8',
                 ]);
-                //  return $user->password;
+               $requestpassword=Hash::make($request->new_password);
+              //  return $requestpassword;
+              //  return auth()->user()->password;
+                if ($requestpassword == auth()->user()->password) {
+                    $message = "Your current password can't be with new password";
+                    return $this->responseError(400, false, $message);
+                }
+               // return $requestpassword;
+                // if ($user && Hash::check($request->new_password,auth()->user()->password)) {
+                //     $message = "Your current password can't be with new password";
+                //     return $this->responseError(400, false, $message);
+                // }
+              ///  return auth()->user()->password;
                 if ($user && Hash::check($request->old_password, $user->password)) {
                     $user->update([
                         'password' => Hash::make($request->new_password)
@@ -236,13 +248,19 @@ class ProfileController extends Controller
 
     public function experienceDestroy($id)
     {
+        // return "aaaaa";
         DB::beginTransaction();
         try {
             $experience = Experience::where('id', $id)->first();
-            $experience->delete();
-            $message = "Deleted Succesfully";
-            DB::commit();
-            return $this->responseSuccess(200, true, $message, []);
+            if ($experience != null) {
+                $experience->delete();
+                $message = "Deleted Succesfully";
+                DB::commit();
+                return $this->responseSuccess(200, true, $message, []);
+            } else {
+                $message = "No Data Found";
+                return $this->responseError(404, false, $message);
+            }
 
         } catch (QueryException $e) {
             DB::rollBack();
@@ -254,10 +272,15 @@ class ProfileController extends Controller
         DB::beginTransaction();
         try {
             $academicQualification = AcademicQualification::where('id', $id)->first();
-            $academicQualification->delete();
-            $message = "Deleted Succesfully";
-            DB::commit();
-            return $this->responseSuccess(200, true, $message, []);
+            if ($academicQualification != null) {
+                $academicQualification->delete();
+                $message = "Deleted Succesfully";
+                DB::commit();
+                return $this->responseSuccess(200, true, $message, []);
+            } else {
+                $message = "No Data Found";
+                return $this->responseError(404, false, $message);
+            }
 
         } catch (QueryException $e) {
             DB::rollBack();
@@ -267,13 +290,19 @@ class ProfileController extends Controller
     public function profile()
     {
         $user = User::with('experiances', 'academics')->where('id', auth()->user()->id)->first();
-        $data = [
-            'user' => $user,
-            'role' => $user->getRoleNames(),
-            'permissions' => $user->getAllPermissions()->pluck('name')
-        ];
+        //  return $user;
+        if ($user != null) {
+            $data = [
+                'user' => $user,
+                'role' => $user->getRoleNames(),
+                'permissions' => $user->getAllPermissions()->pluck('name')
+            ];
 
-        $message = " ";
-        return $this->responseSuccess(200, true, $message, $data);
+            $message = "";
+            return $this->responseSuccess(200, true, $message, $data);
+        } else {
+            $message = "No Data Found";
+            return $this->responseError(404, false, $message);
+        }
     }
 }

@@ -93,41 +93,48 @@ class AuthController extends Controller
 
     public function register(Request $request)
     {
-        $type=strtolower($request->type);
-        if ($type === 'citizen') {
-            $citizenTotalData = User::select(DB::raw('count(id) as total'))
-                ->where('type', 'citizen')
-                ->first();
-            $citizenData = $citizenTotalData->total+1;
-            $citizenCodeNo = 'cit-' . date('d-m-y-') . str_pad($citizenData, 4, '0', STR_PAD_LEFT);
-            //return $citizenCodeNo;
+        if ($request->type != null) {
+            $type = strtolower($request->type);
+            if ($type === 'citizen') {
+                $citizenTotalData = User::select(DB::raw('count(id) as total'))
+                    ->where('type', 'citizen')
+                    ->first();
+                $citizenData = $citizenTotalData->total + 1;
+                $citizenCodeNo = 'cit-' . date('d-m-y-') . str_pad($citizenData, 4, '0', STR_PAD_LEFT);
+                //return $citizenCodeNo;
 
-            $request->validate([
-                'name' => 'required|string|max:50',
-                'phone' => 'required|max:11|min:11|regex:/(01)[0-9]{9}/|unique:users',
-                'password' => 'required|min:8',
-                'type' => 'required',
-                'rates' => 'nullable',
+                $request->validate([
+                    'name' => 'required|string|max:50',
+                    'phone' => 'required|max:11|min:11|regex:/(01)[0-9]{9}/|unique:users',
+                    'password' => 'required|min:8',
+                    'type' => 'required',
+                    'rates' => 'nullable',
 
 
-            ]);
-        } elseif ($type === 'consultant') {
+                ]);
+            } elseif ($type === 'consultant') {
 
-            $consultantTotalData = User::select(DB::raw('count(id) as total'))
-                ->where('type', 'consultant')
-                ->first();
-            $consultantData = $consultantTotalData->total+1;
-            $consultantCodeNo = 'con-' . date('d-m-y-') . str_pad($consultantData, 4, '0', STR_PAD_LEFT);
-            //  return $consultantCodeNo;
+                $consultantTotalData = User::select(DB::raw('count(id) as total'))
+                    ->where('type', 'consultant')
+                    ->first();
+                $consultantData = $consultantTotalData->total + 1;
+                $consultantCodeNo = 'con-' . date('d-m-y-') . str_pad($consultantData, 4, '0', STR_PAD_LEFT);
+                //  return $consultantCodeNo;
 
-            $request->validate([
-                'name' => 'required|string|max:50',
-                'email' => 'email|unique:users,email',
-                'password' => 'required|min:8',
-                'type' => 'required',
-                'rates' => 'nullable',
+                $request->validate([
+                    'name' => 'required|string|max:50',
+                    'email' => 'email|unique:users,email',
+                    'password' => 'required|min:8',
+                    'type' => 'required',
+                    'rates' => 'nullable',
 
-            ]);
+                ]);
+            }
+        } else {
+
+            $message = "Type cannot be null";
+            return $this->responseError(404, false, $message);
+
         }
 
         DB::beginTransaction();
@@ -139,7 +146,7 @@ class AuthController extends Controller
                 'email' => $request->email ?? null,
                 'type' => strtolower($request->type),
                 'rates' => $request->rates,
-                'code'=>  $citizenCodeNo ?? $consultantCodeNo,
+                'code' => $citizenCodeNo ?? $consultantCodeNo,
                 'password' => Hash::make($request->password)
             ]);
 
@@ -173,11 +180,12 @@ class AuthController extends Controller
         DB::beginTransaction();
         try {
             $users = DB::table('users')->whereIn('id', $request->all());
-            $users->delete();
-            $message = "Deleted Succesfully";
-            DB::commit();
-            return $this->responseSuccess(200, true, $message, []);
-
+            if ($users) {
+                $users->delete();
+                $message = "Deleted Succesfully";
+                DB::commit();
+                return $this->responseSuccess(200, true, $message, []);
+            }
         } catch (QueryException $e) {
             DB::rollBack();
         }
@@ -186,7 +194,7 @@ class AuthController extends Controller
     {
         auth()->logout();
         //return response()->json(['message' => 'User successfully signed out']);
-        $message = "User successfully signed out";
+        $message = "User successfully logout";
         return $this->responseSuccess(200, true, $message, []);
     }
 
@@ -194,8 +202,6 @@ class AuthController extends Controller
     {
         return $this->createNewToken(auth()->refresh());
     }
-
-
 
     public function userProfile()
     {

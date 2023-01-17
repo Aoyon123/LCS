@@ -18,10 +18,14 @@ class ConsultantController extends Controller
 
         try {
             $consultants = User::where('type', 'consultant')->get();
-            $message = "";
-            DB::commit();
-            return $this->responseSuccess(200, true, $message, $consultants);
-
+            if ($consultants != null) {
+                $message = "";
+                DB::commit();
+                return $this->responseSuccess(200, true, $message, $consultants);
+            } else {
+                $message = "No Data Found";
+                return $this->responseError(404, false, $message);
+            }
         } catch (QueryException $e) {
             DB::rollBack();
         }

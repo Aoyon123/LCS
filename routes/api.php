@@ -27,7 +27,6 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::post('/index', [AuthController::class, 'index']);
 Route::post('/destroy', [AuthController::class, 'destroy']);
 Route::post('/logout', [AuthController::class, 'logout']);
-
 Route::post('/refresh', [AuthController::class, 'refresh']);
 
 
