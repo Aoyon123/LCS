@@ -28,7 +28,7 @@ Route::post('/index', [AuthController::class, 'index']);
 Route::post('/destroy', [AuthController::class, 'destroy']);
 Route::post('/logout', [AuthController::class, 'logout']);
 Route::post('/refresh', [AuthController::class, 'refresh']);
-
+Route::get('/me', [AuthController::class, 'me']);
 
 Route::group(["middleware" => ["auth:api"]], function () {
     ///////// Consultant   ////////////
@@ -36,12 +36,16 @@ Route::group(["middleware" => ["auth:api"]], function () {
 
 
     //Route::get('/admins', [RegisterController::class, 'index']);
+
     ////////////  Profile //////////////
-    Route::get('/profile', [ProfileController::class, 'profile']);
+    Route::get('/profile/{id}', [ProfileController::class, 'profile']);
     Route::post('/profile/update', [ProfileController::class, 'update']);
     Route::post('/password/change', [ProfileController::class, 'updatePassword']);
     Route::delete('/profile/experience/{id}/delete', [ProfileController::class, 'experienceDestroy']);
     Route::delete('/profile/academic_qualification/{id}/delete', [ProfileController::class, 'academicQualificationDestroy']);
+    Route::post('/approved/{id}', [ProfileController::class, 'approved']);
+    Route::get('/profile/consultantList', [ProfileController::class, 'consultantList']);
+
 
 
     ////////  Education Qualification   /////////////

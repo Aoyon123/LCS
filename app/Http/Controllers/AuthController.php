@@ -30,7 +30,6 @@ class AuthController extends Controller
         return $this->responseSuccess(200, true, $message, $data);
     }
 
-
     public function login(Request $request)
     {
         // return $request->all();
@@ -225,5 +224,25 @@ class AuthController extends Controller
             ],
             //  return $this->responseSuccess(200, true, $message, $data);
         ]);
+    }
+
+    public function me()
+    {
+        
+        $user = User::with('experiances', 'academics')->where('id',auth()->user()->id)->first();
+
+        if ($user != null) {
+            $data = [
+                'user' => $user,
+                'role' => $user->getRoleNames(),
+                'permissions' => $user->getAllPermissions()->pluck('name')
+            ];
+
+            $message = "";
+            return $this->responseSuccess(200, true, $message, $data);
+        } else {
+            $message = "No Data Found";
+            return $this->responseError(404, false, $message);
+        }
     }
 }

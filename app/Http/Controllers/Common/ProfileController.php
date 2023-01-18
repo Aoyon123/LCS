@@ -112,7 +112,6 @@ class ProfileController extends Controller
                             $experiance = Experience::where('id', $experianceId)->first();
 
                             if ($experiance) {
-
                                 $experiance->update([
                                     'institute_name' => $request->experiances[$key]['institute_name'],
                                     'designation' => $request->experiances[$key]['designation'],
@@ -132,7 +131,6 @@ class ProfileController extends Controller
                                 'user_id' => $user->id,
                             ]);
                         }
-
                     }
                 }
 
@@ -207,7 +205,7 @@ class ProfileController extends Controller
     {
         DB::beginTransaction();
         try {
-
+            //  return "tttt";
             $user = User::findOrFail($request->id);
             if ($request->id) {
 
@@ -215,15 +213,15 @@ class ProfileController extends Controller
                     'old_password' => 'required|min:8',
                     'new_password' => 'required|min:8',
                 ]);
-               //$requestpassword=Hash::make($request->new_password);
-              //  return $requestpassword;
-              //  return auth()->user()->password;
+                //$requestpassword=Hash::make($request->new_password);
+                //  return $requestpassword;
+                //  return auth()->user()->password;
                 // if ($requestpassword == auth()->user()->password) {
                 //     $message = "Your current password can't be with new password";
                 //     return $this->responseError(400, false, $message);
                 // }
 
-              ///  return auth()->user()->password;
+                ///  return auth()->user()->password;
                 if ($user && Hash::check($request->old_password, $user->password)) {
                     $user->update([
                         'password' => Hash::make($request->new_password)
@@ -283,9 +281,9 @@ class ProfileController extends Controller
         }
     }
 
-    public function profile()
+    public function profile($id)
     {
-        $user = User::with('experiances', 'academics')->where('id', auth()->user()->id)->first();
+        $user = User::with('experiances', 'academics')->where('id', $id)->first();
         //  return $user;
         if ($user != null) {
             $data = [
@@ -299,6 +297,49 @@ class ProfileController extends Controller
         } else {
             $message = "No Data Found";
             return $this->responseError(404, false, $message);
+        }
+    }
+
+    public function approved($id)
+    {
+        DB::beginTransaction();
+        try {
+
+            $user = User::where(['id' => $id, 'type' => 'consultant'])->first();
+            if ($user != null) {
+                $user->update([
+                    'approval' => 2,
+                    'approved_by' => auth()->user()->id
+                ]);
+                $message = "This Consultant Approved";
+                DB::commit();
+                return $this->responseSuccess(200, true, $message, $user);
+            } else {
+                $message = "Not Found Data";
+                return $this->responseError(404, false, $message);
+            }
+        } catch (QueryException $e) {
+            DB::rollBack();
+        }
+    }
+
+    public function consultantList()
+    {
+        DB::beginTransaction();
+        try {
+            $consultants = User::where('approval', 2)->get();
+            //  return $consultants;
+            if ($consultants) {
+                $message = "Consultant List Successfully Shown";
+                DB::commit();
+                return $this->responseSuccess(200, true, $message, $consultants);
+            }
+            //else {
+            //     $message = "No Data Found";
+            //     return $this->responseError(404, false, $message);
+            // }
+        } catch (QueryException $e) {
+            DB::rollBack();
         }
     }
 }
