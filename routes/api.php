@@ -8,6 +8,7 @@ use App\Http\Controllers\ExperienceController;
 use App\Http\Controllers\Common\ProfileController;
 use App\Http\Controllers\Admin\ConsultantController;
 use App\Http\Controllers\Admin\PermissionController;
+use App\Http\Controllers\Consultant\ServiceController;
 use App\Http\Controllers\AcademicQualificationController;
 use App\Http\Controllers\Consultant\ConsultantRateController;
 
@@ -43,10 +44,16 @@ Route::group(["middleware" => ["auth:api"]], function () {
     Route::post('/password/change', [ProfileController::class, 'updatePassword']);
     Route::delete('/profile/experience/{id}/delete', [ProfileController::class, 'experienceDestroy']);
     Route::delete('/profile/academic_qualification/{id}/delete', [ProfileController::class, 'academicQualificationDestroy']);
-    Route::post('/approved/{id}', [ProfileController::class, 'approved']);
+    Route::post('/consultant/approve', [ProfileController::class, 'approved']);
     Route::get('/profile/consultantList', [ProfileController::class, 'consultantList']);
 
 
+   /////////////  Service //////////////
+   Route::post('/services/store', [ServiceController::class, 'store']);
+   Route::get('/services/index', [ServiceController::class, 'index']);
+   Route::get('/services/{id}/retrieve', [ServiceController::class, 'retrieve']);
+   Route::put('/services/{id}/update', [ServiceController::class, 'update']);
+   Route::post('/services/{id}/delete', [ServiceController::class, 'destroy']);
 
     ////////  Education Qualification   /////////////
     Route::post('/academic_qualification', [AcademicQualificationController::class, 'store']);

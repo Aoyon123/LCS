@@ -300,20 +300,30 @@ class ProfileController extends Controller
         }
     }
 
-    public function approved($id)
+    public function approved(Request $request)
     {
         DB::beginTransaction();
         try {
-
-            $user = User::where(['id' => $id, 'type' => 'consultant'])->first();
-            if ($user != null) {
+            $user = User::where(['id' => $request->approvalUserId, 'type' => 'consultant'])->first();
+            if ($user) {
                 $user->update([
-                    'approval' => 2,
+                    'approval' => $request->approvalStatus,
                     'approved_by' => auth()->user()->id
                 ]);
-                $message = "This Consultant Approved";
+                if ($request->approvalStatus == 2) {
+                    $approvalStatus = 'Approved';
+                }
+                else if($request->approvalStatus == 4){
+                    $approvalStatus = 'Deactivated';
+                }
+                
+                else{
+                    $approvalStatus = 'Rejected';
+                }
+                $message = "This Consultant " .$approvalStatus;
                 DB::commit();
                 return $this->responseSuccess(200, true, $message, $user);
+
             } else {
                 $message = "Not Found Data";
                 return $this->responseError(404, false, $message);
@@ -323,12 +333,12 @@ class ProfileController extends Controller
         }
     }
 
-    public function consultantList()
+    public function consultantList(Request $request)
     {
         DB::beginTransaction();
         try {
             $consultants = User::where('approval', 2)->get();
-            //  return $consultants;
+
             if ($consultants) {
                 $message = "Consultant List Successfully Shown";
                 DB::commit();

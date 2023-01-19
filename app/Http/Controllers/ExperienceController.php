@@ -63,7 +63,6 @@ class ExperienceController extends Controller
         } catch (QueryException $e) {
             DB::rollBack();
         }
-
     }
 
     public function update(ExperienceRequest $request, $id)
