@@ -41,7 +41,7 @@ class ServiceController extends Controller
             ]);
 
             DB::commit();
-            $message = "Data Inserted Successfull";
+            $message = "Service Created Successfull";
             return $this->responseSuccess(200, true, $message, $data);
 
         } catch (QueryException $e) {
@@ -56,7 +56,7 @@ class ServiceController extends Controller
         try {
             $data = Service::findOrFail($id);
             if ($data) {
-                $message = "Data Found";
+                $message = "Service Found";
                 DB::commit();
                 return $this->responseSuccess(200, true, $message, $data);
             } else {
@@ -80,7 +80,7 @@ class ServiceController extends Controller
                 $input->status = $request['status'];
                 $input->remark = $request['remark'];
                 $input->save();
-                $message = "Updated Succesfully";
+                $message = "Service Updated Succesfully";
                 DB::commit();
                 return $this->responseSuccess(200, true, $message, $input);
             } else {
@@ -94,12 +94,13 @@ class ServiceController extends Controller
 
     public function destroy($id)
     {
+
         DB::beginTransaction();
         try {
             $user = Service::findOrFail($id);
             if ($user) {
                 $user->delete();
-                $message = "Deleted Succesfully";
+                $message = "Services Deleted Succesfully";
                 DB::commit();
                 return $this->responseSuccess(200, true, $message, []);
             }
