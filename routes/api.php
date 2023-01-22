@@ -6,11 +6,11 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\ExperienceController;
 use App\Http\Controllers\Common\ProfileController;
-use App\Http\Controllers\Admin\ConsultantController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Consultant\ServiceController;
 use App\Http\Controllers\AcademicQualificationController;
 use App\Http\Controllers\Consultant\ConsultantRateController;
+use App\Http\Controllers\Frontend\V1\Consultant\ConsultantController;
 
 /*
 |--------------------------------------------------------------------------
@@ -50,6 +50,7 @@ Route::group(["middleware" => ["auth:api"]], function () {
 
    /////////////  Service //////////////
    Route::post('/services/store', [ServiceController::class, 'store']);
+   Route::get('/services/all', [ServiceController::class, 'allServices']);
    Route::get('/services/index', [ServiceController::class, 'index']);
    Route::get('/services/{id}/retrieve', [ServiceController::class, 'retrieve']);
    Route::put('/services/{id}/update', [ServiceController::class, 'update']);
@@ -92,3 +93,8 @@ Route::group(["middleware" => ["auth:api"]], function () {
 
 
 });
+
+
+/////////// Frontrend Part ////////////
+
+Route::get('/frontend/consultantList', [ConsultantController::class, 'index']);

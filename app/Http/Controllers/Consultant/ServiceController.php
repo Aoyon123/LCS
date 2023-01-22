@@ -15,9 +15,22 @@ class ServiceController extends Controller
 {
     use ResponseTrait;
 
+    public function allServices()
+    {
+        $data = Service::all();
+        if (!empty($data)) {
+            $message = "Succesfully Data Shown";
+            return $this->responseSuccess(200, true, $message, $data);
+        } else {
+            $message = "Invalid credentials";
+            return $this->responseError(403, false, $message);
+        }
+    }
+
     public function index()
     {
         $data = Service::all();
+        return $data;
         if (!empty($data)) {
             $message = "Succesfully Data Shown";
             return $this->responseSuccess(200, true, $message, $data);

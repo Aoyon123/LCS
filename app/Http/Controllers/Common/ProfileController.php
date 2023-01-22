@@ -35,14 +35,19 @@ class ProfileController extends Controller
                 'gender' => 'required|max:10',
             ]);
 
+
             if ($request->profile_image) {
-                $profile_image_path = FileHandler::uploadImage($request->profile_image, $request->type, $request->phone, 'profile');
-                if (File::exists($profile_image_path)) {
-                    File::delete($profile_image_path);
+                $image_parts = explode(";base64,", $request->profile_image);
+                if (isset($image_parts[1])) {
+                    $profile_image_path = FileHandler::uploadImage($request->profile_image, $request->type, $request->phone, 'profile');
+                    if (File::exists($profile_image_path)) {
+                        File::delete($profile_image_path);
+                    }
+                } else {
+                    $profile_image_path = $user->profile_image;
                 }
-            } else {
-                $profile_image_path = $user->profile_image;
             }
+
 
             if (strtolower($request->type) === 'consultant') {
                 $request->validate([
@@ -66,22 +71,34 @@ class ProfileController extends Controller
                 }
 
                 if ($request->nid_front) {
-                    $nid_front_image_path = FileHandler::uploadImage($request->nid_front, $request->type, $request->email, 'nid_front');
-                    if (File::exists($nid_front_image_path)) {
-                        File::delete($nid_front_image_path);
+                    $image_parts = explode(";base64,", $request->nid_front);
+                    if (isset($image_parts[1])) {
+                        $nid_front_image_path = FileHandler::uploadImage($request->nid_front, $request->type, $request->email, 'nid_front');
+                        if (File::exists($nid_front_image_path)) {
+                            File::delete($nid_front_image_path);
+                        }
+                    } else {
+                        $nid_front_image_path = $user->nid_front;
                     }
                 } else {
                     $nid_front_image_path = $user->nid_front;
                 }
 
                 if ($request->nid_back) {
-                    $nid_back_image_path = FileHandler::uploadImage($request->nid_back, $request->type, $request->email, 'nid_back');
-                    if (File::exists($nid_back_image_path)) {
-                        File::delete($nid_back_image_path);
+                    $image_parts = explode(";base64,", $request->nid_back);
+                    if (isset($image_parts[1])) {
+                        $nid_back_image_path = FileHandler::uploadImage($request->nid_back, $request->type, $request->email, 'nid_back');
+                        if (File::exists($nid_back_image_path)) {
+                            File::delete($nid_back_image_path);
+                        }
+                    } else {
+                        $nid_back_image_path = $user->nid_back;
                     }
                 } else {
                     $nid_back_image_path = $user->nid_back;
                 }
+
+                $user->services()->sync([$request->services]);
             }
 
             $user->update([
@@ -99,6 +116,7 @@ class ProfileController extends Controller
                 'current_profession' => $request->current_profession ?? $user->current_profession,
                 'nid_front' => $nid_front_image_path ?? $user->nid_front,
                 'nid_back' => $nid_back_image_path ?? $user->nid_back,
+                'schedule' => $request->schedule ?? $user->schedule
             ]);
 
 
@@ -161,9 +179,14 @@ class ProfileController extends Controller
                         // }
 
                         if ($request->academics[$key]['certification_copy']) {
-                            $certificateImage = FileHandler::uploadImage($request->academics[$key]['certification_copy'], $request->type, $request->email, 'certificate');
-                            if (File::exists($certificateImage)) {
-                                File::delete($certificateImage);
+                            $image_parts = explode(";base64,", $request->academics[$key]['certification_copy']);
+                            if (isset($image_parts[1])) {
+                                $certificateImage = FileHandler::uploadImage($request->academics[$key]['certification_copy'], $request->type, $request->email, 'certificate');
+                                if (File::exists($certificateImage)) {
+                                    File::delete($certificateImage);
+                                }
+                            } {
+                                $certificateImage = $academic->certification_copy;
                             }
                         } else {
                             $certificateImage = $academic->certification_copy;
@@ -283,7 +306,7 @@ class ProfileController extends Controller
 
     public function profile($id)
     {
-        $user = User::with('experiances', 'academics')->where('id', $id)->first();
+        $user = User::with('experiances', 'academics','services')->where('id', $id)->first();
         //  return $user;
         if ($user != null) {
             $data = [
@@ -312,15 +335,12 @@ class ProfileController extends Controller
                 ]);
                 if ($request->approvalStatus == 2) {
                     $approvalStatus = 'Approved';
-                }
-                else if($request->approvalStatus == 4){
+                } else if ($request->approvalStatus == 4) {
                     $approvalStatus = 'Deactivated';
-                }
-                
-                else{
+                } else {
                     $approvalStatus = 'Rejected';
                 }
-                $message = "This Consultant " .$approvalStatus;
+                $message = "This Consultant " . $approvalStatus;
                 DB::commit();
                 return $this->responseSuccess(200, true, $message, $user);
 

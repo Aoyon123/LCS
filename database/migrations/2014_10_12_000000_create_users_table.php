@@ -42,6 +42,7 @@ return new class extends Migration {
             4 Deactivated
             ");
             $table->unsignedBigInteger('approved_by')->nullable();
+            $table->text('schedule')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });

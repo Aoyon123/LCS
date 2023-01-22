@@ -1,12 +1,14 @@
 <?php
 
 namespace App\Models;
+
+use App\Models\Service;
+use Spatie\Permission\Traits\HasRoles;
+use Tymon\JWTAuth\Contracts\JWTSubject;
+use Illuminate\Notifications\Notifiable;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
-use Tymon\JWTAuth\Contracts\JWTSubject;
-use Spatie\Permission\Traits\HasRoles;
 
 
 class User extends Authenticatable implements JWTSubject
@@ -32,11 +34,24 @@ class User extends Authenticatable implements JWTSubject
     {
         return $this->hasMany(AcademicQualification::class);
     }
-    public function getJWTIdentifier() {
+    public function getJWTIdentifier()
+    {
         return $this->getKey();
     }
 
-    public function getJWTCustomClaims() {
+    public function services()
+    {
+        return $this->belongsToMany(Service::class)->withTimestamps();
+    }
+
+    public function getJWTCustomClaims()
+    {
         return [];
     }
+
+    public function scopeActive($query)
+    {
+        return $query->where('status', 1);
+    }
+
 }
