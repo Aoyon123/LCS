@@ -11,7 +11,7 @@ use App\Http\Controllers\Consultant\ServiceController;
 use App\Http\Controllers\AcademicQualificationController;
 use App\Http\Controllers\Consultant\ConsultantRateController;
 use App\Http\Controllers\Frontend\V1\Consultant\ConsultantController;
-
+use App\Http\Controllers\Admin\ConsultantController as AdminConsultantController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -33,7 +33,7 @@ Route::get('/me', [AuthController::class, 'me']);
 
 Route::group(["middleware" => ["auth:api"]], function () {
     ///////// Consultant   ////////////
-    Route::get('/admin/consultants', [ConsultantController::class, 'index']);
+    Route::get('/admin/consultants', [AdminConsultantController::class, 'index']);
 
 
     //Route::get('/admins', [RegisterController::class, 'index']);
@@ -88,8 +88,9 @@ Route::group(["middleware" => ["auth:api"]], function () {
     Route::post('/permission/delete', [PermissionController::class, 'destroy']);
 
     /////////// Consultant Rate ///////////////
-   // Route::get('/consultantRate', [ConsultantRateController::class, 'index']);
-
+    Route::get('/consultantRate', [ConsultantRateController::class, 'index']);
+    Route::post('/consultantRate/store', [ConsultantRateController::class, 'store']);
+    Route::get('/consultantRate/rateCalculate', [ConsultantRateController::class, 'rateCalculate']);
 
 
 });

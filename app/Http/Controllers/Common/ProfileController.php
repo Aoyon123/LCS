@@ -23,7 +23,9 @@ class ProfileController extends Controller
         DB::beginTransaction();
         try {
 
+           // return $request->all();
             $user = User::findOrFail($request->id);
+
 
             $request->validate([
                 'name' => 'required|string|max:50',
@@ -55,8 +57,8 @@ class ProfileController extends Controller
                     'current_profession' => 'nullable',
                     'email' => 'required|email|unique:users,email,' . $user->id,
                     'phone' => 'required|unique:users,phone,' . $user->id,
+                    
                 ]);
-
 
                 if ($request->nid_front) {
                     $request->validate([
@@ -98,7 +100,7 @@ class ProfileController extends Controller
                     $nid_back_image_path = $user->nid_back;
                 }
 
-                $user->services()->sync([$request->services]);
+                $user->services()->sync($request->services);
             }
 
             $user->update([
@@ -118,6 +120,7 @@ class ProfileController extends Controller
                 'nid_back' => $nid_back_image_path ?? $user->nid_back,
                 'schedule' => $request->schedule ?? $user->schedule
             ]);
+
 
 
             if (strtolower($user->type) === 'consultant') {
@@ -192,6 +195,7 @@ class ProfileController extends Controller
                             $certificateImage = $academic->certification_copy;
                         }
 
+
                         if ($existId) {
                             if ($academic) {
                                 $academic->update([
@@ -243,7 +247,6 @@ class ProfileController extends Controller
                 //     $message = "Your current password can't be with new password";
                 //     return $this->responseError(400, false, $message);
                 // }
-
                 ///  return auth()->user()->password;
                 if ($user && Hash::check($request->old_password, $user->password)) {
                     $user->update([
