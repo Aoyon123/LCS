@@ -17,7 +17,7 @@ class Service extends Model
         'remark',
     ];
 
-    public function users()
+    public function consultants()
     {
         return $this->belongsToMany(User::class)->withTimestamps();
     }

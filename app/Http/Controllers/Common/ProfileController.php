@@ -26,7 +26,6 @@ class ProfileController extends Controller
            // return $request->all();
             $user = User::findOrFail($request->id);
 
-
             $request->validate([
                 'name' => 'required|string|max:50',
                 'phone' => 'max:15|min:11|regex:/(01)[0-9]{9}/',
@@ -57,7 +56,7 @@ class ProfileController extends Controller
                     'current_profession' => 'nullable',
                     'email' => 'required|email|unique:users,email,' . $user->id,
                     'phone' => 'required|unique:users,phone,' . $user->id,
-                    
+
                 ]);
 
                 if ($request->nid_front) {
@@ -120,7 +119,6 @@ class ProfileController extends Controller
                 'nid_back' => $nid_back_image_path ?? $user->nid_back,
                 'schedule' => $request->schedule ?? $user->schedule
             ]);
-
 
 
             if (strtolower($user->type) === 'consultant') {

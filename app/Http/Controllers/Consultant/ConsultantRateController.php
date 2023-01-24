@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Consultant;
 
+use App\Models\User;
 use Illuminate\Http\Request;
 use App\Traits\ResponseTrait;
 use Illuminate\Http\Response;
@@ -39,8 +40,11 @@ class ConsultantRateController extends Controller
     public function rateCalculate(Request $request)
     {
         $data = ConsultantRate::where('consultant_id', 2)->avg('rate');
-        return $data;
-
+      //  return $data;
+    //  User::create([
+    //     'rates' => $data
+    // ]);
+      //  return "aaaa";
         $message = "ConsultantRate Created Successfull";
         return $this->responseSuccess(200, true, $message, $data);
     }

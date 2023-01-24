@@ -98,4 +98,7 @@ Route::group(["middleware" => ["auth:api"]], function () {
 
 /////////// Frontrend Part ////////////
 
-Route::get('/frontend/consultantList', [ConsultantController::class, 'index']);
+Route::get('frontend/consultantList/dashboard', [ConsultantController::class, 'dashboard']);
+Route::get('frontend/consultantList/{topRated?}/{active?}', [ConsultantController::class, 'topRated']);
+Route::get('frontend/consultantList/active', [ConsultantController::class, 'active']);
+Route::get('frontend/serviceWiseConsultantList/{id}', [ConsultantController::class, 'serviceWiseConsultantList']);
