@@ -37,16 +37,23 @@ class ConsultantRateController extends Controller
         }
     }
 
-    public function rateCalculate(Request $request)
+    public function rateCalculate(Request $request,$id)
     {
-        $data = ConsultantRate::where('consultant_id', 2)->avg('rate');
-      //  return $data;
-    //  User::create([
-    //     'rates' => $data
-    // ]);
-      //  return "aaaa";
+        $data = ConsultantRate::where('consultant_id', $id)->avg('rate');
+        $roundData = round($data, 1);
+
+        $data = User::create([
+            'rates' => ,
+
+        ]);
+       //  return $data2;
+        //  return $data;
+        //  User::create([
+        //     'rates' => $data
+        // ]);
+        //  return "aaaa";
         $message = "ConsultantRate Created Successfull";
-        return $this->responseSuccess(200, true, $message, $data);
+        return $this->responseSuccess(200, true, $message, $roundData);
     }
 
 }

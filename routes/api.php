@@ -90,15 +90,19 @@ Route::group(["middleware" => ["auth:api"]], function () {
     /////////// Consultant Rate ///////////////
     Route::get('/consultantRate', [ConsultantRateController::class, 'index']);
     Route::post('/consultantRate/store', [ConsultantRateController::class, 'store']);
-    Route::get('/consultantRate/rateCalculate', [ConsultantRateController::class, 'rateCalculate']);
+    Route::get('/consultantRate/{id}/rateCalculate', [ConsultantRateController::class, 'rateCalculate']);
 
 
 });
 
 
 /////////// Frontrend Part ////////////
+Route::group(["prefix" => "/frontend/common/", 'namespace' => 'Frontend/V1/'], function (){
+    Route::get("consultant", [ConsultantController::class, 'consultantList']);
+});
 
-Route::get('frontend/consultantList/dashboard', [ConsultantController::class, 'dashboard']);
-Route::get('frontend/consultantList/{topRated?}/{active?}', [ConsultantController::class, 'topRated']);
-Route::get('frontend/consultantList/active', [ConsultantController::class, 'active']);
-Route::get('frontend/serviceWiseConsultantList/{id}', [ConsultantController::class, 'serviceWiseConsultantList']);
+
+// Route::get('frontend/consultant/list', [ConsultantController::class, 'dashboard']);
+// Route::get('frontend/consultantList/{topRated?}/{active?}', [ConsultantController::class, 'topRated']);
+// Route::get('frontend/consultantList/active', [ConsultantController::class, 'active']);
+// Route::get('frontend/serviceWiseConsultantList/{id}', [ConsultantController::class, 'serviceWiseConsultantList']);
