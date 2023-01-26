@@ -20,6 +20,7 @@ class User extends Authenticatable implements JWTSubject
     protected $hidden = [
         'password',
         'remember_token',
+        'pivot'
     ];
 
     // protected $casts = [
@@ -28,7 +29,7 @@ class User extends Authenticatable implements JWTSubject
 
     public function experiances()
     {
-        return $this->hasMany(Experience::class);
+        return $this->hasMany(Experience::class, 'user_id');
     }
     public function academics()
     {

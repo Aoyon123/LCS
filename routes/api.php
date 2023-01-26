@@ -98,7 +98,9 @@ Route::group(["middleware" => ["auth:api"]], function () {
 
 /////////// Frontrend Part ////////////
 Route::group(["prefix" => "/frontend/common/", 'namespace' => 'Frontend/V1/'], function (){
-    Route::get("consultant", [ConsultantController::class, 'consultantList']);
+    Route::get("consultantList", [ConsultantController::class, 'consultantList']);
+    Route::get("consultant/{id}/details", [ConsultantController::class, 'details']);
+    Route::get("dashboard", [ConsultantController::class, 'dashboard']);
 });
 
 

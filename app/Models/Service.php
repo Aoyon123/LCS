@@ -17,6 +17,10 @@ class Service extends Model
         'remark',
     ];
 
+    protected $hidden = [
+        'pivot'
+    ];
+
     public function consultants()
     {
         return $this->belongsToMany(User::class)->withTimestamps();

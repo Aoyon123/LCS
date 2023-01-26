@@ -35,7 +35,7 @@ class Handler extends ExceptionHandler
             return response()->json(["status_code" => 404, "status"=>false, 'message' => "Not Found Your Targeted Data"], Response::HTTP_NOT_FOUND);
         }
         if ($exception instanceof QueryException) {
-            return response()->json(["status_code" => 500, "status"=>false, 'message' => "Internal Server Error"], Response::HTTP_INTERNAL_SERVER_ERROR);
+            // return response()->json(["status_code" => 500, "status"=>false, 'message' => "Internal Server Error"], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
         if ($exception instanceof MethodNotAllowedHttpException) {
             return response()->json(["status_code" => 405, "status"=>false, 'message' => "Method Not Allowed"], Response::HTTP_METHOD_NOT_ALLOWED);

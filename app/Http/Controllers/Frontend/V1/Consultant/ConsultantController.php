@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\Service;
 use Illuminate\Http\Request;
 use App\Traits\ResponseTrait;
+use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Route;
 
@@ -14,59 +15,193 @@ class ConsultantController extends Controller
     use ResponseTrait;
     public function consultantList(Request $request)
     {
-        $params = $request->all();
-        $consultant = User::with('academics', 'services')->active();
-        $data = [];
+        $consultant = DB::table('users')
+            ->select(
+                'users.name',
+                'users.email',
+                'users.phone',
+                'users.address',
+                'users.profile_image',
+                'users.gender',
+                'users.status',
+                'users.rates',
+                'users.years_of_experience',
+                'users.schedule',
+                'users.id as user_id',
+                'academic_qualifications.education_level',
+                'experiences.institute_name',
+                'service_user.service_id',
+                'services.title',
+                'services.status as services_status',
+            )
+            ->where(['users.status' => 1, 'users.approval' => 2, 'users.type' => 'consultant'])
+            ->join('academic_qualifications', 'users.id', '=', 'academic_qualifications.user_id')
+            ->join('experiences', 'users.id', '=', 'experiences.user_id')
+            ->leftJoin('service_user', 'users.id', '=', 'service_user.user_id')
+            ->join('services', 'service_user.service_id', '=', 'services.id')
+            ->groupBy('users.id')
+            ->get();
 
-        foreach ($params as $key => $param) {
-
-            if ($key === 'services') {
-                $consultant = $consultant->whereHas('services', function ($q) use ($param) {
-                    $q->where('services.id', $param);
-                });
-                $data[$key] = $consultant->get();
-               // return $data['list'] = $consultant->get();
-            }
-
-
-            if ($key === 'search') {
-                $userSearchFields = ['name', 'phone', 'email', 'address', 'code', 'schedule', 'years_of_experience'];
-                $servicesSearchFields = ['title'];
-                $academicSearchFields = ['education_level'];
-
-                $consultant = $consultant->where(function ($query) use ($userSearchFields, $param) {
-                    foreach ($userSearchFields as $userSearchField) {
-                        $query->orWhere($userSearchField, 'like', '%' . $param . '%');
-                    }
-                })
-                    ->orWhereHas('services', function ($query) use ($servicesSearchFields, $param) {
-                        foreach ($servicesSearchFields as $serviceSearchField) {
-                            $query->where($serviceSearchField, 'like', '%' . $param . '%');
-                        }
-                    })
-                    ->orWhereHas('academics', function ($query) use ($academicSearchFields, $param) {
-                        foreach ($academicSearchFields as $academicSearchField) {
-                            $query->where($academicSearchField, 'like', '%' . $param . '%');
-                        }
-                    });
-
-                $data[$key] = $consultant->get();
-            }
-
-
-
-            if ($key === 'rating') {
-                $consultant = $consultant->orderBy('users.rates', $param);
-            }
-        }
-
-        if (isset($params['count'])) {
-            $data['list'] = $consultant->limit($params['count'])->get();
+        // return $consultant;
+        if (!empty($consultant)) {
+            $message = "Succesfully Data Shown";
+            return $this->responseSuccess(200, true, $message, $consultant);
         } else {
-            $data['list'] = $consultant->get();
+            $message = "Invalid credentials";
+            return $this->responseError(403, false, $message);
         }
+    }
 
-        return $data;
+    public function details($id){
+        $consultant = User::where('id',$id)->with('academics', 'services', 'experiances')->active()->get();
+        //return $consultant;
+         if (!empty($consultant)) {
+            $message = "Succesfully Data Shown";
+            return $this->responseSuccess(200, true, $message, $consultant);
+        } else {
+            $message = "Invalid credentials";
+            return $this->responseError(403, false, $message);
+        }
+    }
+
+
+
+    public function dashboard(){
+
+            $user = User::active()->get();
+            $service =Service::all();
+            if ($user) {
+                $data = [
+                    'topRated'=>$user,
+                    'active' => $user,
+                    'service'=>$service
+                ];
+            }
+          //  return $data;
+            if (!empty($data)) {
+                $message = "Succesfully Data Shown";
+                return $this->responseSuccess(200, true, $message, $data);
+            } else {
+                $message = "Invalid credentials";
+                return $this->responseError(403, false, $message);
+            }
+        }
+    }
+
+        // $consultant = User::with(
+        //            ['services' => function ($query) {
+        //     $query->select('id', 'title');
+        // },
+        //     'academics' => function ($query) {
+        //         $query->select('id', 'education_level');
+        //     },
+        //     'experiances' => function ($query) {
+        //         $query->select('id', 'institute_name');
+        //     }]
+        // )->get();
+
+        // return $consultant;
+
+       // $consultant = User::with('academics', 'services', 'experiances')->active();
+        // $consultant = User::with('academics')->where('id', 2)->first();
+        // $consultant = User::query()->with(
+        //     [
+        //         'services' => function ($query) use ($services_selected_fields) {
+        //             $query->select($services_selected_fields)->get();
+        //         },
+        //     ],
+
+
+        // // [
+        // //     'academics' => function ($query) use ($academics_selected_fields) {
+        // //         $query->select($academics_selected_fields);
+        // //     }
+        // // ],
+
+        // // [
+        // //     'experiances' => function ($query) use ($experiences_selected_fields) {
+        // //         $query->select($experiences_selected_fields);
+        // //     }
+        // // ],
+        // )
+        //     ->with(
+        //         [
+
+        //             'experiances' => function ($query) use ($experiences_selected_fields) {
+        //                 $query->select($experiences_selected_fields);
+        //             }
+        //         ]
+        //     )
+        //     ->with(
+        //         [
+
+        //             'academics' => function ($query) use ($academics_selected_fields) {
+        //                 $query->select($academics_selected_fields);
+        //             }
+        //         ]
+        //     );
+
+        // ->whereHas('services', function ($q) use ($services_selected_fields) {
+        //     $q->select($services_selected_fields);
+        // })
+        // ->whereHas('academics', function ($q) use ($academics_selected_fields) {
+        //     $q->select($academics_selected_fields);
+        // })
+        // return $consultant;
+
+        // $data = [];
+        // $params = $request->all();
+        // // return $params;
+        // $consultants_selected_fields = ['name', 'phone', 'email', 'address', 'code', 'profile_image', 'gender', 'rates', 'years_of_experience', 'schedule'];
+        // $academics_selected_fields = ['education_level'];
+        // $services_selected_fields = ['title'];
+        // $experiences_selected_fields = ['institute_name'];
+        // foreach ($params as $key => $param) {
+
+        //     if ($key === 'services') {
+        //         $consultant = $consultant->whereHas('services', function ($q) use ($param) {
+        //             $q->where('services.id', $param);
+        //         });
+        //         // $data[$key] = $consultant->get();
+
+        //     } elseif ($key === 'search') {
+
+        //         $userSearchFields = ['name', 'phone', 'email', 'address', 'code', 'schedule', 'years_of_experience'];
+        //         $servicesSearchFields = ['title'];
+        //         $academicSearchFields = ['education_level'];
+
+        //         $consultant = $consultant->where(function ($query) use ($userSearchFields, $param) {
+        //             foreach ($userSearchFields as $userSearchField) {
+        //                 $query->orWhere($userSearchField, 'like', '%' . $param . '%');
+        //             }
+        //         })
+        //             ->orWhereHas('services', function ($query) use ($servicesSearchFields, $param) {
+        //                 foreach ($servicesSearchFields as $serviceSearchField) {
+        //                     $query->where($serviceSearchField, 'like', '%' . $param . '%');
+        //                 }
+        //             })
+        //             ->orWhereHas('academics', function ($query) use ($academicSearchFields, $param) {
+        //                 foreach ($academicSearchFields as $academicSearchField) {
+        //                     $query->where($academicSearchField, 'like', '%' . $param . '%');
+        //                 }
+        //             });
+
+        //         // $data[$key] = $consultant->get();
+        //     } elseif ($key === 'rating') {
+        //         $consultant = $consultant->orderBy('users.rates', $param);
+        //     }
+        // }
+
+        // if (isset($params['count'])) {
+        //     $data['data'] = $consultant->limit($params['count'])->get()->toArray();
+        // } else {
+        //     $data['data'] = $consultant->get()->toArray();
+        // }
+
+        // $consultant = $consultant['data'];
+        // $consultant = $data['data']->map(function)
+
+     //   return $data['data'];
 
         // $service = Service::all();
         // $user = User::active()->get();
@@ -85,70 +220,47 @@ class ConsultantController extends Controller
         //     $message = "Invalid credentials";
         //     return $this->responseError(403, false, $message);
         // }
-    }
 
-    public function topRated(Request $request)
-    {
-        $route = Route::current();
-        //return $route;
-        // $topRated = $route->parameter('topRated');
-        $params = [
-            'topRated' => $route->parameter('topRated'),
-            'active' => $route->parameter('active')
-        ];
-        //  return $params;
-        //  return $request->exists($params);
-        // $user = User::query();
-        // return $user;
-        if ($request->exists($params)) {
-            $user = User::active()->get();
-        }
-        //  return $user;
-        if ($user) {
-            $data = [
-                'topRated' => $user,
-            ];
-        }
-        if (!empty($data)) {
-            $message = "Succesfully Data Shown";
-            return $this->responseSuccess(200, true, $message, $data);
-        } else {
-            $message = "Invalid credentials";
-            return $this->responseError(403, false, $message);
-        }
-    }
+   // }
 
-    public function active()
-    {
-        $user = User::active()->get();
 
-        if ($user) {
-            $data = [
-                'active' => $user,
-            ];
-        }
-        if (!empty($data)) {
-            $message = "Succesfully Data Shown";
-            return $this->responseSuccess(200, true, $message, $data);
-        } else {
-            $message = "Invalid credentials";
-            return $this->responseError(403, false, $message);
-        }
-    }
 
-    public function serviceWiseConsultantList($id)
-    {
-        $user = Service::with('consultants')->where('id', $id)->whereHas('consultants', function ($query) {
-            $query->active();
-        })->first();
 
-        if (!empty($user)) {
-            $message = "Succesfully Data Shown";
-            return $this->responseSuccess(200, true, $message, $user);
-        } else {
-            $message = "Invalid credentials";
-            return $this->responseError(403, false, $message);
-        }
-    }
 
-}
+
+
+
+//     public function active()
+//     {
+//         $user = User::active()->get();
+
+//         if ($user) {
+//             $data = [
+//                 'active' => $user,
+//             ];
+//         }
+//         if (!empty($data)) {
+//             $message = "Succesfully Data Shown";
+//             return $this->responseSuccess(200, true, $message, $data);
+//         } else {
+//             $message = "Invalid credentials";
+//             return $this->responseError(403, false, $message);
+//         }
+//     }
+
+//     public function serviceWiseConsultantList($id)
+//     {
+//         $user = Service::with('consultants')->where('id', $id)->whereHas('consultants', function ($query) {
+//             $query->active();
+//         })->first();
+
+//         if (!empty($user)) {
+//             $message = "Succesfully Data Shown";
+//             return $this->responseSuccess(200, true, $message, $user);
+//         } else {
+//             $message = "Invalid credentials";
+//             return $this->responseError(403, false, $message);
+//         }
+//     }
+// }
+
