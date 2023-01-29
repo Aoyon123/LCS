@@ -99,6 +99,7 @@ Route::group(["middleware" => ["auth:api"]], function () {
 /////////// Frontrend Part ////////////
 Route::group(["prefix" => "/frontend/common/", 'namespace' => 'Frontend/V1/'], function (){
     Route::get("consultantList", [ConsultantController::class, 'consultantList']);
+  //  Route::get("consultantList", [ConsultantController::class, 'consultantList2']);
     Route::get("consultant/{id}/details", [ConsultantController::class, 'details']);
     Route::get("dashboard", [ConsultantController::class, 'dashboard']);
 });

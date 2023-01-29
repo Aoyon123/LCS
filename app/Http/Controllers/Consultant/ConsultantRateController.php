@@ -42,10 +42,10 @@ class ConsultantRateController extends Controller
         $data = ConsultantRate::where('consultant_id', $id)->avg('rate');
         $roundData = round($data, 1);
 
-        $data = User::create([
-            'rates' => ,
+        // $data = User::create([
+        //     'rates' => ,
 
-        ]);
+        // ]);
        //  return $data2;
         //  return $data;
         //  User::create([

@@ -18,7 +18,9 @@ class Service extends Model
     ];
 
     protected $hidden = [
-        'pivot'
+        'pivot',
+        'created_at',
+        'id'
     ];
 
     public function consultants()

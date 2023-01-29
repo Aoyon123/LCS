@@ -19,6 +19,11 @@ class Experience extends Model
         'current_working',
         'user_id'
     ];
+
+
+    protected $hidden = [
+        'user_id'
+    ];
     public function user(){
         return $this->belongsTo(User::class);
     }
