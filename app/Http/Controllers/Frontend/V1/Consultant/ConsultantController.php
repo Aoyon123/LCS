@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use App\Traits\ResponseTrait;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
+use App\Models\Experience;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -19,7 +20,7 @@ class ConsultantController extends Controller
     {
         //  return auth()->guard('api')->users();
         $data = [];
-        $consultants_selected_fields = ['id', 'name', 'phone', 'email', 'address', 'code', 'profile_image', 'gender', 'rates', 'years_of_experience', 'schedule'];
+        $consultants_selected_fields = ['id', 'name', 'active_status','phone', 'email', 'address', 'code','type','profile_image', 'gender', 'rates', 'years_of_experience', 'schedule'];
         $params = $request->all();
 
         $consultant = User::with(
@@ -37,9 +38,11 @@ class ConsultantController extends Controller
                 $consultant = $consultant->whereHas('services', function ($q) use ($param) {
                     $q->where('services.id', $param);
                 });
-                // $data[$key] = $consultant->get();
-                // return $data['list'] = $consultant->get();
-            } elseif ($key === 'search') {
+            }
+            elseif ($key === 'active') {
+                $consultant = $consultant->where('active_status', $param);
+            }
+            elseif ($key === 'search') {
                 $userSearchFields = ['name', 'phone', 'email', 'address', 'code', 'schedule', 'years_of_experience'];
                 $servicesSearchFields = ['title'];
                 $experienceSearchFields = ['institute_name'];
@@ -69,9 +72,11 @@ class ConsultantController extends Controller
                     });
 
                 // $data[$key] = $consultant->get();
-            } elseif ($key === 'rating') {
+            }
+            elseif ($key === 'rating') {
                 $consultant = $consultant->orderBy('users.rates', $param);
             }
+
         }
 
         if (isset($params['limit'])) {
@@ -137,28 +142,36 @@ class ConsultantController extends Controller
 
 
 
-    public function dashboard()
-    {
+    // public function dashboard()
+    // {
+    //     $service = DB::table('services')->get();
 
-        $user = User::active()->get();
-        $service = DB::table('services')->get();
+    //     $consultants_selected_fields = ['id', 'name', 'phone', 'email', 'address', 'code', 'profile_image', 'gender', 'rates', 'years_of_experience', 'schedule'];
 
-        if ($user) {
-            $data = [
-                'topRated' => $user,
-                'active' => $user,
-                'service' => $service
-            ];
-        }
+    //     $consultant = User::with(
+    //         [
+    //             'experianceLatest:user_id,institute_name',
+    //             'academicLatest:user_id,education_level',
+    //             'serviceLatest',
+    //         ]
 
-        if (!empty($data)) {
-            $message = "Succesfully Data Shown";
-            return $this->responseSuccess(200, true, $message, $data);
-        } else {
-            $message = "Invalid credentials";
-            return $this->responseError(403, false, $message);
-        }
-    }
+    //     )->select($consultants_selected_fields)->active()->get();
+
+    //     if ($consultant && $service) {
+    //         $data = [
+    //             'topRated' => $consultant,
+    //             'active' => $consultant,
+    //             'service' => $service
+    //         ];
+    //     }
+    //     if (!empty($data)) {
+    //         $message = "Succesfully Data Shown";
+    //         return $this->responseSuccess(200, true, $message, $data);
+    //     } else {
+    //         $message = "Invalid credentials";
+    //         return $this->responseError(403, false, $message);
+    //     }
+    // }
 }
 
 // $consultant = User::with(

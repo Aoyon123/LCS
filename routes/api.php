@@ -10,8 +10,11 @@ use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Consultant\ServiceController;
 use App\Http\Controllers\AcademicQualificationController;
 use App\Http\Controllers\Consultant\ConsultantRateController;
+use App\Http\Controllers\Frontend\V1\Common\CommonController;
 use App\Http\Controllers\Frontend\V1\Consultant\ConsultantController;
 use App\Http\Controllers\Admin\ConsultantController as AdminConsultantController;
+use App\Http\Controllers\Admin\CitizenController as AdminCitizenController;
+
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -32,14 +35,18 @@ Route::post('/refresh', [AuthController::class, 'refresh']);
 Route::get('/me', [AuthController::class, 'me']);
 
 Route::group(["middleware" => ["auth:api"]], function () {
-    ///////// Consultant   ////////////
+
+
+    ///////// Consultant List  ////////////
     Route::get('/admin/consultants', [AdminConsultantController::class, 'index']);
 
-
+    ////////// Citizen List ///////////
+    Route::get('/admin/citizen', [AdminCitizenController::class, 'index']);
     //Route::get('/admins', [RegisterController::class, 'index']);
 
     ////////////  Profile //////////////
     Route::get('/profile/{id}', [ProfileController::class, 'profile']);
+    Route::get('/profile/active/status', [ProfileController::class, 'activeUser']);
     Route::post('/profile/update', [ProfileController::class, 'update']);
     Route::post('/password/change', [ProfileController::class, 'updatePassword']);
     Route::delete('/profile/experience/{id}/delete', [ProfileController::class, 'experienceDestroy']);
@@ -48,13 +55,13 @@ Route::group(["middleware" => ["auth:api"]], function () {
     Route::get('/profile/consultantList', [ProfileController::class, 'consultantList']);
 
 
-   /////////////  Service //////////////
-   Route::post('/services/store', [ServiceController::class, 'store']);
-   Route::get('/services/all', [ServiceController::class, 'allServices']);
-   Route::get('/services/index', [ServiceController::class, 'index']);
-   Route::get('/services/{id}/retrieve', [ServiceController::class, 'retrieve']);
-   Route::put('/services/{id}/update', [ServiceController::class, 'update']);
-   Route::post('/services/{id}/delete', [ServiceController::class, 'destroy']);
+    /////////////  Service //////////////
+    Route::post('/services/store', [ServiceController::class, 'store']);
+    Route::get('/services/all', [ServiceController::class, 'allServices']);
+    Route::get('/services/index', [ServiceController::class, 'index']);
+    Route::get('/services/{id}/retrieve', [ServiceController::class, 'retrieve']);
+    Route::put('/services/{id}/update', [ServiceController::class, 'update']);
+    Route::post('/services/{id}/delete', [ServiceController::class, 'destroy']);
 
     ////////  Education Qualification   /////////////
     Route::post('/academic_qualification', [AcademicQualificationController::class, 'store']);
@@ -97,11 +104,11 @@ Route::group(["middleware" => ["auth:api"]], function () {
 
 
 /////////// Frontrend Part ////////////
-Route::group(["prefix" => "/frontend/common/", 'namespace' => 'Frontend/V1/'], function (){
+Route::group(["prefix" => "/frontend/common/", 'namespace' => 'Frontend/V1/'], function () {
     Route::get("consultantList", [ConsultantController::class, 'consultantList']);
-  //  Route::get("consultantList", [ConsultantController::class, 'consultantList2']);
+    //  Route::get("consultantList", [ConsultantController::class, 'consultantList2']);
     Route::get("consultant/{id}/details", [ConsultantController::class, 'details']);
-    Route::get("dashboard", [ConsultantController::class, 'dashboard']);
+    Route::get("dashboard", [CommonController::class, 'dashboard']);
 });
 
 

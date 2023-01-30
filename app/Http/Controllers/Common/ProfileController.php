@@ -6,13 +6,14 @@ use App\Models\User;
 use App\Models\Experience;
 use Illuminate\Http\Request;
 use App\Traits\ResponseTrait;
+use App\Http\Helper\FileHandler;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
 use App\Models\AcademicQualification;
 use Illuminate\Database\QueryException;
-use App\Http\Helper\FileHandler;
 
 
 class ProfileController extends Controller
@@ -372,5 +373,15 @@ class ProfileController extends Controller
         } catch (QueryException $e) {
             DB::rollBack();
         }
+    }
+
+    public function activeUser(){
+        $authUser = Auth::user();
+
+       User::active()->where(['id' => $authUser->id])->update([
+            'active_status' => !$authUser->active_status,
+        ]);
+
+        return $this->responseSuccess(200, true, '', []);
     }
 }

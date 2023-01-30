@@ -43,6 +43,7 @@ return new class extends Migration {
             ");
             $table->unsignedBigInteger('approved_by')->nullable();
             $table->string('schedule', 250)->nullable();
+            $table->string('active_status', 100)->default(0);
             $table->rememberToken();
             $table->timestamps();
         });
