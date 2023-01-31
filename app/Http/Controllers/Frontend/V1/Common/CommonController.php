@@ -15,7 +15,7 @@ class CommonController extends Controller
     {
         $service = DB::table('services')->get();
 
-        $consultants_selected_fields = ['id', 'name', 'phone', 'email', 'address', 'code','type', 'profile_image', 'gender', 'rates', 'years_of_experience', 'schedule'];
+        $consultants_selected_fields = ['id', 'name', 'phone', 'email', 'address', 'code','type', 'profile_image', 'gender', 'rates', 'active_status','years_of_experience', 'schedule'];
 
         $consultant = User::with(
             [

@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\ExperienceController;
+use App\Http\Controllers\Citizen\CaseController;
 use App\Http\Controllers\Common\ProfileController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Consultant\ServiceController;
@@ -12,8 +13,8 @@ use App\Http\Controllers\AcademicQualificationController;
 use App\Http\Controllers\Consultant\ConsultantRateController;
 use App\Http\Controllers\Frontend\V1\Common\CommonController;
 use App\Http\Controllers\Frontend\V1\Consultant\ConsultantController;
-use App\Http\Controllers\Admin\ConsultantController as AdminConsultantController;
 use App\Http\Controllers\Admin\CitizenController as AdminCitizenController;
+use App\Http\Controllers\Admin\ConsultantController as AdminConsultantController;
 
 /*
 |--------------------------------------------------------------------------
@@ -41,7 +42,7 @@ Route::group(["middleware" => ["auth:api"]], function () {
     Route::get('/admin/consultants', [AdminConsultantController::class, 'index']);
 
     ////////// Citizen List ///////////
-    Route::get('/admin/citizen', [AdminCitizenController::class, 'index']);
+    Route::get('/admin/citizens', [AdminCitizenController::class, 'index']);
     //Route::get('/admins', [RegisterController::class, 'index']);
 
     ////////////  Profile //////////////
@@ -99,6 +100,11 @@ Route::group(["middleware" => ["auth:api"]], function () {
     Route::post('/consultantRate/store', [ConsultantRateController::class, 'store']);
     Route::get('/consultantRate/{id}/rateCalculate', [ConsultantRateController::class, 'rateCalculate']);
 
+
+    ///////////  Case ////////////
+    Route::post('/citizen/case', [CaseController::class, 'store']);
+    Route::get('citizen/case/consultants/{id}/services', [CaseController::class, 'consultantServices']);
+    Route::get('/case/all', [ServiceController::class, 'allCases']);
 
 });
 
