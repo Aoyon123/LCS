@@ -107,7 +107,6 @@ class ServiceController extends Controller
 
     public function destroy($id)
     {
-
         DB::beginTransaction();
         try {
             $user = Service::findOrFail($id);

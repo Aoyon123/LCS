@@ -101,6 +101,7 @@ class AuthController extends Controller
                 $citizenTotalData = User::select(DB::raw('count(id) as total'))
                     ->where('type', 'citizen')
                     ->first();
+              //  return $citizenTotalData;
                 $citizenData = $citizenTotalData->total + 1;
                 $citizenCodeNo = 'cit-' . date('d-m-y-') . str_pad($citizenData, 4, '0', STR_PAD_LEFT);
 

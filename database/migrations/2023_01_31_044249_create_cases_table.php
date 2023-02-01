@@ -18,7 +18,7 @@ return new class extends Migration {
             $table->unsignedBigInteger('citizen_id');
             $table->unsignedBigInteger('consultant_id');
             $table->string('title', 50);
-            $table->string("description")->nullable();
+            $table->bigText("description")->nullable();
             $table->tinyInteger('status')->comment("
             0 intial,
             1 inprogress,
