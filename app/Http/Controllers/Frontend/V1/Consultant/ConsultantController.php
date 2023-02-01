@@ -22,7 +22,6 @@ class ConsultantController extends Controller
         $data = [];
         $consultants_selected_fields = ['id', 'name', 'active_status', 'phone', 'email', 'address', 'code', 'type', 'profile_image', 'gender', 'rates', 'years_of_experience', 'schedule'];
         $params = $request->all();
-
         $consultant = User::with(
             [
                 'experianceLatest:user_id,institute_name',
@@ -32,15 +31,16 @@ class ConsultantController extends Controller
 
         )->select($consultants_selected_fields)->active();
 
-        // return $consultant;
         foreach ($params as $key => $param) {
 
             if ($key === 'services') {
                 $consultant = $consultant->whereHas('services', function ($q) use ($param) {
                     $q->where('services.id', $param);
                 });
+
             } elseif ($key === 'active') {
                 $consultant = $consultant->where('active_status', $param);
+                // return $consultant;
             } elseif ($key === 'search') {
                 $userSearchFields = ['name', 'phone', 'email', 'address', 'code', 'schedule', 'years_of_experience'];
                 $servicesSearchFields = ['title'];
