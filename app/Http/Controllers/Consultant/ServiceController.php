@@ -30,7 +30,7 @@ class ServiceController extends Controller
     public function index()
     {
         $data = Service::all();
-        return $data;
+       // return $data;
         if (!empty($data)) {
             $message = "Succesfully Data Shown";
             return $this->responseSuccess(200, true, $message, $data);
@@ -39,6 +39,8 @@ class ServiceController extends Controller
             return $this->responseError(403, false, $message);
         }
     }
+
+
 
 
     public function store(ServiceRequest $request)

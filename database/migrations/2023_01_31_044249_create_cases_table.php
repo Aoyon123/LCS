@@ -14,11 +14,11 @@ return new class extends Migration {
     {
         Schema::create('lcs_cases', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('service_id');
-            $table->unsignedBigInteger('citizen_id');
-            $table->unsignedBigInteger('consultant_id');
-            $table->string('title', 50);
-            $table->bigText("description")->nullable();
+            $table->unsignedBigInteger('service_id')->nullable();
+            $table->unsignedBigInteger('citizen_id')->nullable();
+            $table->unsignedBigInteger('consultant_id')->nullable();
+            $table->string('title', 50)->nullable();
+            $table->mediumText("description")->nullable();
             $table->tinyInteger('status')->comment("
             0 intial,
             1 inprogress,
@@ -26,11 +26,13 @@ return new class extends Migration {
             3 complete
             ");
             $table->string('file', 255)->nullable();
+            $table->string('link', 255)->nullable();
             $table->string('case_initial_date', 255)->nullable();
             $table->string('case_status_date', 255)->nullable();
             $table->string('consultant_review_comment', 255)->nullable();
             $table->string('citizen_review_comment', 255)->nullable();
             $table->string('case_code')->nullable();
+            $table->text('rating')->nullable();
             $table->timestamps();
         });
     }

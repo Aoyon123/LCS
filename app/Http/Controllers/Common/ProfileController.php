@@ -50,7 +50,6 @@ class ProfileController extends Controller
                 }
             }
 
-
             if (strtolower($request->type) === 'consultant') {
                 $request->validate([
                     'years_of_experience' => 'required',

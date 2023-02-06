@@ -24,18 +24,18 @@ class CaseRequest extends FormRequest
     public function rules()
     {
         $rules = [
-            'service_id' => 'required',
-            'citizen_id' => 'required',
-            'consultant_id' => 'required',
-            'title' => 'required|string|max:50',
+            'service_id' => 'nullable',
+            'citizen_id' => 'nullable',
+            'consultant_id' => 'nullable',
+            'title' => 'nullable|string|max:50',
             'description' => 'nullable|string',
-            'status' => 'required',
+            'status' => 'nullable',
             'file' => 'nullable',
-            'case_initial_date' => 'required',
+            'case_initial_date' => 'nullable',
             'case_status_date' => 'nullable',
-            'consultant_review_comment' => 'string|max:255',
-            'citizen_review_comment' => 'string|max:255',
-            'case_code' => 'string|required',
+            'consultant_review_comment' => 'string|nullable|max:255',
+            'citizen_review_comment' => 'nullable|string|max:255',
+            'case_code' => 'string|nullable',
         ];
 
         return $rules;

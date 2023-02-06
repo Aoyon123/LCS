@@ -36,4 +36,17 @@ class FileHandler
         // }
 
     }
+
+    public static function uploadFile($file, $unique, $path)
+    {
+        $file_parts = explode(";base64,", $file);
+        $filename_path = 'case' . '_' . $unique . ".pdf";
+        if (isset($file_parts[1])) {
+            $file_path = "/uploads/$path/$filename_path";
+            $decoded = base64_decode($file_parts[1]);
+            file_put_contents(public_path() . $file_path, $decoded);
+            return $file_path;
+        }
+    }
+
 }

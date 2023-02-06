@@ -103,7 +103,7 @@ class AuthController extends Controller
                     ->first();
               //  return $citizenTotalData;
                 $citizenData = $citizenTotalData->total + 1;
-                $citizenCodeNo = 'cit-' . date('d-m-y-') . str_pad($citizenData, 4, '0', STR_PAD_LEFT);
+                $citizenCodeNo = 'cit-' . date('dmy-') . str_pad($citizenData, 4, '0', STR_PAD_LEFT);
 
                 $request->validate([
                     'name' => 'required|string|max:50',

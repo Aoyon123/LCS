@@ -103,7 +103,7 @@ Route::group(["middleware" => ["auth:api"]], function () {
 
     ///////////  Case ////////////
     Route::get('/allcase', [CaseController::class, 'index']);
-    Route::post('/citizen/case', [CaseController::class, 'store']);
+    Route::post('/citizen/case/store', [CaseController::class, 'store']);
     Route::delete('/citizen/case/{id}/delete', [CaseController::class, 'destroy']);
     Route::get('citizen/case/consultants/{id}/services', [CaseController::class, 'consultantServices']);
     Route::get('/case/all', [ServiceController::class, 'allCases']);
@@ -116,7 +116,10 @@ Route::group(["prefix" => "/frontend/common/", 'namespace' => 'Frontend/V1/'], f
     Route::get("consultantList", [ConsultantController::class, 'consultantList']);
     //  Route::get("consultantList", [ConsultantController::class, 'consultantList2']);
     Route::get("consultant/{id}/details", [ConsultantController::class, 'details']);
+
+    /// CommonController ////
     Route::get("dashboard", [CommonController::class, 'dashboard']);
+    Route::get("serviceList", [CommonController::class, 'activeServiceList']);
 });
 
 

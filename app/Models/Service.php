@@ -27,4 +27,9 @@ class Service extends Model
         return $this->belongsToMany(User::class)->withTimestamps();
     }
 
+    public function scopeActiveServiceList($query)
+    {
+        return $query->where(['status' => 1]);
+    }
+
 }

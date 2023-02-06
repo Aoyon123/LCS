@@ -17,6 +17,8 @@ class LcsCase extends Model
         'description',
         'status',
         'file',
+        'rating',
+        'link',
         'case_initial_date',
         'case_status_date',
         'consultant_review_comment',
