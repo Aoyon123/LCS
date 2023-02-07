@@ -37,10 +37,10 @@ class FileHandler
 
     }
 
-    public static function uploadFile($file, $unique, $path)
+    public static function uploadFile($file, $extension, $unique, $path)
     {
         $file_parts = explode(";base64,", $file);
-        $filename_path = 'case' . '_' . $unique . ".pdf";
+        $filename_path = $unique . $extension;
         if (isset($file_parts[1])) {
             $file_path = "/uploads/$path/$filename_path";
             $decoded = base64_decode($file_parts[1]);

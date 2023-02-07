@@ -25,8 +25,8 @@ return new class extends Migration {
             2 cancel,
             3 complete
             ");
-            $table->string('file', 255)->nullable();
-            $table->string('link', 255)->nullable();
+            $table->string('document_file', 255)->nullable();
+            $table->string('document_link', 255)->nullable();
             $table->string('case_initial_date', 255)->nullable();
             $table->string('case_status_date', 255)->nullable();
             $table->string('consultant_review_comment', 255)->nullable();

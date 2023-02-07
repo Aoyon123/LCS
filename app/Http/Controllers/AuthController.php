@@ -101,7 +101,7 @@ class AuthController extends Controller
                 $citizenTotalData = User::select(DB::raw('count(id) as total'))
                     ->where('type', 'citizen')
                     ->first();
-              //  return $citizenTotalData;
+                //  return $citizenTotalData;
                 $citizenData = $citizenTotalData->total + 1;
                 $citizenCodeNo = 'cit-' . date('dmy-') . str_pad($citizenData, 4, '0', STR_PAD_LEFT);
 
@@ -114,14 +114,13 @@ class AuthController extends Controller
 
 
                 ]);
-            }
-             elseif ($type === 'consultant') {
+            } elseif ($type === 'consultant') {
 
                 $consultantTotalData = User::select(DB::raw('count(id) as total'))
                     ->where('type', 'consultant')
                     ->first();
                 $consultantData = $consultantTotalData->total + 1;
-                $consultantCodeNo = 'con-' . date('d-m-y-') . str_pad($consultantData, 4, '0', STR_PAD_LEFT);
+                $consultantCodeNo = 'con-' . date('dmy-') . str_pad($consultantData, 4, '0', STR_PAD_LEFT);
                 //  return $consultantCodeNo;
 
                 $request->validate([

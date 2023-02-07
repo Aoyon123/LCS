@@ -106,8 +106,9 @@ Route::group(["middleware" => ["auth:api"]], function () {
     Route::post('/citizen/case/store', [CaseController::class, 'store']);
     Route::delete('/citizen/case/{id}/delete', [CaseController::class, 'destroy']);
     Route::get('citizen/case/consultants/{id}/services', [CaseController::class, 'consultantServices']);
-    Route::get('/case/all', [ServiceController::class, 'allCases']);
-
+    Route::get('/case/all', [CaseController::class, 'allCases']);
+    Route::get('/consultantRate/{id}/rateCalculate', [CaseController::class, 'rateCalculate']);
+    Route::post('/case/statusUpdate', [CaseController::class, 'statusUpdate']);
 });
 
 
