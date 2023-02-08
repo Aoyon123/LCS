@@ -2,8 +2,9 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class LcsCase extends Model
 {
@@ -25,4 +26,14 @@ class LcsCase extends Model
         'citizen_review_comment',
         'case_code'
     ];
+
+    public function consultant(){
+        return $this->belongsTo(User::class, 'consultant_id', 'id');
+    }
+
+    public function citizen(){
+        return $this->belongsTo(User::class, 'citizen_id', 'id');
+    }
+
+
 }

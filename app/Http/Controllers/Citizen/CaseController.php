@@ -31,6 +31,44 @@ class CaseController extends Controller
         }
     }
 
+    public function caseList(Request $request)
+    {
+        // $type = auth()->user()->type;
+        // $cases = [];
+        // $case_selected_fields = ['id', 'title', 'document_file', 'document_link', 'case_code'];
+        // if ($type == 'citizen') {
+        //     $cases = LcsCase::with(['consultant:id,name,code,profile_image'])->select($case_selected_fields)->get();
+
+        // } elseif ($type == 'consultant') {
+        //     $cases = LcsCase::with(['citizen:id,name,code,profile_image'])->select($case_selected_fields)->get();
+        // }
+        // return $cases;
+
+        $type = auth()->user()->type;
+        $caseData = DB::table('lcs_cases')
+            ->where('lcs_cases.' . $type . '_id', auth()->user()->id)
+            ->select(
+                'lcs_cases.id as case_id',
+                'lcs_cases.title',
+                'lcs_cases.document_file',
+                'lcs_cases.document_link',
+                'lcs_cases.case_code',
+                'lcs_cases.status',
+                'users.name',
+                'users.code',
+                'users.profile_image'
+            )->join('users', 'lcs_cases.' . $type . '_id', '=', 'users.id')->get();
+
+        if ($caseData) {
+            $message = "Case list data succesfully shown";
+            return $this->responseSuccess(200, true, $message, $caseData);
+        } else {
+            $message = "No Data Found";
+            return $this->responseError(404, false, $message);
+        }
+    }
+
+
     public function store(CaseRequest $request)
     {
         DB::beginTransaction();
@@ -71,11 +109,13 @@ class CaseController extends Controller
                 $extension = '';
                 $file_parts = explode(";base64,", $request->document_file);
                 $extension_part = $file_parts[0];
-
+                // return $extension_part;
                 if (str_contains($extension_part, 'text/plain')) {
                     $extension = '.txt';
                 } elseif (str_contains($extension_part, 'application/pdf')) {
                     $extension = '.pdf';
+                } elseif (str_contains($extension_part, 'application/msword')) {
+                    $extension = '.doc';
                 } elseif (str_contains($extension_part, 'image')) {
                     $extension = '.png';
                 } else {
@@ -223,7 +263,7 @@ class CaseController extends Controller
                     $Status = 'complete';
                 }
 
-                $message = "This ". $case->case_code. " status " . $Status;
+                $message = "This " . $case->case_code . " status " . $Status;
                 DB::commit();
                 return $this->responseSuccess(200, true, $message, $case);
             } else {
@@ -236,4 +276,37 @@ class CaseController extends Controller
         }
     }
 
+    public function caseDetailsInfo($id)
+    {
+        $type = auth()->user()->type;
+
+        $caseData = DB::table('lcs_cases')
+            ->where('lcs_cases.id', $id)
+            ->select(
+                'lcs_cases.title',
+                'lcs_cases.case_code',
+                'lcs_cases.document_file',
+                'lcs_cases.document_link',
+                'lcs_cases.case_initial_date',
+                'lcs_cases.case_status_date',
+                'lcs_cases.description',
+                'lcs_cases.citizen_review_comment',
+                'lcs_cases.consultant_review_comment',
+                'users.name',
+                'users.profile_image',
+                'users.rates',
+                'services.title as service',
+
+            )->join('users', 'lcs_cases.' . $type . '_id', '=', 'users.id')
+            ->join('services', 'lcs_cases.service_id', '=', 'services.id')
+            ->first();
+         // return $caseData;
+        if ($caseData) {
+            $message = "Case details data succesfully shown";
+            return $this->responseSuccess(200, true, $message, $caseData);
+        } else {
+            $message = "No Data Found";
+            return $this->responseError(404, false, $message);
+        }
+    }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\LcsCase;
 use App\Models\Service;
 use Spatie\Permission\Traits\HasRoles;
 use Tymon\JWTAuth\Contracts\JWTSubject;
@@ -68,5 +69,10 @@ class User extends Authenticatable implements JWTSubject
     {
         return $query->where(['type' => 'consultant', 'status' => 1, 'approval' => 2]);
     }
+
+    // public function lcsCases()
+    // {
+    //     return $this->belongsToMany(LcsCase::class)->withTimestamps();
+    // }
 
 }
