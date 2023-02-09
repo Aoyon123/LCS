@@ -15,18 +15,14 @@ class CommonController extends Controller
     public function dashboard()
     {
         $service = DB::table('services')->get();
-
         $consultants_selected_fields = ['id', 'name', 'phone', 'email', 'address', 'code', 'type', 'profile_image', 'gender', 'rates', 'active_status', 'years_of_experience', 'schedule'];
-
         $consultant = User::with(
             [
                 'experianceLatest:user_id,institute_name',
                 'academicLatest:user_id,education_level',
                 'serviceLatest',
             ]
-
         )->select($consultants_selected_fields)->active()->get();
-
         if ($consultant && $service) {
             $data = [
                 'topRated' => $consultant,
@@ -48,7 +44,6 @@ class CommonController extends Controller
     {
         $consultant = Service::activeservicelist()->get();
 
-    //  return $consultant;
 
         if (!empty($consultant)) {
             $message = "Succesfully Data Shown";

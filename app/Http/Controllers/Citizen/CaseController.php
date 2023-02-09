@@ -159,49 +159,49 @@ class CaseController extends Controller
         }
     }
 
-    public function update(CaseRequest $request, $id)
-    {
-        $input = LcsCase::findOrFail($id);
+    // public function update(CaseRequest $request, $id)
+    // {
+    //     $input = LcsCase::findOrFail($id);
 
-        DB::beginTransaction();
-        try {
-            if ($request->hasFile('document_file')) {
-                $request->validate([
-                    'document_file' => 'mimes:csv,txt,xlx,xls,pdf',
-                ]);
-            }
-            $file = $request->file('document_file');
-            $fileName = 'case' . '_' . $request->citizen_id . '.' . $file->getClientOriginalExtension();
-            $destinationPath = public_path('uploads/caseFile/');
-            $file->move($destinationPath, $fileName);
-            $case_file_path_save = '/uploads/caseFile/' . $fileName;
+    //     DB::beginTransaction();
+    //     try {
+    //         if ($request->hasFile('document_file')) {
+    //             $request->validate([
+    //                 'document_file' => 'mimes:csv,txt,xlx,xls,pdf',
+    //             ]);
+    //         }
+    //         $file = $request->file('document_file');
+    //         $fileName = 'case' . '_' . $request->citizen_id . '.' . $file->getClientOriginalExtension();
+    //         $destinationPath = public_path('uploads/caseFile/');
+    //         $file->move($destinationPath, $fileName);
+    //         $case_file_path_save = '/uploads/caseFile/' . $fileName;
 
-            if ($input) {
-                $input->service_id = $request['service_id'];
-                $input->citizen_id = $request['citizen_id'];
-                $input->consultant_id = $request['consultant_id'];
-                $input->title = $request['title'];
-                $input->status = $request['status'];
-                $input->case_initial_date = $request['case_initial_date'];
-                $input->case_status_date = $request['case_status_date'];
-                $input->consultant_review_comment = $request['consultant_review_comment'];
-                $input->citizen_review_comment = $request['citizen_review_comment'];
-                $input->case_code = $request['case_code'];
-                $input->file = $case_file_path_save;
+    //         if ($input) {
+    //             $input->service_id = $request['service_id'];
+    //             $input->citizen_id = $request['citizen_id'];
+    //             $input->consultant_id = $request['consultant_id'];
+    //             $input->title = $request['title'];
+    //             $input->status = $request['status'];
+    //             $input->case_initial_date = $request['case_initial_date'];
+    //             $input->case_status_date = $request['case_status_date'];
+    //             $input->consultant_review_comment = $request['consultant_review_comment'];
+    //             $input->citizen_review_comment = $request['citizen_review_comment'];
+    //             $input->case_code = $request['case_code'];
+    //             $input->file = $case_file_path_save;
 
-                $input->save();
-                $message = "Updated Succesfully";
+    //             $input->save();
+    //             $message = "Updated Succesfully";
 
-                DB::commit();
-                return $this->responseSuccess(200, true, $message, $input);
-            } else {
-                $message = "No Data Found";
-                return $this->responseError(404, false, $message);
-            }
-        } catch (QueryException $e) {
-            DB::rollBack();
-        }
-    }
+    //             DB::commit();
+    //             return $this->responseSuccess(200, true, $message, $input);
+    //         } else {
+    //             $message = "No Data Found";
+    //             return $this->responseError(404, false, $message);
+    //         }
+    //     } catch (QueryException $e) {
+    //         DB::rollBack();
+    //     }
+    // }
 
     public function destroy(Request $request, $id)
     {
@@ -226,8 +226,9 @@ class CaseController extends Controller
         DB::beginTransaction();
         try {
             $services = User::with('services:id,title')->where('id', $id)->active()->first()['services'];
+
             DB::commit();
-            $message = "Consultant Services ShownSuccessfull";
+            $message = "Consultant Services Shown Successfull";
             return $this->responseSuccess(200, true, $message, $services);
         } catch (QueryException $e) {
             DB::rollBack();
@@ -276,6 +277,7 @@ class CaseController extends Controller
         }
     }
 
+
     public function caseDetailsInfo($id)
     {
         $type = auth()->user()->type;
@@ -300,7 +302,7 @@ class CaseController extends Controller
             )->join('users', 'lcs_cases.' . $type . '_id', '=', 'users.id')
             ->join('services', 'lcs_cases.service_id', '=', 'services.id')
             ->first();
-         // return $caseData;
+
         if ($caseData) {
             $message = "Case details data succesfully shown";
             return $this->responseSuccess(200, true, $message, $caseData);

@@ -27,11 +27,13 @@ class LcsCase extends Model
         'case_code'
     ];
 
-    public function consultant(){
+    public function consultant()
+    {
         return $this->belongsTo(User::class, 'consultant_id', 'id');
     }
 
-    public function citizen(){
+    public function citizen()
+    {
         return $this->belongsTo(User::class, 'citizen_id', 'id');
     }
 

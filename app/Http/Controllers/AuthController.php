@@ -62,6 +62,7 @@ class AuthController extends Controller
                 }
 
                 $user = User::orWhere('phone', $request->email_or_phone)->orWhere('email', $request->email_or_phone)->first();
+
                 if ($user) {
                     if (Hash::check($request->password, $user->password)) {
                         if (!$token = auth()->attempt($credentials)) {
@@ -111,8 +112,6 @@ class AuthController extends Controller
                     'password' => 'required|min:8',
                     'type' => 'required',
                     'rates' => 'nullable',
-
-
                 ]);
             } elseif ($type === 'consultant') {
 
@@ -122,7 +121,6 @@ class AuthController extends Controller
                 $consultantData = $consultantTotalData->total + 1;
                 $consultantCodeNo = 'con-' . date('dmy-') . str_pad($consultantData, 4, '0', STR_PAD_LEFT);
                 //  return $consultantCodeNo;
-
                 $request->validate([
                     'name' => 'required|string|max:50',
                     'email' => 'email|unique:users,email',

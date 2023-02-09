@@ -32,4 +32,5 @@ class Service extends Model
         return $query->where(['status' => 1]);
     }
 
+
 }
