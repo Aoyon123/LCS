@@ -5,10 +5,10 @@ namespace App\Models;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-
+use Illuminate\Database\Eloquent\SoftDeletes;
 class LcsCase extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'service_id',
@@ -24,7 +24,8 @@ class LcsCase extends Model
         'case_status_date',
         'consultant_review_comment',
         'citizen_review_comment',
-        'case_code'
+        'case_code',
+        // 'deleted_at'
     ];
 
     public function consultant()

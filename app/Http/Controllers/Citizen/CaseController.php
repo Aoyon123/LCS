@@ -43,21 +43,24 @@ class CaseController extends Controller
         //     $cases = LcsCase::with(['citizen:id,name,code,profile_image'])->select($case_selected_fields)->get();
         // }
         // return $cases;
-
         $type = auth()->user()->type;
+        $userType = $type === 'citizen' ? 'consultant' : 'citizen';
         $caseData = DB::table('lcs_cases')
             ->where('lcs_cases.' . $type . '_id', auth()->user()->id)
+            ->where('deleted_at', null)
             ->select(
                 'lcs_cases.id as case_id',
                 'lcs_cases.title',
                 'lcs_cases.document_file',
                 'lcs_cases.document_link',
+                'lcs_cases.case_initial_date',
+                'lcs_cases.case_status_date',
                 'lcs_cases.case_code',
                 'lcs_cases.status',
                 'users.name',
                 'users.code',
                 'users.profile_image'
-            )->join('users', 'lcs_cases.' . $type . '_id', '=', 'users.id')->get();
+            )->join('users', 'lcs_cases.' . $userType . '_id', '=', 'users.id')->get();
 
         if ($caseData) {
             $message = "Case list data succesfully shown";
@@ -142,9 +145,9 @@ class CaseController extends Controller
                 'rating' => $request->rating,
                 'description' => $request->description,
                 'case_initial_date' => Carbon::now()->toDateString(),
-                // 'case_status_date' => $request->case_status_date,
-                // 'consultant_review_comment' => $request->consultant_review_comment,
-                // 'citizen_review_comment' => $request->citizen_review_comment,
+                'case_status_date' => $request->case_status_date,
+                'consultant_review_comment' => $request->consultant_review_comment,
+                'citizen_review_comment' => $request->citizen_review_comment,
                 'case_code' => $case_code,
                 'document_file' => $case_file_path,
             ]);
@@ -159,62 +162,41 @@ class CaseController extends Controller
         }
     }
 
-    // public function update(CaseRequest $request, $id)
-    // {
-    //     $input = LcsCase::findOrFail($id);
-
-    //     DB::beginTransaction();
-    //     try {
-    //         if ($request->hasFile('document_file')) {
-    //             $request->validate([
-    //                 'document_file' => 'mimes:csv,txt,xlx,xls,pdf',
-    //             ]);
-    //         }
-    //         $file = $request->file('document_file');
-    //         $fileName = 'case' . '_' . $request->citizen_id . '.' . $file->getClientOriginalExtension();
-    //         $destinationPath = public_path('uploads/caseFile/');
-    //         $file->move($destinationPath, $fileName);
-    //         $case_file_path_save = '/uploads/caseFile/' . $fileName;
-
-    //         if ($input) {
-    //             $input->service_id = $request['service_id'];
-    //             $input->citizen_id = $request['citizen_id'];
-    //             $input->consultant_id = $request['consultant_id'];
-    //             $input->title = $request['title'];
-    //             $input->status = $request['status'];
-    //             $input->case_initial_date = $request['case_initial_date'];
-    //             $input->case_status_date = $request['case_status_date'];
-    //             $input->consultant_review_comment = $request['consultant_review_comment'];
-    //             $input->citizen_review_comment = $request['citizen_review_comment'];
-    //             $input->case_code = $request['case_code'];
-    //             $input->file = $case_file_path_save;
-
-    //             $input->save();
-    //             $message = "Updated Succesfully";
-
-    //             DB::commit();
-    //             return $this->responseSuccess(200, true, $message, $input);
-    //         } else {
-    //             $message = "No Data Found";
-    //             return $this->responseError(404, false, $message);
-    //         }
-    //     } catch (QueryException $e) {
-    //         DB::rollBack();
-    //     }
-    // }
-
-    public function destroy(Request $request, $id)
+    public function update(CaseRequest $request)
     {
+        DB::beginTransaction();
+        $caseData = LcsCase::findOrFail($request->id);
+        try {
 
+            if ($caseData) {
+                $caseData->update([
+                    'status' => $request->status ?? $caseData->status,
+                    'consultant_review_comment' => $request->consultant_review_comment ?? $caseData->consultant_review_comment,
+                    'case_status_date' => Carbon::now()->toDateTimeString(),
+                    'rating' => $request->rating ?? $caseData->rating,
+                    'citizen_review_comment' => $request->citizen_review_comment ?? $caseData->citizen_review_comment,
+                ]);
+
+                $message = "This " . $caseData->case_code . " data has been updated.";
+                DB::commit();
+                return $this->responseSuccess(200, true, $message, $caseData);
+            }
+        } catch (QueryException $e) {
+            DB::rollBack();
+        }
+    }
+
+
+    public function destroy($id)
+    {
         DB::beginTransaction();
         try {
-            $user = LcsCase::findOrFail($id);
-            if ($user) {
-                $user->delete();
-                $message = "Case Deleted Succesfully";
-                DB::commit();
-                return $this->responseSuccess(200, true, $message, []);
-            }
+            $lcsCase = LcsCase::findOrFail($id);
+            $lcsCase->delete();
+
+            $message = "Case Deleted Succesfully";
+            DB::commit();
+            return $this->responseSuccess(200, true, $message, []);
         } catch (QueryException $e) {
             DB::rollBack();
         }
@@ -246,49 +228,52 @@ class CaseController extends Controller
         return $this->responseSuccess(200, true, $message, $consultantRating);
     }
 
+    // public function statusUpdate(Request $request)
+    // {
+    //     DB::beginTransaction();
+    //     try {
+    //         $case = LcsCase::where('id', $request->id)->first();
+    //         if ($case) {
+    //             $case->update([
+    //                 'status' => $request->status,
+    //             ]);
+    //             if ($request->status == 1) {
+    //                 $Status = 'inprogress';
+    //             } else if ($request->status == 2) {
+    //                 $Status = 'cancel';
+    //             } else {
+    //                 $Status = 'complete';
+    //             }
 
-    public function statusUpdate(Request $request)
-    {
-        DB::beginTransaction();
-        try {
-            $case = LcsCase::where('id', $request->id)->first();
-            if ($case) {
-                $case->update([
-                    'status' => $request->status,
-                ]);
-                if ($request->status == 1) {
-                    $Status = 'inprogress';
-                } else if ($request->status == 2) {
-                    $Status = 'cancel';
-                } else {
-                    $Status = 'complete';
-                }
+    //             $message = "This " . $case->case_code . " status " . $Status;
+    //             DB::commit();
+    //             return $this->responseSuccess(200, true, $message, $case);
+    //         } else {
+    //             $message = "Not Found Data";
+    //             return $this->responseError(404, false, $message);
 
-                $message = "This " . $case->case_code . " status " . $Status;
-                DB::commit();
-                return $this->responseSuccess(200, true, $message, $case);
-            } else {
-                $message = "Not Found Data";
-                return $this->responseError(404, false, $message);
-
-            }
-        } catch (QueryException $e) {
-            DB::rollBack();
-        }
-    }
+    //         }
+    //     } catch (QueryException $e) {
+    //         DB::rollBack();
+    //     }
+    // }
 
 
     public function caseDetailsInfo($id)
     {
         $type = auth()->user()->type;
 
+        $type = $type === 'citizen' ? 'consultant' : 'citizen';
+        //  return $type;
         $caseData = DB::table('lcs_cases')
             ->where('lcs_cases.id', $id)
             ->select(
+                'lcs_cases.id',
                 'lcs_cases.title',
                 'lcs_cases.case_code',
                 'lcs_cases.document_file',
                 'lcs_cases.document_link',
+                'lcs_cases.status',
                 'lcs_cases.case_initial_date',
                 'lcs_cases.case_status_date',
                 'lcs_cases.description',
