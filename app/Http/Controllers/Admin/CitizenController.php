@@ -17,11 +17,11 @@ class CitizenController extends Controller
         DB::beginTransaction();
 
         try {
-            $consultants = User::where('type', 'citizen')->get();
-            if ($consultants != null) {
+            $citizen = User::where('type', 'citizen')->get();
+            if ($citizen != null) {
                 $message = "Citizen Data Succesfully Shown";
                 DB::commit();
-                return $this->responseSuccess(200, true, $message, $consultants);
+                return $this->responseSuccess(200, true, $message, $citizen);
             } else {
                 $message = "No Data Found";
                 return $this->responseError(404, false, $message);

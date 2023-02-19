@@ -22,8 +22,8 @@ return new class extends Migration {
             $table->tinyInteger('status')->comment("
             0 intial,
             1 inprogress,
-            2 cancel,
-            3 complete
+            2 complete,
+            3 cancel
             ");
             $table->string('document_file', 255)->nullable();
             $table->string('document_link', 255)->nullable();

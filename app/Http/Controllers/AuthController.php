@@ -8,6 +8,8 @@ use App\Traits\ResponseTrait;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
+use Tymon\JWTAuth\Facades\JWTAuth;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Database\QueryException;
@@ -65,7 +67,7 @@ class AuthController extends Controller
 
                 if ($user) {
                     if (Hash::check($request->password, $user->password)) {
-                        if (!$token = auth()->attempt($credentials)) {
+                        if(!$token = JWTAuth::attempt($credentials, ['exp' => Carbon::now()->addMinutes(2)->timestamp])) {
                             $message = "Invalid Credentials!";
                             return $this->responseError(403, false, $message);
                         }
@@ -127,7 +129,6 @@ class AuthController extends Controller
                     'password' => 'required|min:8',
                     'type' => 'required',
                     'rates' => 'nullable',
-
                 ]);
             }
         } else {
@@ -144,7 +145,6 @@ class AuthController extends Controller
                 'phone' => $request->phone ?? null,
                 'email' => $request->email ?? null,
                 'type' => strtolower($request->type),
-                'rates' => $request->rates,
                 'code' => $citizenCodeNo ?? $consultantCodeNo,
                 'password' => Hash::make($request->password)
             ]);

@@ -55,6 +55,7 @@ class CaseController extends Controller
                 'lcs_cases.document_link',
                 'lcs_cases.case_initial_date',
                 'lcs_cases.case_status_date',
+                'lcs_cases.description',
                 'lcs_cases.case_code',
                 'lcs_cases.status',
                 'users.name',
@@ -80,10 +81,12 @@ class CaseController extends Controller
                 ->where('consultant_id', $request->consultant_id)
                 ->latest()->first();
             $case_code = '';
+            $case_file_path = null;
 
             if ($case) {
                 $caseCode = $case->case_code;
                 $output = substr($caseCode, 0, strrpos($caseCode, '-'));
+               // return $output;
                 $codeNumber = explode("-", $caseCode)[4] + 1;
                 $case_code = $output . '-' . $codeNumber;
             } else {
@@ -91,6 +94,7 @@ class CaseController extends Controller
                 $citizenInfo = User::where('id', auth()->user()->id)->first();
 
                 $citizenCode = $citizenInfo->code;
+              //  return $citizenCode;
 
                 $citizenLastCodeNumber = explode("-", $citizenCode)[2];
 
@@ -128,11 +132,7 @@ class CaseController extends Controller
 
                 if (isset($file_parts[1])) {
                     $case_file_path = FileHandler::uploadFile($request->document_file, $extension, $case_code, 'caseFile');
-                    if (File::exists($case_file_path)) {
-                        File::delete($case_file_path);
-                    }
                 }
-
             }
 
             $data = LcsCase::create([
@@ -144,7 +144,7 @@ class CaseController extends Controller
                 'document_link' => $request->document_link,
                 'rating' => $request->rating,
                 'description' => $request->description,
-                'case_initial_date' => Carbon::now()->toDateString(),
+                'case_initial_date' => Carbon::now()->toDateTimeString(),
                 'case_status_date' => $request->case_status_date,
                 'consultant_review_comment' => $request->consultant_review_comment,
                 'citizen_review_comment' => $request->citizen_review_comment,
@@ -165,6 +165,7 @@ class CaseController extends Controller
     public function update(CaseRequest $request)
     {
         DB::beginTransaction();
+
         $caseData = LcsCase::findOrFail($request->id);
         try {
 
@@ -177,15 +178,23 @@ class CaseController extends Controller
                     'citizen_review_comment' => $request->citizen_review_comment ?? $caseData->citizen_review_comment,
                 ]);
 
+                if ($request->rating) {
+                    $consultant_id = $caseData->consultant_id;
+                    $averageRating = LcsCase::where(['consultant_id' => $consultant_id, 'status' => 2])->avg('rating');
+                    $roundRating = round($averageRating, 1);
+
+                    User::find($consultant_id)->update(['rates' => $roundRating]);
+                }
+
                 $message = "This " . $caseData->case_code . " data has been updated.";
                 DB::commit();
                 return $this->responseSuccess(200, true, $message, $caseData);
             }
+
         } catch (QueryException $e) {
             DB::rollBack();
         }
     }
-
 
     public function destroy($id)
     {
@@ -218,16 +227,6 @@ class CaseController extends Controller
         }
     }
 
-    public function rateCalculate(Request $request, $id)
-    {
-        $data = LcsCase::where('consultant_id', $id)->where('status', 3)->avg('rating');
-        $roundData = round($data, 1);
-        $consultantRating = User::UpdateOrCreate(["id" => $id], ["rates" => $roundData]);
-        //  return $consultantRating;
-        $message = "Consultant average rating created successfull";
-        return $this->responseSuccess(200, true, $message, $consultantRating);
-    }
-
     // public function statusUpdate(Request $request)
     // {
     //     DB::beginTransaction();
@@ -258,11 +257,9 @@ class CaseController extends Controller
     //     }
     // }
 
-
     public function caseDetailsInfo($id)
     {
         $type = auth()->user()->type;
-
         $type = $type === 'citizen' ? 'consultant' : 'citizen';
         //  return $type;
         $caseData = DB::table('lcs_cases')
@@ -274,6 +271,7 @@ class CaseController extends Controller
                 'lcs_cases.document_file',
                 'lcs_cases.document_link',
                 'lcs_cases.status',
+                'lcs_cases.rating as case_rate',
                 'lcs_cases.case_initial_date',
                 'lcs_cases.case_status_date',
                 'lcs_cases.description',
@@ -283,7 +281,6 @@ class CaseController extends Controller
                 'users.profile_image',
                 'users.rates',
                 'services.title as service',
-
             )->join('users', 'lcs_cases.' . $type . '_id', '=', 'users.id')
             ->join('services', 'lcs_cases.service_id', '=', 'services.id')
             ->first();

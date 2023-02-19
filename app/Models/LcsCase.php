@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
+
 class LcsCase extends Model
 {
     use HasFactory, SoftDeletes;
@@ -32,7 +33,6 @@ class LcsCase extends Model
     {
         return $this->belongsTo(User::class, 'consultant_id', 'id');
     }
-
     public function citizen()
     {
         return $this->belongsTo(User::class, 'citizen_id', 'id');

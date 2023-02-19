@@ -9,6 +9,7 @@ use App\Http\Controllers\Citizen\CaseController;
 use App\Http\Controllers\Common\ProfileController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Consultant\ServiceController;
+use App\Http\Controllers\Common\ConversationController;
 use App\Http\Controllers\AcademicQualificationController;
 use App\Http\Controllers\Consultant\ConsultantRateController;
 use App\Http\Controllers\Frontend\V1\Common\CommonController;
@@ -55,6 +56,8 @@ Route::group(["middleware" => ["auth:api"]], function () {
     Route::post('/consultant/approve', [ProfileController::class, 'approved']);
     Route::get('/profile/consultantList', [ProfileController::class, 'consultantList']);
 
+    /////////  Conversations /////////
+    Route::post('/conversation/{id}/store', [ConversationController::class, 'store']);
 
     /////////////  Service //////////////
     Route::post('/services/store', [ServiceController::class, 'store']);
@@ -74,7 +77,7 @@ Route::group(["middleware" => ["auth:api"]], function () {
 
     /////////  Experince   ///////////
     Route::get('/experience', [ExperienceController::class, 'index']);
-    Route::post('/experience', [ExperienceController::class, 'store']);
+    Route::get('/experience/{id}/user', [ExperienceController::class, 'experience']);
     Route::get('/experience/{id}/retrieve', [ExperienceController::class, 'retrieve']);
     Route::put('/experience/{id}/update', [ExperienceController::class, 'update']);
     Route::post('/experience/delete', [ExperienceController::class, 'destroy']);
@@ -110,7 +113,6 @@ Route::group(["middleware" => ["auth:api"]], function () {
     Route::delete('/case/{id}/delete', [CaseController::class, 'destroy']);
     Route::get('citizen/case/consultants/{id}/services', [CaseController::class, 'consultantServices']);
     Route::get('/case/all', [CaseController::class, 'allCases']);
-    Route::get('/consultantRate/{id}/rateCalculate', [CaseController::class, 'rateCalculate']);
     Route::post('/case/statusUpdate', [CaseController::class, 'statusUpdate']);
 
 });

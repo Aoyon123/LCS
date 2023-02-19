@@ -15,6 +15,14 @@ class ExperienceController extends Controller
 {
     use ResponseTrait;
   //  $facilitiesArr = Facilities::orderBy('title', 'asc')->pluck('title', 'id')->toArray();
+
+  public function experience($id)
+  {
+      $user = Experience::with('user')->where('id', $id)->first();
+      return $user;
+
+  }
+
     public function index()
     {
 
