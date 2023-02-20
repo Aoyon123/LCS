@@ -40,9 +40,6 @@ class ServiceController extends Controller
         }
     }
 
-
-
-
     public function store(ServiceRequest $request)
     {
 

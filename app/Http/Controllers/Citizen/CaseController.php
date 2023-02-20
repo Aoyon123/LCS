@@ -140,7 +140,7 @@ class CaseController extends Controller
                 'citizen_id' => auth()->user()->id,
                 'consultant_id' => $request->consultant_id,
                 'title' => $request->title,
-                'status' => 0,
+                'status' => 0,'status' => 0,
                 'document_link' => $request->document_link,
                 'rating' => $request->rating,
                 'description' => $request->description,

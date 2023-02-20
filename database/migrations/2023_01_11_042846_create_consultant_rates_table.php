@@ -18,7 +18,7 @@ return new class extends Migration {
             $table->foreign('citizen_id')->references('id')->on('users')->onDelete('cascade');
             $table->unsignedBigInteger('consultant_id')->comment('Users Whoose Information Is Connect With');
             $table->foreign('consultant_id')->references('id')->on('users')->onDelete('cascade');
-            $table->text('rate');
+            $table->double('rate');
             $table->integer('against_id');
             $table->timestamps();
         });

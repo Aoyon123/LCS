@@ -24,14 +24,14 @@ class ConversationRequest extends FormRequest
     public function rules()
     {
         $rules = [
-            'citizen_id' => 'nullable',
-            'consultant_id' => 'nullable',
-            'case_message' => 'required',
-            'case_id' => 'nullable',
+            'sender_id' => 'nullable',
+            'receiver_id' => 'nullable',
+            'message' => 'required',
+            'purpose_id' => 'nullable',
+            'purpose_type' => 'nullable',
             'time' => 'nullable',
             'seen_status' => 'nullable',
             'status' => 'nullable',
-            'is_delete' => 'nullable'
         ];
 
         return $rules;

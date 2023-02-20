@@ -16,49 +16,51 @@ use App\Http\Requests\ConversationRequest;
 class ConversationController extends Controller
 {
     use ResponseTrait;
-    public function store(ConversationRequest $request, $id)
+
+    public function allMessage($purposeId)
+    {
+
+
+        // $data2=LcsCase::w
+
+        $data = Conversation::with(['sender:id,name,profile_image', 'receiver:id,name,profile_image'])
+            ->where(['purpose_id' => $purposeId])
+            ->latest()
+            ->limit(20)
+            ->get()
+            ->sortBy('id')->values()->all();
+
+            // $data = $data->sortBy('id')->values()->all();
+
+
+        $message = "Conversion Data Shown Successfull";
+        return $this->responseSuccess(200, true, $message, $data);
+        //  ->where(['id' => $id, 'seen_status' => 0])
+
+        // ->first();
+        //  ->get();
+        // return $data;
+        // if ($data) {
+        //     // $user->update([
+        //     //     'approval' => $request->approvalStatus,
+        //     //     'approved_by' => auth()->user()->id
+        //     // ]);
+        // }
+    }
+
+    public function store(ConversationRequest $request)
     {
         DB::beginTransaction();
         try {
-            $type = auth()->user()->type;
-            //     if($type === 'citizen'){
-            //     $data = Conversation::create([
-            //         'citizen_id' => auth()->user()->id,
-            //         'consultant_id' => $request->consultant_id,
-            //         'case_message' => $request->case_message,
-            //         'case_id' => $request->case_id,
-            //         'time' => Carbon::now()->toDateTimeString(),
-            //         // 'seen_status' => '',
-            //         // 'status' => '',
-            //         // 'is_delete' =>''
-
-            //     ]);
-            // }
-            // else if($type === 'consultant'){
-            //     $data = Conversation::create([
-            //         'citizen_id' => $request->citizen_id,
-            //         'consultant_id' => auth()->user()->id,
-            //         'case_message' => $request->case_message,
-            //         'case_id' => $request->case_id,
-            //         'time' => Carbon::now()->toDateTimeString(),
-            //         // 'seen_status' => '',
-            //         // 'status' => '',
-            //         // 'is_delete' =>''
-
-            //     ]);
-            // }
-
-            $caseData = LcsCase::where('id', $id)->first();
-            // return $caseData;
             $data = Conversation::create([
-                'citizen_id' => $caseData->citizen_id,
-                'consultant_id' => $caseData->consultant_id,
-                'case_message' => $request->case_message,
-                'case_id' => $caseData->id,
+                'sender_id' => auth()->user()->id,
+                'receiver_id' => $request->receiver_id,
+                'message' => $request->message,
+                'purpose_id' => $request->purpose_id,
+                'purpose_type' => $request->purpose_type,
                 'time' => Carbon::now()->toDateTimeString(),
-                // 'seen_status' => '',
-                 'status' => $request->status,
-                // 'is_delete' =>''
+                'status' => 0,
+                'seen_status' => 0,
             ]);
 
             DB::commit();
@@ -69,7 +71,23 @@ class ConversationController extends Controller
             DB::rollBack();
             return $this->responseError(Response::HTTP_INTERNAL_SERVER_ERROR, false, $e->getMessage());
         }
+    }
 
+    public function destroy($id)
+    {
+        DB::beginTransaction();
+        try {
+            $conversationsData = Conversation::findOrFail($id);
+            //return $conversationsData;
+            $conversationsData->delete();
 
+            Conversation::find($id)->update(['is_delete' => 1]);
+
+            $message = "Case Deleted Succesfully";
+            DB::commit();
+            return $this->responseSuccess(200, true, $message, []);
+        } catch (QueryException $e) {
+            DB::rollBack();
+        }
     }
 }

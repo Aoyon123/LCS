@@ -26,7 +26,7 @@ class ConsultantRateRequest extends FormRequest
         $rules = [
             'citizen_id' => 'required',
             'consultant_id' => 'required',
-            'rate' => 'required|lte:5|gte:0',
+            'rate' => 'required|lte:5.0|gte:0.0',
             'against_id' => 'required',
         ];
 

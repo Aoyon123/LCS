@@ -33,7 +33,7 @@ return new class extends Migration {
             $table->string('nid_front')->nullable();
             $table->string('nid_back')->nullable();
             $table->string('code')->nullable();
-            $table->string('rates')->nullable();
+           // $table->double('rates')->nullable();
             $table->tinyInteger('approval')->comment("
             0 intial,
             1 pending,
