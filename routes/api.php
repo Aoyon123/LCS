@@ -57,6 +57,7 @@ Route::group(["middleware" => ["auth:api"]], function () {
     Route::get('/profile/consultantList', [ProfileController::class, 'consultantList']);
 
     /////////  Conversations /////////
+    Route::get('/conversation/{purpose_id}/seeMoreMessage/{offset}', [ConversationController::class, 'seeMoreMessage']);
     Route::get('/conversation/{id}/allMessage', [ConversationController::class, 'allMessage']);
     Route::post('/conversation/store', [ConversationController::class, 'store']);
     Route::post('/conversation/{id}/delete', [ConversationController::class, 'destroy']);

@@ -268,6 +268,8 @@ class CaseController extends Controller
                 'lcs_cases.id',
                 'lcs_cases.title',
                 'lcs_cases.case_code',
+                'lcs_cases.citizen_id',
+                'lcs_cases.consultant_id',
                 'lcs_cases.document_file',
                 'lcs_cases.document_link',
                 'lcs_cases.status',
