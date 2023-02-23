@@ -31,7 +31,7 @@ class CaseController extends Controller
         }
     }
 
-    public function caseList(Request $request)
+    public function caseList()
     {
         // $type = auth()->user()->type;
         // $cases = [];
@@ -261,7 +261,7 @@ class CaseController extends Controller
     {
         $type = auth()->user()->type;
         $type = $type === 'citizen' ? 'consultant' : 'citizen';
-        //  return $type;
+
         $caseData = DB::table('lcs_cases')
             ->where('lcs_cases.id', $id)
             ->select(

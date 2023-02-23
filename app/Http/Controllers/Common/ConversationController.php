@@ -18,51 +18,53 @@ class ConversationController extends Controller
 
     public function allMessage($purposeId)
     {
+        $this->seenMessage($purposeId);
         $data = [];
-        $data['messages'] = Conversation::with(['sender:id,name,profile_image', 'receiver:id,name,profile_image'])
+        $data['messages'] = Conversation::with(
+            ['sender:id,name,profile_image', 'receiver:id,name,profile_image']
+        )
             ->where(['purpose_id' => $purposeId])
             ->latest()
-            ->limit(20)
+            ->limit(10)
             ->get()
-            ->sortBy('id')->values()->all();
+            ->sortBy('id')
+            ->values()
+            ->all();
 
         $data['offset'] = 0;
-
         $message = "Conversion Data Shown Successfull";
         return $this->responseSuccess(200, true, $message, $data);
-        //  ->where(['id' => $id, 'seen_status' => 0])
-        // ->first();
-        //  ->get();
-        // return $data;
-        // if ($data) {
-        //     // $user->update([
-        //     //     'approval' => $request->approvalStatus,
-        //     //     'approved_by' => auth()->user()->id
-        //     // ]);
-        // }
+
     }
+
+    public function seenMessage($purposeId)
+    {
+        Conversation::where(['purpose_id' => $purposeId])
+            ->where(['receiver_id' => auth()->user()->id, 'seen_status' => 0])
+            ->latest()
+            ->limit(200)
+            ->update(['seen_status' => 1]);
+    }
+
 
     public function seeMoreMessage($purposeId, $offset)
     {
         $data = [];
-        $data['messages'] = Conversation::with(['sender:id,name,profile_image', 'receiver:id,name,profile_image'])
+        $data['messages'] = Conversation::with(
+            ['sender:id,name,profile_image', 'receiver:id,name,profile_image']
+        )
             ->where(['purpose_id' => $purposeId])
             ->latest()
             ->offset($offset)
-            ->limit(20)
+            ->limit(10)
             ->get()
-            ->sortBy('id')->values()->all();
+            ->sortBy('id')
+            ->values()
+            ->all();
 
-        $data['offset'] = $offset;
+        $data['offset'] = (int) $offset;
         $message = "More Conversion Data Shown Successfull";
         return $this->responseSuccess(200, true, $message, $data);
-
-        // if ($data) {
-        //     // $user->update([
-        //     //     'approval' => $request->approvalStatus,
-        //     //     'approved_by' => auth()->user()->id
-        //     // ]);
-        // }
     }
 
     public function store(ConversationRequest $request)
@@ -98,7 +100,6 @@ class ConversationController extends Controller
         DB::beginTransaction();
         try {
             $conversationsData = Conversation::findOrFail($id);
-            //return $conversationsData;
             $conversationsData->delete();
 
             Conversation::find($id)->update(['is_delete' => 1]);

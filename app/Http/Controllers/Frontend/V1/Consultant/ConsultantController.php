@@ -8,9 +8,7 @@ use Illuminate\Http\Request;
 use App\Traits\ResponseTrait;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
-use App\Models\Experience;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Route;
+
 
 class ConsultantController extends Controller
 {
@@ -18,7 +16,7 @@ class ConsultantController extends Controller
 
     public function consultantList(Request $request)
     {
-        //  return auth()->guard('api')->users();
+        
         $data = [];
         $consultants_selected_fields = ['id', 'name', 'active_status', 'phone', 'email', 'address', 'code', 'type', 'profile_image', 'gender', 'rates', 'years_of_experience', 'schedule'];
         $params = $request->all();

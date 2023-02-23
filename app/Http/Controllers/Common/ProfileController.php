@@ -24,7 +24,6 @@ class ProfileController extends Controller
         DB::beginTransaction();
         try {
 
-           // return $request->all();
             $user = User::findOrFail($request->id);
 
             $request->validate([

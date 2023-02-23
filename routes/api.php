@@ -57,6 +57,8 @@ Route::group(["middleware" => ["auth:api"]], function () {
     Route::get('/profile/consultantList', [ProfileController::class, 'consultantList']);
 
     /////////  Conversations /////////
+    Route::get('/conversation/seenMessage/{purpose_id}', [ConversationController::class, 'seenMessage']);
+
     Route::get('/conversation/{purpose_id}/seeMoreMessage/{offset}', [ConversationController::class, 'seeMoreMessage']);
     Route::get('/conversation/{id}/allMessage', [ConversationController::class, 'allMessage']);
     Route::post('/conversation/store', [ConversationController::class, 'store']);
@@ -110,7 +112,7 @@ Route::group(["middleware" => ["auth:api"]], function () {
     ///////////  Case ////////////
     Route::get('/allcase', [CaseController::class, 'index']);
     Route::get('/case/list', [CaseController::class, 'caseList']);
-    Route::get('/case/{id}/details', [CaseController::class, 'caseDetailsInfo']);
+    Route::get('/case/{case_id}/details', [CaseController::class, 'caseDetailsInfo']);
     Route::post('/case/update', [CaseController::class, 'update']);
     Route::post('/citizen/case/store', [CaseController::class, 'store']);
     Route::delete('/case/{id}/delete', [CaseController::class, 'destroy']);
