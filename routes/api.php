@@ -13,10 +13,11 @@ use App\Http\Controllers\Common\ConversationController;
 use App\Http\Controllers\AcademicQualificationController;
 use App\Http\Controllers\Consultant\ConsultantRateController;
 use App\Http\Controllers\Frontend\V1\Common\CommonController;
+use App\Http\Controllers\Admin\FrequentlyAskedQuestionController;
 use App\Http\Controllers\Frontend\V1\Consultant\ConsultantController;
 use App\Http\Controllers\Admin\CitizenController as AdminCitizenController;
 use App\Http\Controllers\Admin\ConsultantController as AdminConsultantController;
-
+use App\Http\Controllers\Citizen\CitizenController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -30,6 +31,8 @@ use App\Http\Controllers\Admin\ConsultantController as AdminConsultantController
 
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
+Route::post('/registration/with/otp', [AuthController::class, 'registrationWithOTP']);
+Route::post('/refresh/otp', [AuthController::class, 'refreshOTP']);
 Route::post('/index', [AuthController::class, 'index']);
 Route::post('/destroy', [AuthController::class, 'destroy']);
 Route::post('/logout', [AuthController::class, 'logout']);
@@ -54,7 +57,7 @@ Route::group(["middleware" => ["auth:api"]], function () {
     Route::delete('/profile/experience/{id}/delete', [ProfileController::class, 'experienceDestroy']);
     Route::delete('/profile/academic_qualification/{id}/delete', [ProfileController::class, 'academicQualificationDestroy']);
     Route::post('/consultant/approve', [ProfileController::class, 'approved']);
-    Route::get('/profile/consultantList', [ProfileController::class, 'consultantList']);
+   // Route::get('/profile/consultantList', [ProfileController::class, 'consultantList']);
 
     /////////  Conversations /////////
     Route::get('/conversation/seenMessage/{purpose_id}', [ConversationController::class, 'seenMessage']);
@@ -120,18 +123,33 @@ Route::group(["middleware" => ["auth:api"]], function () {
     Route::get('/case/all', [CaseController::class, 'allCases']);
     Route::post('/case/statusUpdate', [CaseController::class, 'statusUpdate']);
 
+
+    /////////////// Frequently Asked Question  ////////////////////
+    Route::post('/frequentlyAskedQuestion/store', [FrequentlyAskedQuestionController::class, 'store']);
+    Route::get('/frequentlyAskedQuestion/all', [FrequentlyAskedQuestionController::class, 'index']);
+    Route::put('/frequentlyAskedQuestion/{faq_id}/update', [FrequentlyAskedQuestionController::class, 'update']);
+    Route::delete('/frequentlyAskedQuestion/{faq_id}/delete', [FrequentlyAskedQuestionController::class, 'destroy']);
+
+
+    /////////////// Citizen Controller  //////////////
+    Route::get('/citizen/conlsultants/list', [CitizenController::class, 'conlsultantList']);
 });
 
 
 /////////// Frontrend Part ////////////
 Route::group(["prefix" => "/frontend/common/", 'namespace' => 'Frontend/V1/'], function () {
+
+   ////////////////   ConsultantController  //////////////////
     Route::get("consultantList", [ConsultantController::class, 'consultantList']);
-    //  Route::get("consultantList", [ConsultantController::class, 'consultantList2']);
-    Route::get("consultant/{id}/details", [ConsultantController::class, 'details']);
+    Route::get("consultant/{consultant_id}/details", [ConsultantController::class, 'consultantDetails']);
+
+
+
 
     /// CommonController ////
     Route::get("dashboard", [CommonController::class, 'dashboard']);
     Route::get("serviceList", [CommonController::class, 'activeServiceList']);
+    Route::get("district/list", [CommonController::class, 'allDistricts']);
 });
 
 

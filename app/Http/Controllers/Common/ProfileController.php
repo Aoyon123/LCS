@@ -21,19 +21,23 @@ class ProfileController extends Controller
     use ResponseTrait;
     public function update(Request $request)
     {
+        //  return $request->all();
         DB::beginTransaction();
         try {
 
             $user = User::findOrFail($request->id);
+            // return $user;
 
             $request->validate([
                 'name' => 'required|string|max:50',
-                'phone' => 'max:15|min:11|regex:/(01)[0-9]{9}/',
+                'phone' => 'max:15|min:11|regex:/(01)[0-9]{9}/|required|unique:users,phone,' . $user->id,
                 'password' => 'nullable|min:8',
                 'address' => 'required|max:50',
-                'nid' => 'required|max:50',
+                'nid' => 'required|max:18|unique:users,nid,' . $user->id,
                 'dob' => 'required|max:50',
                 'gender' => 'required|max:10',
+                'district' => 'required|max:50',
+                // 'phone' => 'required|unique:users,phone,' . $user->id,
             ]);
 
 
@@ -49,12 +53,18 @@ class ProfileController extends Controller
                 }
             }
 
+            if (strtolower($request->type) === 'citizen') {
+                $request->validate([
+                    'email' => 'nullable|email|unique:users,email,' . $user->id,
+                ]);
+            }
+
             if (strtolower($request->type) === 'consultant') {
                 $request->validate([
                     'years_of_experience' => 'required',
                     'current_profession' => 'nullable',
                     'email' => 'required|email|unique:users,email,' . $user->id,
-                    'phone' => 'required|unique:users,phone,' . $user->id,
+
 
                 ]);
 
@@ -112,6 +122,7 @@ class ProfileController extends Controller
                 'status' => $request->status ?? $user->status,
                 'gender' => $request->gender ?? $user->gender,
                 'profile_image' => $profile_image_path ?? $user->profile_image,
+                'district' => $request->district ?? $user->district,
                 'years_of_experience' => $request->years_of_experience ?? $user->years_of_experience,
                 'current_profession' => $request->current_profession ?? $user->current_profession,
                 'nid_front' => $nid_front_image_path ?? $user->nid_front,
@@ -306,7 +317,7 @@ class ProfileController extends Controller
 
     public function profile($id)
     {
-        $user = User::with('experiances', 'academics','services')->where('id', $id)->first();
+        $user = User::with('experiances', 'academics', 'services')->where('id', $id)->first();
         //  return $user;
         if ($user != null) {
             $data = [
@@ -353,11 +364,13 @@ class ProfileController extends Controller
         }
     }
 
-    public function consultantList(Request $request)
+    public function consultantList()
     {
+
         DB::beginTransaction();
         try {
-            $consultants = User::where('approval', 2)->get();
+            $consultants = User::active()->get();
+            return $consultants;
 
             if ($consultants) {
                 $message = "Consultant List Successfully Shown";
@@ -373,10 +386,11 @@ class ProfileController extends Controller
         }
     }
 
-    public function activeUser(){
+    public function activeUser()
+    {
         $authUser = Auth::user();
 
-       User::active()->where(['id' => $authUser->id])->update([
+        User::active()->where(['id' => $authUser->id])->update([
             'active_status' => !$authUser->active_status,
         ]);
 

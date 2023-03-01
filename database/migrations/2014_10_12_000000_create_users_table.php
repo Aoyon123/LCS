@@ -14,20 +14,22 @@ return new class extends Migration {
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->string('name', 50);
+            $table->string('first_name', 50);
+            $table->string('last_name', 50);
             $table->string("phone", 15)->comment("phone always unique")->nullable();
             $table->string('email', 50)->nullable();
             $table->string('password')->nullable();
             $table->string('nid', 50)->nullable();
             $table->string('dob', 50)->nullable();
             $table->string('profile_image')->nullable();
+            $table->bigInteger('district_id')->nullable();
             $table->string('gender', 10)->nullable();
             $table->tinyInteger('status')->nullable();
             $table->string('address', 255)->nullable();
             $table->string('type', 20);
-            $table->string('is_nid_verified', 255)->nullable();
-            $table->string('is_email_verified', 255)->nullable();
-            $table->string('is_phone_verified', 255)->nullable();
+            $table->tinyInteger('is_nid_verified', 4)->default(null);
+            $table->tinyInteger('is_email_verified', 4)->default(null);
+            $table->tinyInteger('is_phone_verified', 4)->default(null);
             $table->string('years_of_experience')->nullable();
             $table->string('current_profession')->nullable();
             $table->string('nid_front')->nullable();
@@ -43,7 +45,9 @@ return new class extends Migration {
             ");
             $table->unsignedBigInteger('approved_by')->nullable();
             $table->string('schedule', 250)->nullable();
-            $table->string('active_status', 100)->default(0);
+            $table->tinyInteger('active_status', 4)->default(0);
+            $table->tinyInteger('terms_conditions', 4)->default(0);
+            $table->integer('otp', 10)->nullable();
             $table->rememberToken();
             $table->timestamps();
         });

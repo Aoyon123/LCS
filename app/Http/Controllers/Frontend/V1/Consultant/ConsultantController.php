@@ -16,10 +16,11 @@ class ConsultantController extends Controller
 
     public function consultantList(Request $request)
     {
-        
+
         $data = [];
         $consultants_selected_fields = ['id', 'name', 'active_status', 'phone', 'email', 'address', 'code', 'type', 'profile_image', 'gender', 'rates', 'years_of_experience', 'schedule'];
         $params = $request->all();
+        //  return $params;
         $consultant = User::with(
             [
                 'experianceLatest:user_id,institute_name',
@@ -27,7 +28,7 @@ class ConsultantController extends Controller
                 'serviceLatest',
             ]
 
-        )->select($consultants_selected_fields)->active();
+        )->select($consultants_selected_fields)->status()->approval()->consultant();
 
         foreach ($params as $key => $param) {
 
@@ -121,9 +122,9 @@ class ConsultantController extends Controller
     //     }
     // }
 
-    public function details($id)
+    public function consultantDetails($consultant_id)
     {
-        $consultant = User::where('id', $id)->with('academics', 'services', 'experiances')->active()->get();
+        $consultant = User::where('id', $consultant_id)->with('academics', 'experiances', 'services')->status()->get();
         //return $consultant;
         if (!empty($consultant)) {
             $message = "Succesfully Data Shown";

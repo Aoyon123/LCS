@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Helper\SMSHelper;
 use App\Models\User;
 use Illuminate\Http\Request;
 use App\Traits\ResponseTrait;
@@ -21,7 +22,7 @@ class AuthController extends Controller
     use ResponseTrait;
     public function __construct()
     {
-        $this->middleware('auth:api', ['except' => ['login', 'register']]);
+        $this->middleware('auth:api', ['except' => ['login', 'register','registrationWithOTP','refreshOTP']]);
     }
 
     public function index()
@@ -67,7 +68,7 @@ class AuthController extends Controller
 
                 if ($user) {
                     if (Hash::check($request->password, $user->password)) {
-                        if(!$token = JWTAuth::attempt($credentials, ['exp' => Carbon::now()->addMinutes(2)->timestamp])) {
+                        if (!$token = JWTAuth::attempt($credentials, ['exp' => Carbon::now()->addMinutes(2)->timestamp])) {
                             $message = "Invalid Credentials!";
                             return $this->responseError(403, false, $message);
                         }
@@ -95,7 +96,28 @@ class AuthController extends Controller
 
     public function register(Request $request)
     {
-        //check request->type is empty or not
+
+        $userExist = User::where('phone', $request->phone)->first();
+        if ($userExist && $userExist->is_phone_verified) {
+            $message = $userExist->phone . " already registered, now you can login";
+            return $this->responseSuccess(200, true, $message, $userExist);
+        }
+
+        if ($userExist && $userExist->is_phone_verified == null) {
+
+            $otp = SMSHelper::generateOTP();
+            $smsMessage = $otp . ' is your LCS verification code';
+            $messageSuccess = SMSHelper::sendSMS($userExist->phone, $smsMessage);
+
+            if ($messageSuccess) {
+                $message = "Phone Number Already Taken, Verification Code Send Successfully, Check Your Message!";
+                return $this->responseSuccess(410, true, $message, $userExist);
+            } else {
+                return $this->responseError(Response::HTTP_INTERNAL_SERVER_ERROR, false, 'Something wrong');
+            }
+        }
+
+
         if ($request->type != null) {
             //converts all the uppercase english alphabets present in the string to lowercase
             $type = strtolower($request->type);
@@ -109,11 +131,12 @@ class AuthController extends Controller
                 $citizenCodeNo = 'cit-' . date('dmy-') . str_pad($citizenData, 4, '0', STR_PAD_LEFT);
 
                 $request->validate([
-                    'name' => 'required|string|max:50',
+                    'first_name' => 'required|string|max:50',
+                    'last_name' => 'required|string|max:50',
                     'phone' => 'required|max:11|min:11|regex:/(01)[0-9]{9}/|unique:users',
                     'password' => 'required|min:8',
                     'type' => 'required',
-                    'rates' => 'nullable',
+                    'terms_conditions' => 'required'
                 ]);
             } elseif ($type === 'consultant') {
 
@@ -124,43 +147,116 @@ class AuthController extends Controller
                 $consultantCodeNo = 'con-' . date('dmy-') . str_pad($consultantData, 4, '0', STR_PAD_LEFT);
                 //  return $consultantCodeNo;
                 $request->validate([
-                    'name' => 'required|string|max:50',
-                    'email' => 'email|unique:users,email',
+                    'first_name' => 'required|string|max:50',
+                    'last_name' => 'required|string|max:50',
+                    'phone' => 'required|max:11|min:11|regex:/(01)[0-9]{9}/|unique:users',
+                    'email' => 'required|email|unique:users,email',
                     'password' => 'required|min:8',
+                    'dob' => 'required|string',
+                    'district_id' => 'required',
                     'type' => 'required',
-                    'rates' => 'nullable',
+                    'terms_conditions' => 'required'
                 ]);
             }
         } else {
-
             $message = "Type cannot be null";
             return $this->responseError(404, false, $message);
-
         }
 
         DB::beginTransaction();
         try {
+            $otp = SMSHelper::generateOTP();
+
             $user = User::create([
-                'name' => $request->name,
-                'phone' => $request->phone ?? null,
+                'name' => $request->first_name . ' ' . $request->last_name,
+                'phone' => $request->phone,
                 'email' => $request->email ?? null,
+                'dob' => $request->dob ?? null,
+                'district_id' => $request->district_id ?? null,
                 'type' => strtolower($request->type),
                 'code' => $citizenCodeNo ?? $consultantCodeNo,
-                'password' => Hash::make($request->password)
+                'password' => Hash::make($request->password),
+                'terms_conditions' => $request->terms_conditions,
+                'otp_code' => $otp,
             ]);
 
-            $role = Role::where('name', $request->type)->first();
+           $smsMessage = $otp . ' is your LCS verification code ';
 
+            $messageSuccess = SMSHelper::sendSMS($user->phone, $smsMessage);
+
+            $role = Role::where('name', $request->type)->first();
             $user->assignRole($role);
+
             DB::commit();
-            $message = $request->type . " Registration Successfull";
-            return $this->responseSuccess(200, true, $message, $user);
+
+            if ($messageSuccess) {
+                $message = "Phone Number Verification Code Send Successfully, Check Your Message!";
+                return $this->responseSuccess(410, true, $message, $user);
+            } else {
+                return $this->responseError(Response::HTTP_INTERNAL_SERVER_ERROR, false, 'Something wrong');
+            }
 
         } catch (QueryException $e) {
             DB::rollBack();
             return $this->responseError(Response::HTTP_INTERNAL_SERVER_ERROR, false, $e->getMessage());
         }
     }
+
+    public function registrationWithOTP(Request $request)
+    {
+        $user = User::where([
+            'phone' => $request->phone,
+            'otp_code' => $request->otp_code,
+            'is_phone_verified' => null
+        ])->first();
+      //   return $user;
+        if ($user) {
+            $is_expired_time = $user->updated_at->addMinutes(2);
+            $nowTime = Carbon::now();
+
+            if ($is_expired_time >= $nowTime) {
+                $user = $user->update([
+                    'is_phone_verified' => 1,
+                ]);
+
+                if ($user) {
+                    $message = "Your Phone Number Verified, And Registration Successfull";
+                    return $this->responseSuccess(200, false, $message, []);
+                }
+            } else {
+                $message = "Your OTP time has been expired";
+                return $this->responseSuccess(404, false, $message, []);
+            }
+        } else {
+            $message = "Your otp is not correct.";
+            return $this->responseError(404, false, $message);
+        }
+    }
+
+    public function refreshOTP(Request $request)
+    {
+        $otp = SMSHelper::generateOTP();
+
+        $userExist = User::where('phone', $request->phone)
+        ->where('is_phone_verified', null)
+        ->first();
+        if ($userExist) {
+
+            $smsMessage = $otp . ' is your LCS verification code';
+            $messageSuccess = SMSHelper::sendSMS($userExist->phone, $smsMessage);
+                $userExist = $userExist->update([
+                    'otp_code' => $otp ,
+                ]);
+
+            if ($messageSuccess) {
+                $message = "Verification Code Send Successfully, Check Your Message!";
+                return $this->responseSuccess(200, true, $message, $userExist);
+            } else {
+                return $this->responseError(Response::HTTP_INTERNAL_SERVER_ERROR, false, 'Something wrong');
+            }
+        }
+    }
+
     public function retrieve($id)
     {
         DB::beginTransaction();

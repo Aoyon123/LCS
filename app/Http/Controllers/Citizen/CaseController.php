@@ -44,6 +44,7 @@ class CaseController extends Controller
         // }
         // return $cases;
         $type = auth()->user()->type;
+        //  return $type;
         $userType = $type === 'citizen' ? 'consultant' : 'citizen';
         $caseData = DB::table('lcs_cases')
             ->where('lcs_cases.' . $type . '_id', auth()->user()->id)
@@ -86,7 +87,7 @@ class CaseController extends Controller
             if ($case) {
                 $caseCode = $case->case_code;
                 $output = substr($caseCode, 0, strrpos($caseCode, '-'));
-               // return $output;
+                // return $output;
                 $codeNumber = explode("-", $caseCode)[4] + 1;
                 $case_code = $output . '-' . $codeNumber;
             } else {
@@ -94,7 +95,7 @@ class CaseController extends Controller
                 $citizenInfo = User::where('id', auth()->user()->id)->first();
 
                 $citizenCode = $citizenInfo->code;
-              //  return $citizenCode;
+                //  return $citizenCode;
 
                 $citizenLastCodeNumber = explode("-", $citizenCode)[2];
 
@@ -140,7 +141,8 @@ class CaseController extends Controller
                 'citizen_id' => auth()->user()->id,
                 'consultant_id' => $request->consultant_id,
                 'title' => $request->title,
-                'status' => 0,'status' => 0,
+                'status' => 0,
+                'status' => 0,
                 'document_link' => $request->document_link,
                 'rating' => $request->rating,
                 'description' => $request->description,
@@ -168,7 +170,6 @@ class CaseController extends Controller
 
         $caseData = LcsCase::findOrFail($request->id);
         try {
-
             if ($caseData) {
                 $caseData->update([
                     'status' => $request->status ?? $caseData->status,
@@ -216,8 +217,12 @@ class CaseController extends Controller
     {
         DB::beginTransaction();
         try {
-            $services = User::with('services:id,title')->where('id', $id)->active()->first()['services'];
-
+            $services = [];
+            $user = User::with('services:id,title')->where('id', $id)->first();
+            if ($user) {
+                $services = $user['services'];
+            }
+           // return $user;
             DB::commit();
             $message = "Consultant Services Shown Successfull";
             return $this->responseSuccess(200, true, $message, $services);

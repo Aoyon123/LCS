@@ -68,12 +68,36 @@ class User extends Authenticatable implements JWTSubject
 
     public function scopeActive($query)
     {
-        return $query->where(['type' => 'consultant', 'status' => 1, 'approval' => 2]);
+        return $query->where(['active_status' => 1]);
     }
 
-    // public function lcsCases()
-    // {
-    //     return $this->belongsToMany(LcsCase::class)->withTimestamps();
-    // }
+    public function scopeStatus($query)
+    {
+        return $query->where(['status' => 1]);
+    }
+
+    public function scopeApproval($query)
+    {
+        return $query->where(['approval' => 2]);
+    }
+    public function scopeCitizen($query)
+    {
+        return $query->where(['type' => 'citizen']);
+    }
+
+    public function scopeConsultant($query)
+    {
+        return $query->where(['type' => 'consultant']);
+    }
+
+    public function scopeActiveServiceList($query)
+    {
+        return $query->where(['status' => 1]);
+    }
+
+// public function lcsCases()
+// {
+//     return $this->belongsToMany(LcsCase::class)->withTimestamps();
+// }
 
 }
