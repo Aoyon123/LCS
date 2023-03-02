@@ -22,7 +22,7 @@ class AuthController extends Controller
     use ResponseTrait;
     public function __construct()
     {
-        $this->middleware('auth:api', ['except' => ['login', 'register','registrationWithOTP','refreshOTP']]);
+        $this->middleware('auth:api', ['except' => ['login', 'register', 'registrationWithOTP', 'refreshOTP']]);
     }
 
     public function index()
@@ -35,25 +35,14 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-        // return $request->all();
-        // if($request->type === 'citizen'){
-        //     $validator = Validator::make($request->all(), [
-        //         'phone' => 'required|min:11',
-        //         'password' => 'required|string|min:6',
-        //     ]);
-        // }elseif($request->type === 'consultant'){
-        //     $validator = Validator::make($request->all(), [
-        //         'email' => 'required|email',
-        //         'password' => 'required|string|min:6',
-        //     ]);
-        // }
         DB::beginTransaction();
-
         try {
+
             if (!$request->password) {
                 $message = "Password Field Required!";
                 return $this->responseError(403, false, $message);
             }
+
             if ($request->email_or_phone) {
                 if (preg_match("/(^(\+88|0088)?(01){1}[3456789]{1}(\d){8})$/", $request->email_or_phone)) {
                     $credentials = ['phone' => $request->email_or_phone, 'password' => $request->password];
@@ -63,28 +52,46 @@ class AuthController extends Controller
                     $message = "Your Phone Or Email Not Valid!";
                     return $this->responseError(403, false, $message);
                 }
+            }
 
-                $user = User::orWhere('phone', $request->email_or_phone)->orWhere('email', $request->email_or_phone)->first();
-
-                if ($user) {
-                    if (Hash::check($request->password, $user->password)) {
-                        if (!$token = JWTAuth::attempt($credentials, ['exp' => Carbon::now()->addMinutes(2)->timestamp])) {
-                            $message = "Invalid Credentials!";
-                            return $this->responseError(403, false, $message);
-                        }
-                        return $this->createNewToken($token);
-                    } else {
-                        $message = "Your Password Not Match!";
+            $user = User::orWhere('phone', $request->email_or_phone)->orWhere('email', $request->email_or_phone)->first();
+            //$user = User::where('phone', $request->phone)->first();
+            // return $user->phone;
+            if ($user && $user->is_phone_verified) {
+                if (Hash::check($request->password, $user->password)) {
+                    if (!$token = JWTAuth::attempt($credentials, ['exp' => Carbon::now()->addMinutes(2)->timestamp])) {
+                        $message = "Invalid Credentials!";
                         return $this->responseError(403, false, $message);
                     }
+                    return $this->createNewToken($token);
+                } else {
+                    $message = "Your Password Not Match!";
+                    return $this->responseError(403, false, $message);
                 }
-            } else {
+            }
+            else if($user && $user->is_phone_verified == null){
+                $otp = SMSHelper::generateOTP();
+               // return $otp;
+                $smsMessage = $otp . ' is your LCS verification code';
+                $messageSuccess = SMSHelper::sendSMS($user->phone, $smsMessage);
+
+                $userOtpUpdate = $user->update([
+                    'otp_code' => $otp,
+                ]);
+               // return $userOtpUpdate;
+                if ($messageSuccess && $userOtpUpdate) {
+                    $message = "Phone Number Already Taken, Verification Code Send Successfully, Check Your Message!";
+                    return $this->responseSuccess(410, true, $message, $user);
+                } else {
+                    return $this->responseError(Response::HTTP_INTERNAL_SERVER_ERROR, false, 'Something wrong');
+                }
+            }
+
+            else {
                 $message = "Please Enter Your Phone Or Email!";
                 return $this->responseError(403, false, $message);
             }
-
             DB::commit();
-
         } catch (QueryException $e) {
             DB::rollBack();
             return $this->responseError(Response::HTTP_INTERNAL_SERVER_ERROR, $e->getMessage(), []);
@@ -96,7 +103,6 @@ class AuthController extends Controller
 
     public function register(Request $request)
     {
-
         $userExist = User::where('phone', $request->phone)->first();
         if ($userExist && $userExist->is_phone_verified) {
             $message = $userExist->phone . " already registered, now you can login";
@@ -109,7 +115,11 @@ class AuthController extends Controller
             $smsMessage = $otp . ' is your LCS verification code';
             $messageSuccess = SMSHelper::sendSMS($userExist->phone, $smsMessage);
 
-            if ($messageSuccess) {
+            $userOtpUpdate = $userExist->update([
+                'otp_code' => $otp,
+            ]);
+
+            if ($messageSuccess && $userOtpUpdate) {
                 $message = "Phone Number Already Taken, Verification Code Send Successfully, Check Your Message!";
                 return $this->responseSuccess(410, true, $message, $userExist);
             } else {
@@ -180,7 +190,7 @@ class AuthController extends Controller
                 'otp_code' => $otp,
             ]);
 
-           $smsMessage = $otp . ' is your LCS verification code ';
+            $smsMessage = $otp . ' is your LCS verification code ';
 
             $messageSuccess = SMSHelper::sendSMS($user->phone, $smsMessage);
 
@@ -204,12 +214,16 @@ class AuthController extends Controller
 
     public function registrationWithOTP(Request $request)
     {
+        //return $request->all();
+        // $phone=01798445611;
+        // $phoneNumberPadded = sprintf("%011d", $phone);
+        // return $phoneNumberPadded;
         $user = User::where([
             'phone' => $request->phone,
-            'otp_code' => $request->otp_code,
-            'is_phone_verified' => null
+            'otp_code' => (int) $request->otp_code,
+            'is_phone_verified' => NULL
         ])->first();
-      //   return $user;
+        //   return $user;
         if ($user) {
             $is_expired_time = $user->updated_at->addMinutes(2);
             $nowTime = Carbon::now();
@@ -221,11 +235,11 @@ class AuthController extends Controller
 
                 if ($user) {
                     $message = "Your Phone Number Verified, And Registration Successfull";
-                    return $this->responseSuccess(200, false, $message, []);
+                    return $this->responseSuccess(200, true, $message, []);
                 }
             } else {
                 $message = "Your OTP time has been expired";
-                return $this->responseSuccess(404, false, $message, []);
+                return $this->responseError(404, false, $message);
             }
         } else {
             $message = "Your otp is not correct.";
@@ -236,20 +250,20 @@ class AuthController extends Controller
     public function refreshOTP(Request $request)
     {
         $otp = SMSHelper::generateOTP();
-
         $userExist = User::where('phone', $request->phone)
-        ->where('is_phone_verified', null)
-        ->first();
+            ->where('is_phone_verified', null)
+            ->first();
+          //  info($userExist->phone);
         if ($userExist) {
-
             $smsMessage = $otp . ' is your LCS verification code';
             $messageSuccess = SMSHelper::sendSMS($userExist->phone, $smsMessage);
-                $userExist = $userExist->update([
-                    'otp_code' => $otp ,
-                ]);
+            
+            $userExist = $userExist->update([
+                'otp_code' => $otp,
+            ]);
 
             if ($messageSuccess) {
-                $message = "Verification Code Send Successfully, Check Your Message!";
+                $message = "OTP Code Refresh Successfully, Check Your Message!";
                 return $this->responseSuccess(200, true, $message, $userExist);
             } else {
                 return $this->responseError(Response::HTTP_INTERNAL_SERVER_ERROR, false, 'Something wrong');

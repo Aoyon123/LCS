@@ -4,12 +4,13 @@ namespace App\Models;
 
 use App\Models\LcsCase;
 use App\Models\Service;
+use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Traits\HasRoles;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 use Illuminate\Notifications\Notifiable;
+use illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
 
@@ -58,7 +59,7 @@ class User extends Authenticatable implements JWTSubject
     public function serviceLatest()
     {
         // return $this->services()->take(1);
-        return $this->belongsToMany(Service::class)->select(array('services.title', 'services.id', 'services.created_at'))->latest();
+        return $this->belongsToMany(Service::class)->where(['status' => 1])->select(array('services.title', 'services.id', 'services.created_at'))->latest();
     }
 
     public function getJWTCustomClaims()
@@ -90,10 +91,16 @@ class User extends Authenticatable implements JWTSubject
         return $query->where(['type' => 'consultant']);
     }
 
-    public function scopeActiveServiceList($query)
+    public function scopeServiceList($query)
     {
-        return $query->where(['status' => 1]);
+       // return $query->where(['status' => 1]);
+        return $this->belongsToMany(Service::class)->where(['status' => 1]);
     }
+
+    // public function scopeCountRating($query)
+    // {
+    //     return $this->belongsToMany(LcsCase::class)->select(DB::raw('count(rating) as total'))->get();
+    // }
 
 // public function lcsCases()
 // {

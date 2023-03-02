@@ -8,6 +8,7 @@ class SMSHelper
 {
     public static function sendSMS($to, $message)
     {
+       // return true;
         $mobile = substr($to, -10); //remove unwanted number
         $user = 'MysoftH'; //user name
         $pwd = 'pbm96bsy'; //user password

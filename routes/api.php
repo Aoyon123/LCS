@@ -31,8 +31,8 @@ use App\Http\Controllers\Citizen\CitizenController;
 
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
-Route::post('/registration/with/otp', [AuthController::class, 'registrationWithOTP']);
-Route::post('/refresh/otp', [AuthController::class, 'refreshOTP']);
+Route::post('/otp/verify', [AuthController::class, 'registrationWithOTP']);
+Route::post('/otp/refresh', [AuthController::class, 'refreshOTP']);
 Route::post('/index', [AuthController::class, 'index']);
 Route::post('/destroy', [AuthController::class, 'destroy']);
 Route::post('/logout', [AuthController::class, 'logout']);
@@ -148,6 +148,7 @@ Route::group(["prefix" => "/frontend/common/", 'namespace' => 'Frontend/V1/'], f
 
     /// CommonController ////
     Route::get("dashboard", [CommonController::class, 'dashboard']);
+    Route::get("consultation", [CommonController::class, 'consultation']);
     Route::get("serviceList", [CommonController::class, 'activeServiceList']);
     Route::get("district/list", [CommonController::class, 'allDistricts']);
 });
