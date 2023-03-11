@@ -33,10 +33,10 @@ class ProfileController extends Controller
                 'phone' => 'max:15|min:11|regex:/(01)[0-9]{9}/|required|unique:users,phone,' . $user->id,
                 'password' => 'nullable|min:8',
                 'address' => 'required|max:50',
-                'nid' => 'required|max:18|unique:users,nid,' . $user->id,
+                'nid' => 'required|regex:/(?:\d{17}|\d{13}|\d{10})/|unique:users,nid,' . $user->id,
                 'dob' => 'required|max:50',
                 'gender' => 'required|max:10',
-                'district' => 'required|max:50',
+                'district_id' => 'required|max:50',
                 // 'phone' => 'required|unique:users,phone,' . $user->id,
             ]);
 
@@ -64,8 +64,6 @@ class ProfileController extends Controller
                     'years_of_experience' => 'required',
                     'current_profession' => 'nullable',
                     'email' => 'required|email|unique:users,email,' . $user->id,
-
-
                 ]);
 
                 if ($request->nid_front) {
@@ -122,7 +120,7 @@ class ProfileController extends Controller
                 'status' => $request->status ?? $user->status,
                 'gender' => $request->gender ?? $user->gender,
                 'profile_image' => $profile_image_path ?? $user->profile_image,
-                'district' => $request->district ?? $user->district,
+                'district_id' => $request->district_id ?? $user->district_id,
                 'years_of_experience' => $request->years_of_experience ?? $user->years_of_experience,
                 'current_profession' => $request->current_profession ?? $user->current_profession,
                 'nid_front' => $nid_front_image_path ?? $user->nid_front,
@@ -395,5 +393,17 @@ class ProfileController extends Controller
         ]);
 
         return $this->responseSuccess(200, true, '', []);
+    }
+
+    public function allDistricts()
+    {
+        $districts = DB::table('districts')->select(['id', 'name_bn', 'name_en'])->get();
+        if (!empty($districts)) {
+            $message = "Succesfully Data Shown";
+            return $this->responseSuccess(200, true, $message, $districts);
+        } else {
+            $message = "Invalid credentials";
+            return $this->responseError(403, false, $message);
+        }
     }
 }

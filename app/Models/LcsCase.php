@@ -38,5 +38,9 @@ class LcsCase extends Model
         return $this->belongsTo(User::class, 'citizen_id', 'id');
     }
 
+    public function scopeCompleted($query)
+    {
+        return $query->where(['status' => 2]);
+    }
 
 }

@@ -12,7 +12,7 @@ class CitizenController extends Controller
     use ResponseTrait;
     public function conlsultantList()
     {
-        $consultants_selected_fields = ['id', 'name', 'phone', 'email', 'address', 'code', 'type', 'profile_image','district', 'gender', 'rates', 'active_status', 'years_of_experience', 'schedule'];
+        $consultants_selected_fields = ['id', 'name', 'phone', 'email', 'address', 'code', 'type', 'profile_image','district_id', 'gender', 'rates', 'active_status', 'years_of_experience', 'schedule'];
         $consultant = User::with(
             [
                 'experianceLatest:user_id,institute_name',

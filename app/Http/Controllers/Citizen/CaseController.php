@@ -62,7 +62,7 @@ class CaseController extends Controller
                 'users.name',
                 'users.code',
                 'users.profile_image'
-            )->join('users', 'lcs_cases.' . $userType . '_id', '=', 'users.id')->get();
+            )->join('users', 'lcs_cases.' . $userType . '_id', '=', 'users.id')->orderBy('case_id','DESC')->get();
 
         if ($caseData) {
             $message = "Case list data succesfully shown";
@@ -141,7 +141,6 @@ class CaseController extends Controller
                 'citizen_id' => auth()->user()->id,
                 'consultant_id' => $request->consultant_id,
                 'title' => $request->title,
-                'status' => 0,
                 'status' => 0,
                 'document_link' => $request->document_link,
                 'rating' => $request->rating,
@@ -222,7 +221,7 @@ class CaseController extends Controller
             if ($user) {
                 $services = $user['services'];
             }
-           // return $user;
+            // return $user;
             DB::commit();
             $message = "Consultant Services Shown Successfull";
             return $this->responseSuccess(200, true, $message, $services);
@@ -231,6 +230,31 @@ class CaseController extends Controller
             return $this->responseError(Response::HTTP_INTERNAL_SERVER_ERROR, false, $e->getMessage());
         }
     }
+
+
+    public function consultantRating($id)
+    {
+        DB::beginTransaction();
+        try {
+            // $services = [];
+            // $user = User::with('services:id,title')->where('id', $id)->first();
+            // if ($user) {
+            //     $services = $user['services'];
+            // }
+            // return $user;
+            $rating = LcsCase::select(DB::raw('count(rating) as total'))->where('consultant_id', $id)->completed()->first();
+           // return $rating;
+            DB::commit();
+            $message = "Consultant Services Shown Successfull";
+            return $this->responseSuccess(200, true, $message, $rating);
+        } catch (QueryException $e) {
+            DB::rollBack();
+            return $this->responseError(Response::HTTP_INTERNAL_SERVER_ERROR, false, $e->getMessage());
+        }
+    }
+
+
+
 
     // public function statusUpdate(Request $request)
     // {

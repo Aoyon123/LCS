@@ -24,9 +24,10 @@ class FrequentlyAskedQuestionRequest extends FormRequest
     public function rules()
     {
         $rules = [
-            'category_name' => 'nullable',
+            'category_name' => 'nullable|string',
             'question' => 'nullable|string',
             'answer' => 'nullable|string',
+            'answer_image' => 'nullable|string',
             'status' => 'nullable',
         ];
 

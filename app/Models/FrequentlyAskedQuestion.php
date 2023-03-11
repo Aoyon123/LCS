@@ -13,6 +13,7 @@ class FrequentlyAskedQuestion extends Model
         'category_name',
         'question',
         'answer',
+        'answer_image',
         'status',
     ];
 

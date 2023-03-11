@@ -124,7 +124,12 @@ class ConsultantController extends Controller
 
     public function consultantDetails($consultant_id)
     {
-        $consultant = User::where('id', $consultant_id)->with('academics', 'experiances', 'services')->status()->get();
+        $consultant = User::where('id', $consultant_id)
+        ->with('academics', 'experiances', 'services')
+        ->status()
+        ->approval()
+        ->consultant()
+        ->get();
         //return $consultant;
         if (!empty($consultant)) {
             $message = "Succesfully Data Shown";

@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
+use Illuminate\Validation\ValidationException;
 
 class Handler extends ExceptionHandler
 {
@@ -18,7 +19,7 @@ class Handler extends ExceptionHandler
         AuthorizationException::class,
         HttpException::class,
         ModelNotFoundException::class,
-        ValidationException::class,
+       // ValidationException::class,
     ];
 
     public function report(Throwable $exception)
@@ -39,7 +40,7 @@ class Handler extends ExceptionHandler
             return response()->json(["status_code" => 404, "status" => false, 'message' => "Not Found Your Targeted Data"], Response::HTTP_NOT_FOUND);
         }
         if ($exception instanceof QueryException) {
-            // return response()->json(["status_code" => 500, "status"=>false, 'message' => "Internal Server Error"], Response::HTTP_INTERNAL_SERVER_ERROR);
+             return response()->json(["status_code" => 500, "status"=>false, 'message' => "Internal Server Error"], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
         if ($exception instanceof MethodNotAllowedHttpException) {
             return response()->json(["status_code" => 405, "status" => false, 'message' => "Method Not Allowed"], Response::HTTP_METHOD_NOT_ALLOWED);
@@ -57,7 +58,9 @@ class Handler extends ExceptionHandler
         if ($exception instanceof NotFoundHttpException) {
             return response()->json(["status_code" => 404, "status" => false, 'message' => "URL is not recognized"], Response::HTTP_NOT_FOUND);
         }
-
+        if ($exception instanceof ValidationException) {
+            return response()->json(["status_code" => 400, "status" => false, 'message' => $exception->getMessage(),'errors' => $exception->errors()], Response::HTTP_BAD_REQUEST);
+        }
 
         return parent::render($request, $exception);
     }

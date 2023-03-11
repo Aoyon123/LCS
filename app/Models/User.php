@@ -23,7 +23,8 @@ class User extends Authenticatable implements JWTSubject
     protected $hidden = [
         'password',
         'remember_token',
-        'pivot'
+        'pivot',
+        // 'otp_code'
     ];
 
     // protected $casts = [
@@ -58,8 +59,13 @@ class User extends Authenticatable implements JWTSubject
 
     public function serviceLatest()
     {
-        // return $this->services()->take(1);
         return $this->belongsToMany(Service::class)->where(['status' => 1])->select(array('services.title', 'services.id', 'services.created_at'))->latest();
+    }
+
+    public function countRating()
+    {
+        return $this->hasMany(LcsCase::class,'consultant_id')
+                    ->where('status',2);
     }
 
     public function getJWTCustomClaims()
@@ -93,7 +99,6 @@ class User extends Authenticatable implements JWTSubject
 
     public function scopeServiceList($query)
     {
-       // return $query->where(['status' => 1]);
         return $this->belongsToMany(Service::class)->where(['status' => 1]);
     }
 

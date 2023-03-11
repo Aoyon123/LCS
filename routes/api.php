@@ -18,6 +18,7 @@ use App\Http\Controllers\Frontend\V1\Consultant\ConsultantController;
 use App\Http\Controllers\Admin\CitizenController as AdminCitizenController;
 use App\Http\Controllers\Admin\ConsultantController as AdminConsultantController;
 use App\Http\Controllers\Citizen\CitizenController;
+
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -57,7 +58,8 @@ Route::group(["middleware" => ["auth:api"]], function () {
     Route::delete('/profile/experience/{id}/delete', [ProfileController::class, 'experienceDestroy']);
     Route::delete('/profile/academic_qualification/{id}/delete', [ProfileController::class, 'academicQualificationDestroy']);
     Route::post('/consultant/approve', [ProfileController::class, 'approved']);
-   // Route::get('/profile/consultantList', [ProfileController::class, 'consultantList']);
+    Route::get("district/list", [ProfileController::class, 'allDistricts']);
+    // Route::get('/profile/consultantList', [ProfileController::class, 'consultantList']);
 
     /////////  Conversations /////////
     Route::get('/conversation/seenMessage/{purpose_id}', [ConversationController::class, 'seenMessage']);
@@ -122,7 +124,7 @@ Route::group(["middleware" => ["auth:api"]], function () {
     Route::get('citizen/case/consultants/{id}/services', [CaseController::class, 'consultantServices']);
     Route::get('/case/all', [CaseController::class, 'allCases']);
     Route::post('/case/statusUpdate', [CaseController::class, 'statusUpdate']);
-
+    Route::get('/case/{consultant_id}/rating', [CaseController::class, 'consultantRating']);
 
     /////////////// Frequently Asked Question  ////////////////////
     Route::post('/frequentlyAskedQuestion/store', [FrequentlyAskedQuestionController::class, 'store']);
@@ -139,7 +141,7 @@ Route::group(["middleware" => ["auth:api"]], function () {
 /////////// Frontrend Part ////////////
 Route::group(["prefix" => "/frontend/common/", 'namespace' => 'Frontend/V1/'], function () {
 
-   ////////////////   ConsultantController  //////////////////
+    ////////////////   ConsultantController  //////////////////
     Route::get("consultantList", [ConsultantController::class, 'consultantList']);
     Route::get("consultant/{consultant_id}/details", [ConsultantController::class, 'consultantDetails']);
 
@@ -147,8 +149,9 @@ Route::group(["prefix" => "/frontend/common/", 'namespace' => 'Frontend/V1/'], f
 
 
     /// CommonController ////
-    Route::get("dashboard", [CommonController::class, 'dashboard']);
+    Route::get("dashboard", [CommonController::class, 'dashboardMobile']);
     Route::get("consultation", [CommonController::class, 'consultation']);
+    Route::get("frequentlyAskedQuestion/all", [CommonController::class, 'faqAll']);
     Route::get("serviceList", [CommonController::class, 'activeServiceList']);
     Route::get("district/list", [CommonController::class, 'allDistricts']);
 });

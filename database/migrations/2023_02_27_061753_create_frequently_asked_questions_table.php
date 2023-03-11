@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('category_name', 255)->nullable();
             $table->string('question', 255)->nullable();
             $table->string('answer', 255)->nullable();
+            $table->string('answer_image',255)->nullable();
             $table->tinyInteger('status')->nullable();
             $table->timestamps();
         });

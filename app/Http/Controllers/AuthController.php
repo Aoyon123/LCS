@@ -43,22 +43,26 @@ class AuthController extends Controller
                 return $this->responseError(403, false, $message);
             }
 
-            if ($request->email_or_phone) {
-                if (preg_match("/(^(\+88|0088)?(01){1}[3456789]{1}(\d){8})$/", $request->email_or_phone)) {
-                    $credentials = ['phone' => $request->email_or_phone, 'password' => $request->password];
-                } elseif (preg_match("/^([a-z0-9\+_\-]+)(\.[a-z0-9\+_\-]+)*@([a-z0-9\-]+\.)+[a-z]{2,6}$/ix", $request->email_or_phone)) {
-                    $credentials = ['email' => $request->email_or_phone, 'password' => $request->password];
+            if (!$request->phone) {
+                $message = "Phone Field Required!";
+                return $this->responseError(403, false, $message);
+            }
+
+            $userExist = User::where('phone', $request->phone)
+                ->select(['id', 'name', 'phone', 'email', 'is_phone_verified', 'dob', 'password'])
+                ->first();
+
+            if ($request->phone) {
+                if (preg_match("/(^(\+88|0088)?(01){1}[3456789]{1}(\d){8})$/", $request->phone)) {
+                    $credentials = ['phone' => $request->phone, 'password' => $request->password];
                 } else {
-                    $message = "Your Phone Or Email Not Valid!";
+                    $message = "Your Phone Format Is Not Valid!";
                     return $this->responseError(403, false, $message);
                 }
             }
 
-            $user = User::orWhere('phone', $request->email_or_phone)->orWhere('email', $request->email_or_phone)->first();
-            //$user = User::where('phone', $request->phone)->first();
-            // return $user->phone;
-            if ($user && $user->is_phone_verified) {
-                if (Hash::check($request->password, $user->password)) {
+            if ($userExist && $userExist->is_phone_verified) {
+                if (Hash::check($request->password, $userExist->password)) {
                     if (!$token = JWTAuth::attempt($credentials, ['exp' => Carbon::now()->addMinutes(2)->timestamp])) {
                         $message = "Invalid Credentials!";
                         return $this->responseError(403, false, $message);
@@ -68,27 +72,28 @@ class AuthController extends Controller
                     $message = "Your Password Not Match!";
                     return $this->responseError(403, false, $message);
                 }
-            }
-            else if($user && $user->is_phone_verified == null){
+            } else if ($userExist && $userExist->is_phone_verified == 0) {
+                // if (Hash::check($request->password, $userExist->password)) {
                 $otp = SMSHelper::generateOTP();
-               // return $otp;
                 $smsMessage = $otp . ' is your LCS verification code';
-                $messageSuccess = SMSHelper::sendSMS($user->phone, $smsMessage);
+                $messageSuccess = SMSHelper::sendSMS($userExist->phone, $smsMessage);
 
-                $userOtpUpdate = $user->update([
+                $userUpdateSuccess = $userExist->update([
                     'otp_code' => $otp,
                 ]);
-               // return $userOtpUpdate;
-                if ($messageSuccess && $userOtpUpdate) {
+
+                if ($messageSuccess && $userUpdateSuccess) {
                     $message = "Phone Number Already Taken, Verification Code Send Successfully, Check Your Message!";
-                    return $this->responseSuccess(410, true, $message, $user);
+                    DB::commit();
+                    $data = [
+                        'user' => $userExist,
+                    ];
+                    return $this->responseSuccess(200, true, $message, $data);
                 } else {
                     return $this->responseError(Response::HTTP_INTERNAL_SERVER_ERROR, false, 'Something wrong');
                 }
-            }
-
-            else {
-                $message = "Please Enter Your Phone Or Email!";
+            } else {
+                $message = "Please Enter Your Valid Phone!";
                 return $this->responseError(403, false, $message);
             }
             DB::commit();
@@ -103,35 +108,79 @@ class AuthController extends Controller
 
     public function register(Request $request)
     {
-        $userExist = User::where('phone', $request->phone)->first();
-        if ($userExist && $userExist->is_phone_verified) {
-            $message = $userExist->phone . " already registered, now you can login";
-            return $this->responseSuccess(200, true, $message, $userExist);
+        $userExist = User::where('phone', $request->phone)
+            ->select(['id', 'name', 'phone', 'email', 'is_phone_verified', 'dob', 'password', 'otp_code'])
+            ->first();
+
+        if ($userExist && $userExist->is_phone_verified == 1) {
+            if (Hash::check($request->password, $userExist->password)) {
+                $message = $userExist->phone . " already registered, now you can login";
+                return $this->responseSuccess(200, true, $message, $userExist);
+            } else {
+                $message = "Your Password Not Match!";
+                return $this->responseError(403, false, $message);
+            }
         }
 
-        if ($userExist && $userExist->is_phone_verified == null) {
-
+        if ($userExist && $userExist->is_phone_verified == 0) {
             $otp = SMSHelper::generateOTP();
             $smsMessage = $otp . ' is your LCS verification code';
             $messageSuccess = SMSHelper::sendSMS($userExist->phone, $smsMessage);
-
             $userOtpUpdate = $userExist->update([
                 'otp_code' => $otp,
             ]);
 
             if ($messageSuccess && $userOtpUpdate) {
                 $message = "Phone Number Already Taken, Verification Code Send Successfully, Check Your Message!";
-                return $this->responseSuccess(410, true, $message, $userExist);
+                return $this->responseSuccess(200, true, $message, $userExist);
             } else {
                 return $this->responseError(Response::HTTP_INTERNAL_SERVER_ERROR, false, 'Something wrong');
             }
         }
 
 
+        // if ($request->type != null) {
+        //     $type = strtolower($request->type);
+        //     if ($type === 'citizen') {
+        //         $rules = [
+        //             'first_name' => 'required|string|max:50',
+        //             'last_name' => 'required|string|max:50',
+        //             'phone' => 'required|max:11|min:11|regex:/(01)[0-9]{9}/|unique:users',
+        //             'password' => 'required|min:8',
+        //             'type' => 'required',
+        //             'terms_conditions' => 'required'
+        //         ];
+        //     } elseif ($type === 'consultant') {
+        //         $rules = [
+        //             'first_name' => 'required|string|max:50',
+        //             'last_name' => 'required|string|max:50',
+        //             'phone' => 'required|max:11|min:11|regex:/(01)[0-9]{9}/|unique:users',
+        //             'email' => 'required|email|unique:users,email',
+        //             'password' => 'required|min:8',
+        //             'dob' => 'required|string',
+        //             'district_id' => 'required',
+        //             'type' => 'required',
+        //             'terms_conditions' => 'required'
+        //         ];
+        //     }
+        // } else {
+        //     $message = "Type cannot be null";
+        //     return $this->responseError(403, false, $message);
+        // }
+
+        // $validated = Validator::make($request->all(), $rules);
+        // if ($validated->fails()) {
+        //     //    return $this->responseError(403, false, $message);
+        //     return response()->json(['status_code' => 403, 'status' => false, 'message' => $validated->errors()->first(), 'errors' => $validated->errors()]);
+        // }
+
+
+
+
+
         if ($request->type != null) {
             //converts all the uppercase english alphabets present in the string to lowercase
             $type = strtolower($request->type);
-
             if ($type === 'citizen') {
                 $citizenTotalData = User::select(DB::raw('count(id) as total'))
                     ->where('type', 'citizen')
@@ -176,7 +225,6 @@ class AuthController extends Controller
         DB::beginTransaction();
         try {
             $otp = SMSHelper::generateOTP();
-
             $user = User::create([
                 'name' => $request->first_name . ' ' . $request->last_name,
                 'phone' => $request->phone,
@@ -191,9 +239,7 @@ class AuthController extends Controller
             ]);
 
             $smsMessage = $otp . ' is your LCS verification code ';
-
             $messageSuccess = SMSHelper::sendSMS($user->phone, $smsMessage);
-
             $role = Role::where('name', $request->type)->first();
             $user->assignRole($role);
 
@@ -201,7 +247,7 @@ class AuthController extends Controller
 
             if ($messageSuccess) {
                 $message = "Phone Number Verification Code Send Successfully, Check Your Message!";
-                return $this->responseSuccess(410, true, $message, $user);
+                return $this->responseSuccess(200, true, $message, $user);
             } else {
                 return $this->responseError(Response::HTTP_INTERNAL_SERVER_ERROR, false, 'Something wrong');
             }
@@ -214,28 +260,36 @@ class AuthController extends Controller
 
     public function registrationWithOTP(Request $request)
     {
-        //return $request->all();
-        // $phone=01798445611;
-        // $phoneNumberPadded = sprintf("%011d", $phone);
-        // return $phoneNumberPadded;
+        if (!$request->otp_code) {
+            $message = "Otp_Code Field Required!";
+            return $this->responseError(403, false, $message);
+        }
+
+        if (!$request->phone) {
+            $message = "Phone Field Required!";
+            return $this->responseError(403, false, $message);
+        }
+
         $user = User::where([
             'phone' => $request->phone,
             'otp_code' => (int) $request->otp_code,
-            'is_phone_verified' => NULL
-        ])->first();
-        //   return $user;
+            'is_phone_verified' => 0
+        ])->select(['id', 'name', 'phone', 'email', 'is_phone_verified', 'dob', 'password', 'updated_at'])
+            ->first();
+        //  return $user;
         if ($user) {
             $is_expired_time = $user->updated_at->addMinutes(2);
+            // return
             $nowTime = Carbon::now();
 
             if ($is_expired_time >= $nowTime) {
-                $user = $user->update([
+                $userData = $user->update([
                     'is_phone_verified' => 1,
                 ]);
 
-                if ($user) {
+                if ($userData) {
                     $message = "Your Phone Number Verified, And Registration Successfull";
-                    return $this->responseSuccess(200, true, $message, []);
+                    return $this->responseSuccess(200, true, $message, $user);
                 }
             } else {
                 $message = "Your OTP time has been expired";
@@ -251,18 +305,19 @@ class AuthController extends Controller
     {
         $otp = SMSHelper::generateOTP();
         $userExist = User::where('phone', $request->phone)
-            ->where('is_phone_verified', null)
+            ->where('is_phone_verified', 0)
+            ->select(['id', 'name', 'phone', 'email', 'is_phone_verified', 'dob', 'password', 'updated_at', 'otp_code'])
             ->first();
-          //  info($userExist->phone);
+        //  return $userExist;
         if ($userExist) {
             $smsMessage = $otp . ' is your LCS verification code';
             $messageSuccess = SMSHelper::sendSMS($userExist->phone, $smsMessage);
-            
-            $userExist = $userExist->update([
+
+            $userOtpUpdate = $userExist->update([
                 'otp_code' => $otp,
             ]);
 
-            if ($messageSuccess) {
+            if ($messageSuccess && $userOtpUpdate) {
                 $message = "OTP Code Refresh Successfully, Check Your Message!";
                 return $this->responseSuccess(200, true, $message, $userExist);
             } else {
@@ -318,19 +373,35 @@ class AuthController extends Controller
 
     protected function createNewToken($token)
     {
+        // $userData=auth()->user()
         return response()->json([
             'status_code' => 200,
             'message' => 'Login Succesfull',
             'status' => true,
-            'access_token' => $token,
-            'token_type' => 'bearer',
-            'expires_in' => auth()->factory()->getTTL() * 120,
-            'user' => [
-                'data' => auth()->user(),
+            'data' => [
+                'user' => auth()->user()
+                    ->only([
+                        'id',
+                        'name',
+                        'phone',
+                        'email',
+                        'is_phone_verified',
+                        'dob',
+                        'profile_image',
+                        'type',
+                        'rates',
+                        'code'
+                    ]),
+
                 'role' => User::where('id', auth()->user()->id)->first()->getRoleNames(),
-                'permissions' => User::where('id', auth()->user()->id)->first()->getAllPermissions()->pluck('name')
+                'permissions' => User::where('id', auth()->user()->id)->first()
+                    ->getAllPermissions()->pluck('name'),
+                'access_token' => $token,
+                'token_type' => 'bearer',
+                // 'expires_in' => auth()->factory()->getTTL() * 120,
+                'expires_in' => Carbon::now()->addMinutes(1440),
             ],
-            //  return $this->responseSuccess(200, true, $message, $data);
+
         ]);
     }
 
