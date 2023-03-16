@@ -33,7 +33,8 @@ class ProfileController extends Controller
                 'phone' => 'max:15|min:11|regex:/(01)[0-9]{9}/|required|unique:users,phone,' . $user->id,
                 'password' => 'nullable|min:8',
                 'address' => 'required|max:50',
-                'nid' => 'required|regex:/(?:\d{17}|\d{13}|\d{10})/|unique:users,nid,' . $user->id,
+               // 'nid' => 'required|regex:/(?:\d{17}|\d{13}|\d{10})/|unique:users,nid,' . $user->id,
+                'nid' => 'required|unique:users,nid,' . $user->id,
                 'dob' => 'required|max:50',
                 'gender' => 'required|max:10',
                 'district_id' => 'required|max:50',
@@ -63,6 +64,7 @@ class ProfileController extends Controller
                 $request->validate([
                     'years_of_experience' => 'required',
                     'current_profession' => 'nullable',
+                    'general_info' => 'nullable',
                     'email' => 'required|email|unique:users,email,' . $user->id,
                 ]);
 
@@ -123,6 +125,7 @@ class ProfileController extends Controller
                 'district_id' => $request->district_id ?? $user->district_id,
                 'years_of_experience' => $request->years_of_experience ?? $user->years_of_experience,
                 'current_profession' => $request->current_profession ?? $user->current_profession,
+                'general_info' => $request->general_info ?? $user->general_info,
                 'nid_front' => $nid_front_image_path ?? $user->nid_front,
                 'nid_back' => $nid_back_image_path ?? $user->nid_back,
                 'schedule' => $request->schedule ?? $user->schedule
@@ -141,6 +144,7 @@ class ProfileController extends Controller
                             if ($experiance) {
                                 $experiance->update([
                                     'institute_name' => $request->experiances[$key]['institute_name'],
+                                    'address' => $request->experiances[$key]['address'],
                                     'designation' => $request->experiances[$key]['designation'],
                                     'department' => $request->experiances[$key]['department'],
                                     'start_date' => $request->experiances[$key]['start_date'],
@@ -151,6 +155,7 @@ class ProfileController extends Controller
                         } else {
                             Experience::create([
                                 'institute_name' => $request->experiances[$key]['institute_name'],
+                                'address' => $request->experiances[$key]['address'],
                                 'designation' => $request->experiances[$key]['designation'],
                                 'department' => $request->experiances[$key]['department'],
                                 'start_date' => $request->experiances[$key]['start_date'],

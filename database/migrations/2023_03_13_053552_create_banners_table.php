@@ -12,19 +12,14 @@ return new class extends Migration {
      */
     public function up()
     {
-        Schema::create('conversations', function (Blueprint $table) {
+        Schema::create('banners', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('sender_id')->nullable();
-            $table->unsignedBigInteger('receiver_id')->nullable();
-            $table->text("message")->nullable();
-            $table->unsignedBigInteger('purpose_id')->nullable();
-            $table->string('purpose_type', 255)->nullable();
-            $table->string('time', 255)->nullable();
-            $table->boolean('seen_status')->default(0);
+            $table->string('page_location', 50);
             $table->tinyInteger('status')->comment("
             0 inactive,
             1 active,
             ");
+            $table->string('image')->nullable();
             $table->timestamps();
         });
     }
@@ -36,6 +31,6 @@ return new class extends Migration {
      */
     public function down()
     {
-        Schema::dropIfExists('conversations');
+        Schema::dropIfExists('banners');
     }
 };

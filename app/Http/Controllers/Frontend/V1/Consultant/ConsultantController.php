@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 use App\Traits\ResponseTrait;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
-
+use App\Models\LcsCase;
 
 class ConsultantController extends Controller
 {
@@ -124,13 +124,14 @@ class ConsultantController extends Controller
 
     public function consultantDetails($consultant_id)
     {
+        // $consultant = User::where('id', $consultant_id)
         $consultant = User::where('id', $consultant_id)
-        ->with('academics', 'experiances', 'services')
-        ->status()
-        ->approval()
-        ->consultant()
-        ->get();
-        //return $consultant;
+            ->with(['academics', 'experiances', 'services'])
+            ->status()
+            ->approval()
+            ->consultant()
+            ->get();
+
         if (!empty($consultant)) {
             $message = "Succesfully Data Shown";
             return $this->responseSuccess(200, true, $message, $consultant);
@@ -140,7 +141,67 @@ class ConsultantController extends Controller
         }
     }
 
+    public function reviewList(Request $request, $consultant_id)
+    {
 
+        $data = [];
+        $params = $request->all();
+        // return $params;
+
+        $totalCitizenRating = LcsCase::where('consultant_id', $consultant_id)
+            ->where('rating', '>=', '0.0')
+            ->distinct('lcs_cases.citizen_id')
+            ->Completed()->count();
+
+        //return $totalCitizenRating;
+        $citizenReviewData = DB::table('lcs_cases')
+            ->where('lcs_cases.consultant_id', $consultant_id)
+            ->select(
+                'users.name as citizen_name',
+                'users.id',
+                'users.profile_image',
+                'lcs_cases.id as case_id',
+                'lcs_cases.citizen_id',
+                'lcs_cases.rating',
+                'lcs_cases.status',
+                'lcs_cases.citizen_review_comment',
+                'lcs_cases.created_at'
+            )
+            ->where(['lcs_cases.status' => 2])
+            ->join('users', 'lcs_cases.citizen_id', '=', 'users.id')
+            ->groupBy('lcs_cases.citizen_id');
+        // ->distinct('lcs_cases.citizen_id');
+        // ->limit(20)
+        //   ->get();
+
+        if (isset($params['limit'])) {
+            if (isset($params['offset'])) {
+                $data['offset'] = $params['offset'];
+                $data['limit'] = $params['limit'];
+                $data['totalCitizenRating'] = $totalCitizenRating;
+                $data['list'] = $citizenReviewData->offset($params['offset'])
+                    ->limit($params['limit'])
+                    ->get();
+            } else {
+                $data['totalCitizenRating'] = $totalCitizenRating;
+                $data['limit'] = $params['limit'];
+                $data['list'] = $citizenReviewData->limit($params['limit'])->get();
+            }
+        } else {
+            $data['totalCitizenRating'] = $totalCitizenRating;
+            $data['list'] = $citizenReviewData->get();
+        }
+
+
+        // return $citizenReviewData;
+        if (!empty($data)) {
+            $message = "Succesfully Data Shown";
+            return $this->responseSuccess(200, true, $message, $data);
+        } else {
+            $message = "Invalid credentials";
+            return $this->responseError(403, false, $message);
+        }
+    }
 
 
 

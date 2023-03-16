@@ -18,6 +18,7 @@ class CreateExperiencesTable extends Migration
             $table->unsignedBigInteger('user_id')->comment('Users Whoose Information Is Connect With');
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->string('institute_name');
+            $table->string('address', 255)->nullable();
             $table->string('designation');
             $table->string('department');
             $table->string('start_date');

@@ -18,6 +18,7 @@ class ConsultantController extends Controller
 
         try {
             $consultants = User::where('type', 'consultant')->get();
+            info($consultants);
             if ($consultants != null) {
                 $message = "";
                 DB::commit();

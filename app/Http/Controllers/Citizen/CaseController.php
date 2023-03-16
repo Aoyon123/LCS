@@ -62,7 +62,8 @@ class CaseController extends Controller
                 'users.name',
                 'users.code',
                 'users.profile_image'
-            )->join('users', 'lcs_cases.' . $userType . '_id', '=', 'users.id')->orderBy('case_id','DESC')->get();
+            )->join('users', 'lcs_cases.' . $userType . '_id', '=', 'users.id')
+            ->orderBy('case_id', 'DESC')->get();
 
         if ($caseData) {
             $message = "Case list data succesfully shown";
@@ -168,6 +169,7 @@ class CaseController extends Controller
         DB::beginTransaction();
 
         $caseData = LcsCase::findOrFail($request->id);
+        // return $caseData;
         try {
             if ($caseData) {
                 $caseData->update([
@@ -180,10 +182,21 @@ class CaseController extends Controller
 
                 if ($request->rating) {
                     $consultant_id = $caseData->consultant_id;
-                    $averageRating = LcsCase::where(['consultant_id' => $consultant_id, 'status' => 2])->avg('rating');
-                    $roundRating = round($averageRating, 1);
+                    //  return $consultant_id;
+                    $averageRating = LcsCase::where(['consultant_id' => $consultant_id, 'status' => 2])
+                        ->avg('rating');
 
-                    User::find($consultant_id)->update(['rates' => $roundRating]);
+                    $totalRating = LcsCase::where([
+                        'consultant_id' => $consultant_id,
+                        'status' => 2,
+                    ])->where('rating', '>=', '0.0')->count('rating');
+
+                    //  return $totalRating;
+                    if ($totalRating > 1) {
+                        $totalRatingSum = $totalRating + 1;
+                    }
+                    $roundRating = round($averageRating, 1);
+                    User::find($consultant_id)->update(['rates' => $roundRating, 'totalRating' => $totalRatingSum ?? 1]);
                 }
 
                 $message = "This " . $caseData->case_code . " data has been updated.";
@@ -243,7 +256,7 @@ class CaseController extends Controller
             // }
             // return $user;
             $rating = LcsCase::select(DB::raw('count(rating) as total'))->where('consultant_id', $id)->completed()->first();
-           // return $rating;
+            // return $rating;
             DB::commit();
             $message = "Consultant Services Shown Successfull";
             return $this->responseSuccess(200, true, $message, $rating);

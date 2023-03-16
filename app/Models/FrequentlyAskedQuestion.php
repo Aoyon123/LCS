@@ -21,4 +21,13 @@ class FrequentlyAskedQuestion extends Model
     {
         return $query->where(['status' => 1]);
     }
+    public function scopeCitizenCategory($query)
+    {
+        return $query->where(['category_name' => 'citizen']);
+    }
+
+    public function scopeConsultantCategory($query)
+    {
+        return $query->where(['category_name' => 'consultant']);
+    }
 }

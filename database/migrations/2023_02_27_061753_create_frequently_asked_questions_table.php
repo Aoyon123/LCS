@@ -19,7 +19,10 @@ return new class extends Migration
             $table->string('question', 255)->nullable();
             $table->string('answer', 255)->nullable();
             $table->string('answer_image',255)->nullable();
-            $table->tinyInteger('status')->nullable();
+            $table->tinyInteger('status')->comment("
+            0 inactive,
+            1 active,
+            ");
             $table->timestamps();
         });
     }

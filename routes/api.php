@@ -6,7 +6,10 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\ExperienceController;
 use App\Http\Controllers\Citizen\CaseController;
+use App\Http\Controllers\Admin\BannerController;
+//use App\Http\Controllers\Admin\BannerControlle;
 use App\Http\Controllers\Common\ProfileController;
+use App\Http\Controllers\Citizen\CitizenController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Consultant\ServiceController;
 use App\Http\Controllers\Common\ConversationController;
@@ -17,7 +20,6 @@ use App\Http\Controllers\Admin\FrequentlyAskedQuestionController;
 use App\Http\Controllers\Frontend\V1\Consultant\ConsultantController;
 use App\Http\Controllers\Admin\CitizenController as AdminCitizenController;
 use App\Http\Controllers\Admin\ConsultantController as AdminConsultantController;
-use App\Http\Controllers\Citizen\CitizenController;
 
 /*
 |--------------------------------------------------------------------------
@@ -63,7 +65,6 @@ Route::group(["middleware" => ["auth:api"]], function () {
 
     /////////  Conversations /////////
     Route::get('/conversation/seenMessage/{purpose_id}', [ConversationController::class, 'seenMessage']);
-
     Route::get('/conversation/{purpose_id}/seeMoreMessage/{offset}', [ConversationController::class, 'seeMoreMessage']);
     Route::get('/conversation/{id}/allMessage', [ConversationController::class, 'allMessage']);
     Route::post('/conversation/store', [ConversationController::class, 'store']);
@@ -91,7 +92,7 @@ Route::group(["middleware" => ["auth:api"]], function () {
     Route::get('/experience/{id}/retrieve', [ExperienceController::class, 'retrieve']);
     Route::put('/experience/{id}/update', [ExperienceController::class, 'update']);
     Route::post('/experience/delete', [ExperienceController::class, 'destroy']);
-
+    Route::post('/experience/store', [ExperienceController::class, 'store']);
 
     ////////// Role ///////////
     Route::get('/role', [RoleController::class, 'index']);
@@ -132,7 +133,10 @@ Route::group(["middleware" => ["auth:api"]], function () {
     Route::put('/frequentlyAskedQuestion/{faq_id}/update', [FrequentlyAskedQuestionController::class, 'update']);
     Route::delete('/frequentlyAskedQuestion/{faq_id}/delete', [FrequentlyAskedQuestionController::class, 'destroy']);
 
-
+    ////////////////  Banner Controller  /////////////
+    Route::get("banner/all", [BannerController::class, 'bannerList']);
+    Route::post('/banner/store', [BannerController::class, 'store']);
+    Route::post('/banner/update', [BannerController::class, 'update']);
     /////////////// Citizen Controller  //////////////
     Route::get('/citizen/conlsultants/list', [CitizenController::class, 'conlsultantList']);
 });
@@ -144,8 +148,11 @@ Route::group(["prefix" => "/frontend/common/", 'namespace' => 'Frontend/V1/'], f
     ////////////////   ConsultantController  //////////////////
     Route::get("consultantList", [ConsultantController::class, 'consultantList']);
     Route::get("consultant/{consultant_id}/details", [ConsultantController::class, 'consultantDetails']);
+    Route::get("reviewList/{consultant_id}", [ConsultantController::class, 'reviewList']);
 
 
+    /////// Banner Controller //////////
+    Route::get("banner/list", [BannerController::class, 'bannerList']);
 
 
     /// CommonController ////

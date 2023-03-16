@@ -30,6 +30,9 @@ class User extends Authenticatable implements JWTSubject
     // protected $casts = [
     //     'email_verified_at' => 'datetime',
     // ];
+    protected $casts = [
+        'created_at' => "datetime:Y-m-d",
+    ];
 
     public function experiances()
     {
@@ -52,6 +55,11 @@ class User extends Authenticatable implements JWTSubject
         return $this->getKey();
     }
 
+    public function ratingList()
+    {
+        return $this->hasMany(LcsCase::class, 'consultant_id');
+    }
+
     public function services()
     {
         return $this->belongsToMany(Service::class)->withTimestamps();
@@ -59,14 +67,15 @@ class User extends Authenticatable implements JWTSubject
 
     public function serviceLatest()
     {
-        return $this->belongsToMany(Service::class)->where(['status' => 1])->select(array('services.title', 'services.id', 'services.created_at'))->latest();
+        return $this->belongsToMany(Service::class)->where(['status' => 1])
+            ->select(array('services.title', 'services.id', 'services.created_at'))->latest();
     }
 
-    public function countRating()
-    {
-        return $this->hasMany(LcsCase::class,'consultant_id')
-                    ->where('status',2);
-    }
+    // public function countRating()
+    // {
+    //     return $this->hasMany(LcsCase::class, 'consultant_id')
+    //          ->where('status', 2);
+    // }
 
     public function getJWTCustomClaims()
     {
@@ -101,15 +110,5 @@ class User extends Authenticatable implements JWTSubject
     {
         return $this->belongsToMany(Service::class)->where(['status' => 1]);
     }
-
-    // public function scopeCountRating($query)
-    // {
-    //     return $this->belongsToMany(LcsCase::class)->select(DB::raw('count(rating) as total'))->get();
-    // }
-
-// public function lcsCases()
-// {
-//     return $this->belongsToMany(LcsCase::class)->withTimestamps();
-// }
 
 }

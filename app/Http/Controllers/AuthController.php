@@ -83,7 +83,7 @@ class AuthController extends Controller
                 ]);
 
                 if ($messageSuccess && $userUpdateSuccess) {
-                    $message = "Phone Number Already Taken, Verification Code Send Successfully, Check Your Message!";
+                    $message = "Phone Number Is Not Verified, Verification Code Send Successfully, Check Your Message!";
                     DB::commit();
                     $data = [
                         'user' => $userExist,
@@ -113,13 +113,14 @@ class AuthController extends Controller
             ->first();
 
         if ($userExist && $userExist->is_phone_verified == 1) {
-            if (Hash::check($request->password, $userExist->password)) {
-                $message = $userExist->phone . " already registered, now you can login";
-                return $this->responseSuccess(200, true, $message, $userExist);
-            } else {
-                $message = "Your Password Not Match!";
-                return $this->responseError(403, false, $message);
-            }
+                if (Hash::check($request->password, $userExist->password)) {
+                    $message = $userExist->phone . " already registered, now you can login";
+                   // return $this->responseSuccess(200, true, $message, $userExist);
+                   return $this->responseError(403, false, $message);
+                } else {
+                    $message = "This phone number already registered!";
+                    return $this->responseError(403, false, $message);
+                }
         }
 
         if ($userExist && $userExist->is_phone_verified == 0) {
@@ -131,52 +132,12 @@ class AuthController extends Controller
             ]);
 
             if ($messageSuccess && $userOtpUpdate) {
-                $message = "Phone Number Already Taken, Verification Code Send Successfully, Check Your Message!";
+                $message = "Phone Number Already Exists, Verification Code Send Successfully, Check Your Message!";
                 return $this->responseSuccess(200, true, $message, $userExist);
             } else {
                 return $this->responseError(Response::HTTP_INTERNAL_SERVER_ERROR, false, 'Something wrong');
             }
         }
-
-
-        // if ($request->type != null) {
-        //     $type = strtolower($request->type);
-        //     if ($type === 'citizen') {
-        //         $rules = [
-        //             'first_name' => 'required|string|max:50',
-        //             'last_name' => 'required|string|max:50',
-        //             'phone' => 'required|max:11|min:11|regex:/(01)[0-9]{9}/|unique:users',
-        //             'password' => 'required|min:8',
-        //             'type' => 'required',
-        //             'terms_conditions' => 'required'
-        //         ];
-        //     } elseif ($type === 'consultant') {
-        //         $rules = [
-        //             'first_name' => 'required|string|max:50',
-        //             'last_name' => 'required|string|max:50',
-        //             'phone' => 'required|max:11|min:11|regex:/(01)[0-9]{9}/|unique:users',
-        //             'email' => 'required|email|unique:users,email',
-        //             'password' => 'required|min:8',
-        //             'dob' => 'required|string',
-        //             'district_id' => 'required',
-        //             'type' => 'required',
-        //             'terms_conditions' => 'required'
-        //         ];
-        //     }
-        // } else {
-        //     $message = "Type cannot be null";
-        //     return $this->responseError(403, false, $message);
-        // }
-
-        // $validated = Validator::make($request->all(), $rules);
-        // if ($validated->fails()) {
-        //     //    return $this->responseError(403, false, $message);
-        //     return response()->json(['status_code' => 403, 'status' => false, 'message' => $validated->errors()->first(), 'errors' => $validated->errors()]);
-        // }
-
-
-
-
 
         if ($request->type != null) {
             //converts all the uppercase english alphabets present in the string to lowercase
@@ -219,7 +180,7 @@ class AuthController extends Controller
             }
         } else {
             $message = "Type cannot be null";
-            return $this->responseError(404, false, $message);
+            return $this->responseError(400, false, $message);
         }
 
         DB::beginTransaction();

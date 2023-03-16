@@ -13,7 +13,10 @@ return new class extends Migration
             $table->id();
             $table->string('title', 50);
             $table->string("description")->nullable();
-            $table->tinyInteger('status')->nullable();
+            $table->tinyInteger('status')->comment("
+            0 inactive,
+            1 active,
+            ");
             $table->string('remark')->nullable();
             $table->timestamps();
         });

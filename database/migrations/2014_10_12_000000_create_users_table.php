@@ -22,9 +22,13 @@ return new class extends Migration {
             $table->string('nid', 50)->nullable();
             $table->string('dob', 50)->nullable();
             $table->string('profile_image')->nullable();
+            $table->mediumText('general_info')->nullable();
             $table->bigInteger('district_id')->nullable();
             $table->string('gender', 10)->nullable();
-            $table->tinyInteger('status',2)->default(0);
+            $table->tinyInteger('status')->comment("
+            0 inactive,
+            1 active,
+            ");
             $table->string('address', 255)->nullable();
             $table->string('type', 20);
             $table->tinyInteger('is_nid_verified', 2)->default(0);
@@ -36,6 +40,7 @@ return new class extends Migration {
             $table->string('nid_back')->nullable();
             $table->string('code')->nullable();
             $table->float('rates', 5, 1)->default(0.0);
+            $table->float('totalRating')->default(0);
             $table->tinyInteger('approval')->comment("
             0 intial,
             1 pending,

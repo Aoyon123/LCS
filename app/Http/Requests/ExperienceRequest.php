@@ -25,12 +25,13 @@ class ExperienceRequest extends FormRequest
     {
         $rules = [
             'Institute_name' => 'required|string|max:30',
+            'address' => 'required',
             'designation' => 'required|max:30',
             'department' => 'required|max:30',
             'start_date' => 'required|max:30',
             'end_date' => 'required|max:50',
             'current_working' => 'nullable',
-            'user_id' => 'required|int|exists:users,id|unique:experiences,user_id,'
+            'user_id' => 'required|int|exists:users,id'
         ];
         if (request()->isMethod('put') || request()->isMethod('patch')) {
             $rules['user_id'] = '';

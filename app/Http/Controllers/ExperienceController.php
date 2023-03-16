@@ -43,6 +43,7 @@ class ExperienceController extends Controller
         try {
             $data = Experience::create([
                 'Institute_name' => $request->Institute_name,
+                'address' => $request->address,
                 'designation' => $request->designation,
                 'department' => $request->department,
                 'start_date' => $request->start_date,
@@ -81,6 +82,7 @@ class ExperienceController extends Controller
         try {
             if ($input) {
                 $input->Institute_name = $request['Institute_name'];
+                $input->address = $request['address'];
                 $input->designation = $request['designation'];
                 $input->department = $request['department'];
                 $input->start_date = $request['start_date'];
