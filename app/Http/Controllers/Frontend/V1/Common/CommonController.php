@@ -96,13 +96,16 @@ class CommonController extends Controller
                     $q->where('services.id', $param);
                     //  return $consultant;
                 });
+                $totalConsultant = $consultant->whereHas('services', function ($q) use ($param) {
+                    $q->where('services.id', $param);
+                    //  return $consultant;
+                })->count();
             } elseif ($key === 'active') {
                 $totalConsultant = $consultant->where('active_status', $param)->count();
                 $consultant = $consultant->where('active_status', $param);
 
             } elseif ($key === 'ratingValue') {
                 $totalConsultant = $consultant->where('rates', $param)->count();
-                // return  $totalConsultant;
                 $consultant = $consultant->where('rates', $param);
             } elseif ($key === 'search') {
                 $userSearchFields = [
@@ -118,13 +121,32 @@ class CommonController extends Controller
                 $experienceSearchFields = ['institute_name'];
                 $academicSearchFields = ['education_level'];
 
+                $totalConsultant = $consultant->where(function ($query) use ($userSearchFields, $param) {
+                    foreach ($userSearchFields as $userSearchField) {
+                        $query->orWhere($userSearchField, 'like', '%' . $param . '%');
+                    }
+                })->count();
+
+
+                $totalConsultant = $consultant->orWhereHas('academics', function ($query) use ($academicSearchFields, $param) {
+                    foreach ($academicSearchFields as $academicSearchField) {
+                        $query->where($academicSearchField, 'like', '%' . $param . '%');
+                    }
+                })->count();
+
+                $totalConsultant = $consultant->orWhereHas('experiances', function ($query) use ($experienceSearchFields, $param) {
+                    foreach ($experienceSearchFields as $experienceSearchField) {
+                        $query->where($experienceSearchField, 'like', '%' . $param . '%');
+                    }
+                })->count();
+
+
                 $consultant = $consultant->where(function ($query) use ($userSearchFields, $param) {
                     foreach ($userSearchFields as $userSearchField) {
                         $query->orWhere($userSearchField, 'like', '%' . $param . '%');
-                        // $totalConsultant = $query->orWhere($userSearchField, 'like', '%' . $param . '%')->count();
-                        //     return $totalConsultant;
                     }
                 })
+
                     ->orWhereHas('services', function ($query) use ($servicesSearchFields, $param) {
                         foreach ($servicesSearchFields as $serviceSearchField) {
                             $query->where($serviceSearchField, 'like', '%' . $param . '%');
@@ -144,13 +166,14 @@ class CommonController extends Controller
                     });
                 // $data[$key] = $consultant->get();
             } elseif ($key === 'ratingTop') {
+                $totalConsultant = $consultant->orderBy('users.rates', $param)->count();
                 $consultant = $consultant->orderBy('users.rates', $param);
             }
         }
 
         if (isset($params['limit'])) {
             if (isset($params['offset'])) {
-                //$data['totalConsultant'] = $totalConsultant;
+                $data['totalConsultant'] = $totalConsultant;
                 $data['offset'] = $params['offset'];
                 $data['limit'] = $params['limit'];
                 $data['list'] = $consultant->offset($params['offset'])->limit($params['limit'])->get();

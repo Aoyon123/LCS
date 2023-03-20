@@ -33,7 +33,7 @@ class ProfileController extends Controller
                 'phone' => 'max:15|min:11|regex:/(01)[0-9]{9}/|required|unique:users,phone,' . $user->id,
                 'password' => 'nullable|min:8',
                 'address' => 'required|max:50',
-               // 'nid' => 'required|regex:/(?:\d{17}|\d{13}|\d{10})/|unique:users,nid,' . $user->id,
+                // 'nid' => 'required|regex:/(?:\d{17}|\d{13}|\d{10})/|unique:users,nid,' . $user->id,
                 'nid' => 'required|unique:users,nid,' . $user->id,
                 'dob' => 'required|max:50',
                 'gender' => 'required|max:10',
@@ -83,7 +83,7 @@ class ProfileController extends Controller
                 if ($request->nid_front) {
                     $image_parts = explode(";base64,", $request->nid_front);
                     if (isset($image_parts[1])) {
-                        $nid_front_image_path = FileHandler::uploadImage($request->nid_front, $request->type, $request->email, 'nid_front');
+                        $nid_front_image_path = FileHandler::uploadImage($request->nid_front, $request->type, $request->phone, 'nid_front');
                         if (File::exists($nid_front_image_path)) {
                             File::delete($nid_front_image_path);
                         }
@@ -97,7 +97,7 @@ class ProfileController extends Controller
                 if ($request->nid_back) {
                     $image_parts = explode(";base64,", $request->nid_back);
                     if (isset($image_parts[1])) {
-                        $nid_back_image_path = FileHandler::uploadImage($request->nid_back, $request->type, $request->email, 'nid_back');
+                        $nid_back_image_path = FileHandler::uploadImage($request->nid_back, $request->type, $request->phone, 'nid_back');
                         if (File::exists($nid_back_image_path)) {
                             File::delete($nid_back_image_path);
                         }
@@ -195,7 +195,7 @@ class ProfileController extends Controller
                         if ($request->academics[$key]['certification_copy']) {
                             $image_parts = explode(";base64,", $request->academics[$key]['certification_copy']);
                             if (isset($image_parts[1])) {
-                                $certificateImage = FileHandler::uploadImage($request->academics[$key]['certification_copy'], $request->type, $request->email, 'certificate');
+                                $certificateImage = FileHandler::uploadImage($request->academics[$key]['certification_copy'], $request->type, $request->phone, 'certificate');
                                 if (File::exists($certificateImage)) {
                                     File::delete($certificateImage);
                                 }
@@ -410,5 +410,50 @@ class ProfileController extends Controller
             $message = "Invalid credentials";
             return $this->responseError(403, false, $message);
         }
+    }
+
+    public function activeStatusChange(Request $request, $consultant_id)
+    {
+        $consultantData = User::findOrFail($consultant_id);
+
+
+        if ($consultantData && $consultantData->active_status == 1) {
+            $consultantData->update([
+                'active_status' => 0,
+
+            ]);
+        } else if ($consultantData && $consultantData->active_status == 0) {
+            $consultantData->update([
+                'active_status' => 1,
+
+            ]);
+        }
+
+        if (!empty($consultantData)) {
+            $message = "Consulatnt ActiveStatus Succesfully Updated";
+            return $this->responseSuccess(200, true, $message, $consultantData);
+        } else {
+            $message = "Invalid credentials";
+            return $this->responseError(403, false, $message);
+        }
+
+        // return $consultantData;
+
+
+        // if ($consultantData) {
+        //     $consultantData->update([
+        //         'active_status' => $request->active_status,
+        //     ]);
+        //     if ($request->active_status == 0) {
+        //         $activeStatus = 'InActive';
+        //     } else if ($request->active_status == 1) {
+        //         $activeStatus = 'Active';
+        //     }
+        // }
+
+        // $message = "This Consultant " . $activeStatus;
+        // return $this->responseSuccess(200, true, $message, $consultantData);
+
+
     }
 }

@@ -39,11 +39,20 @@ class ConversationController extends Controller
 
     public function seenMessage($purposeId)
     {
+        //    $data=Conversation::where(['purpose_id' => $purposeId])
+        //    ->where(['receiver_id' => auth()->user()->id, 'seen_status' => 0])
+        //    ->latest()
+        //    ->limit(200)
+        //    ->update(['seen_status' => 1]);
+
         Conversation::where(['purpose_id' => $purposeId])
             ->where(['receiver_id' => auth()->user()->id, 'seen_status' => 0])
             ->latest()
             ->limit(200)
             ->update(['seen_status' => 1]);
+
+        // $message = "Conversion Message Seen Successfully";
+        // return $this->responseSuccess(200, true, $message, $data);
     }
 
 

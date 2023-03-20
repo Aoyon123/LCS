@@ -57,6 +57,7 @@ Route::group(["middleware" => ["auth:api"]], function () {
     Route::get('/profile/active/status', [ProfileController::class, 'activeUser']);
     Route::post('/profile/update', [ProfileController::class, 'update']);
     Route::post('/password/change', [ProfileController::class, 'updatePassword']);
+    Route::post('/active_status/{consultant_id}/change', [ProfileController::class, 'activeStatusChange']);
     Route::delete('/profile/experience/{id}/delete', [ProfileController::class, 'experienceDestroy']);
     Route::delete('/profile/academic_qualification/{id}/delete', [ProfileController::class, 'academicQualificationDestroy']);
     Route::post('/consultant/approve', [ProfileController::class, 'approved']);
@@ -126,6 +127,7 @@ Route::group(["middleware" => ["auth:api"]], function () {
     Route::get('/case/all', [CaseController::class, 'allCases']);
     Route::post('/case/statusUpdate', [CaseController::class, 'statusUpdate']);
     Route::get('/case/{consultant_id}/rating', [CaseController::class, 'consultantRating']);
+    Route::get('/admin/case/{type}/{user_id}/list', [CaseController::class, 'adminCaseList']);
 
     /////////////// Frequently Asked Question  ////////////////////
     Route::post('/frequentlyAskedQuestion/store', [FrequentlyAskedQuestionController::class, 'store']);

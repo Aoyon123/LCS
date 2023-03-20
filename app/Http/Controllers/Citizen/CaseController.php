@@ -33,21 +33,45 @@ class CaseController extends Controller
 
     public function caseList()
     {
-        // $type = auth()->user()->type;
-        // $cases = [];
-        // $case_selected_fields = ['id', 'title', 'document_file', 'document_link', 'case_code'];
-        // if ($type == 'citizen') {
-        //     $cases = LcsCase::with(['consultant:id,name,code,profile_image'])->select($case_selected_fields)->get();
-
-        // } elseif ($type == 'consultant') {
-        //     $cases = LcsCase::with(['citizen:id,name,code,profile_image'])->select($case_selected_fields)->get();
-        // }
-        // return $cases;
         $type = auth()->user()->type;
         //  return $type;
         $userType = $type === 'citizen' ? 'consultant' : 'citizen';
         $caseData = DB::table('lcs_cases')
             ->where('lcs_cases.' . $type . '_id', auth()->user()->id)
+            ->where('deleted_at', null)
+            ->select(
+                'lcs_cases.id as case_id',
+                'lcs_cases.title',
+                'lcs_cases.document_file',
+                'lcs_cases.document_link',
+                'lcs_cases.case_initial_date',
+                'lcs_cases.case_status_date',
+                'lcs_cases.description',
+                'lcs_cases.case_code',
+                'lcs_cases.status',
+                'users.name',
+                'users.code',
+                'users.profile_image'
+            )->join('users', 'lcs_cases.' . $userType . '_id', '=', 'users.id')
+            ->orderBy('case_id', 'DESC')->get();
+
+        if ($caseData) {
+            $message = "Case list data succesfully shown";
+            return $this->responseSuccess(200, true, $message, $caseData);
+        } else {
+            $message = "No Data Found";
+            return $this->responseError(404, false, $message);
+        }
+    }
+
+
+    public function adminCaseList($type,$user_id)
+    {
+        //$type = $request->type;
+        //  return $type;
+        $userType = $type === 'citizen' ? 'consultant' : 'citizen';
+        $caseData = DB::table('lcs_cases')
+            ->where('lcs_cases.' . $type . '_id', $user_id)
             ->where('deleted_at', null)
             ->select(
                 'lcs_cases.id as case_id',
@@ -192,7 +216,7 @@ class CaseController extends Controller
                     ])->where('rating', '>=', '0.0')->count('rating');
 
                     //  return $totalRating;
-                    if ($totalRating > 1) {
+                    if ($totalRating >= 1) {
                         $totalRatingSum = $totalRating + 1;
                     }
                     $roundRating = round($averageRating, 1);
