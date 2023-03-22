@@ -36,6 +36,8 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/otp/verify', [AuthController::class, 'registrationWithOTP']);
 Route::post('/otp/refresh', [AuthController::class, 'refreshOTP']);
+Route::post('/forget/password', [AuthController::class, 'forgetPassword']);
+Route::post('/set/password', [AuthController::class, 'setPassword']);
 Route::post('/index', [AuthController::class, 'index']);
 Route::post('/destroy', [AuthController::class, 'destroy']);
 Route::post('/logout', [AuthController::class, 'logout']);
@@ -62,6 +64,7 @@ Route::group(["middleware" => ["auth:api"]], function () {
     Route::delete('/profile/academic_qualification/{id}/delete', [ProfileController::class, 'academicQualificationDestroy']);
     Route::post('/consultant/approve', [ProfileController::class, 'approved']);
     Route::get("district/list", [ProfileController::class, 'allDistricts']);
+    Route::post('/imagefile/download', [ProfileController::class, 'getDownload']);
     // Route::get('/profile/consultantList', [ProfileController::class, 'consultantList']);
 
     /////////  Conversations /////////

@@ -22,7 +22,7 @@ class AuthController extends Controller
     use ResponseTrait;
     public function __construct()
     {
-        $this->middleware('auth:api', ['except' => ['login', 'register', 'registrationWithOTP', 'refreshOTP']]);
+        $this->middleware('auth:api', ['except' => ['login', 'register', 'registrationWithOTP', 'refreshOTP', 'forgetPassword','setPassword']]);
     }
 
     public function index()
@@ -113,14 +113,14 @@ class AuthController extends Controller
             ->first();
 
         if ($userExist && $userExist->is_phone_verified == 1) {
-                if (Hash::check($request->password, $userExist->password)) {
-                    $message = $userExist->phone . " already registered, now you can login";
-                   // return $this->responseSuccess(200, true, $message, $userExist);
-                   return $this->responseError(403, false, $message);
-                } else {
-                    $message = "This phone number already registered!";
-                    return $this->responseError(403, false, $message);
-                }
+            if (Hash::check($request->password, $userExist->password)) {
+                $message = $userExist->phone . " already registered, now you can login";
+                // return $this->responseSuccess(200, true, $message, $userExist);
+                return $this->responseError(403, false, $message);
+            } else {
+                $message = "This phone number already registered!";
+                return $this->responseError(403, false, $message);
+            }
         }
 
         if ($userExist && $userExist->is_phone_verified == 0) {
@@ -234,7 +234,7 @@ class AuthController extends Controller
         $user = User::where([
             'phone' => $request->phone,
             'otp_code' => (int) $request->otp_code,
-            'is_phone_verified' => 0
+            // 'is_phone_verified' => 0
         ])->select(['id', 'name', 'phone', 'email', 'is_phone_verified', 'dob', 'password', 'updated_at'])
             ->first();
         //  return $user;
@@ -266,7 +266,7 @@ class AuthController extends Controller
     {
         $otp = SMSHelper::generateOTP();
         $userExist = User::where('phone', $request->phone)
-            ->where('is_phone_verified', 0)
+          //  ->where('is_phone_verified', 0)
             ->select(['id', 'name', 'phone', 'email', 'is_phone_verified', 'dob', 'password', 'updated_at', 'otp_code'])
             ->first();
         //  return $userExist;
@@ -286,6 +286,78 @@ class AuthController extends Controller
             }
         }
     }
+
+
+    public function forgetPassword(Request $request)
+    {
+        $request->validate([
+            'phone' => 'required|max:11|min:11|regex:/(01)[0-9]{9}/|',
+        ]);
+
+        $userExist = User::where('phone', $request->phone)
+            ->select(['id', 'name', 'phone', 'email', 'is_phone_verified', 'dob', 'password', 'otp_code'])
+            ->first();
+
+        if ($userExist) {
+            $otp = SMSHelper::generateOTP();
+            $smsMessage = $otp . ' is your LCS verification code';
+            $messageSuccess = SMSHelper::sendSMS($userExist->phone, $smsMessage);
+            $userOtpUpdate = $userExist->update([
+                'otp_code' => $otp,
+            ]);
+
+            if ($messageSuccess && $userOtpUpdate) {
+                $message = "Verification Code Send Successfully, Check Your Message!";
+                return $this->responseSuccess(200, true, $message, $userExist);
+            } else {
+                return $this->responseError(Response::HTTP_INTERNAL_SERVER_ERROR, false, 'Something wrong');
+            }
+        } else {
+            $message = "This Phone Number Is Not Exists!";
+            return $this->responseError(400, false, $message);
+        }
+
+    }
+
+    public function setPassword(Request $request)
+    {
+        if (!$request->password) {
+            $message = "Password Field Required!";
+            return $this->responseError(403, false, $message);
+        }
+        $request->validate([
+            'password' => 'required|min:8',
+        ]);
+        $user = User::where([
+            'phone' => $request->phone,
+        ])->select(['id', 'name', 'phone', 'email', 'is_phone_verified', 'dob', 'password', 'updated_at'])
+            ->first();
+       // return $user;
+        if ($user) {
+            $is_expired_time = $user->updated_at->addMinutes(3);
+
+            $nowTime = Carbon::now();
+
+            if ($is_expired_time >= $nowTime) {
+                $userData = $user->update([
+                    'password' => Hash::make($request->password),
+                ]);
+
+                if ($userData) {
+                    $message = "Your Password Updated Successfully";
+                    return $this->responseSuccess(200, true, $message, $user);
+                }
+            } else {
+                $message = "Time Has Been Expired";
+                return $this->responseError(404, false, $message);
+            }
+        }
+
+    }
+
+
+
+
 
     public function retrieve($id)
     {

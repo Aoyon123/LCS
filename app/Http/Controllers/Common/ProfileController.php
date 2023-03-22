@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Common;
 use App\Models\User;
 use App\Models\Experience;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Response;
 use App\Traits\ResponseTrait;
 use App\Http\Helper\FileHandler;
 use Illuminate\Support\Facades\DB;
@@ -33,8 +34,8 @@ class ProfileController extends Controller
                 'phone' => 'max:15|min:11|regex:/(01)[0-9]{9}/|required|unique:users,phone,' . $user->id,
                 'password' => 'nullable|min:8',
                 'address' => 'required|max:50',
-                // 'nid' => 'required|regex:/(?:\d{17}|\d{13}|\d{10})/|unique:users,nid,' . $user->id,
-                'nid' => 'required|unique:users,nid,' . $user->id,
+                // 'nid' => 'regex:/(?:\d{17}|\d{13}|\d{10})/|unique:users,nid,' . $user->id,
+              //  'nid' => 'nullable|unique:users,nid,' . $user->id,
                 'dob' => 'required|max:50',
                 'gender' => 'required|max:10',
                 'district_id' => 'required|max:50',
@@ -66,6 +67,7 @@ class ProfileController extends Controller
                     'current_profession' => 'nullable',
                     'general_info' => 'nullable',
                     'email' => 'required|email|unique:users,email,' . $user->id,
+                    'nid' => 'required|unique:users,nid,' . $user->id,
                 ]);
 
                 if ($request->nid_front) {
@@ -174,35 +176,18 @@ class ProfileController extends Controller
                             $academic = AcademicQualification::where('id', $academicsId)->first();
                         }
 
-                        // if ($request->academics[$key]['certification_copy']) {
-                        //     //return $request->academics[$key]['certification_copy'];
-                        //     $image_parts = explode(";base64,", $request->academics[$key]['certification_copy']);
-                        //     $filename_path = md5(time() . uniqid()) . ".png";
-                        //     if (isset($image_parts[1])) {
-                        //         $decoded = base64_decode($image_parts[1]);
-                        //         file_put_contents(public_path() . "/uploads/certificate/" . $filename_path, $decoded);
-                        //         $certification_copy = "/uploads/certificate/" . $filename_path;
-                        //         if (File::exists($certification_copy)) {
-                        //             File::delete($certification_copy);
-                        //         }
-                        //     } else {
-                        //         $certification_copy = $academic->certification_copy;
-                        //     }
-                        // } else {
-                        //     $certification_copy = $academic->certification_copy;
-                        // }
 
                         if ($request->academics[$key]['certification_copy']) {
                             $image_parts = explode(";base64,", $request->academics[$key]['certification_copy']);
                             if (isset($image_parts[1])) {
                                 $certificateImage = FileHandler::uploadImage($request->academics[$key]['certification_copy'], $request->type, $request->phone, 'certificate');
+                           //  return $certificateImage;
                                 if (File::exists($certificateImage)) {
                                     File::delete($certificateImage);
                                 }
-                            } {
-                                $certificateImage = $academic->certification_copy;
                             }
-                        } else {
+                         }
+                         else {
                             $certificateImage = $academic->certification_copy;
                         }
 
@@ -455,5 +440,19 @@ class ProfileController extends Controller
         // return $this->responseSuccess(200, true, $message, $consultantData);
 
 
+    }
+
+    public function getDownload(Request $request){
+
+        // $file = public_path()."/downloads/info.pdf";
+        // $headers = array('Content-Type: application/pdf',);
+        // return Response::download($file, 'info.pdf',$headers);
+        $filepath = public_path($request->path);
+        return response()->download($filepath);
+
+
+        // $file = public_path()."/downloads".$download_path;
+        // $headers = array($content_type,);
+        // return Response::download($file, $download_path,$headers);
     }
 }
