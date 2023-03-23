@@ -65,7 +65,7 @@ class CaseController extends Controller
     }
 
 
-    public function adminCaseList($type,$user_id)
+    public function adminCaseList($type, $user_id)
     {
         //$type = $request->type;
         //  return $type;
@@ -74,7 +74,7 @@ class CaseController extends Controller
             ->where('lcs_cases.' . $type . '_id', $user_id)
             ->where('deleted_at', null)
             ->select(
-                'lcs_cases.id as case_id',
+                'lcs_cases.id',
                 'lcs_cases.title',
                 'lcs_cases.document_file',
                 'lcs_cases.document_link',
@@ -82,12 +82,15 @@ class CaseController extends Controller
                 'lcs_cases.case_status_date',
                 'lcs_cases.description',
                 'lcs_cases.case_code',
+                'lcs_cases.rating',
                 'lcs_cases.status',
+                'lcs_cases.created_at',
+                'lcs_cases.updated_at',
                 'users.name',
                 'users.code',
                 'users.profile_image'
             )->join('users', 'lcs_cases.' . $userType . '_id', '=', 'users.id')
-            ->orderBy('case_id', 'DESC')->get();
+            ->orderBy('id', 'DESC')->get();
 
         if ($caseData) {
             $message = "Case list data succesfully shown";

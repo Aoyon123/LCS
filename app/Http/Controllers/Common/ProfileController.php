@@ -35,7 +35,7 @@ class ProfileController extends Controller
                 'password' => 'nullable|min:8',
                 'address' => 'required|max:50',
                 // 'nid' => 'regex:/(?:\d{17}|\d{13}|\d{10})/|unique:users,nid,' . $user->id,
-              //  'nid' => 'nullable|unique:users,nid,' . $user->id,
+                //  'nid' => 'nullable|unique:users,nid,' . $user->id,
                 'dob' => 'required|max:50',
                 'gender' => 'required|max:10',
                 'district_id' => 'required|max:50',
@@ -89,12 +89,11 @@ class ProfileController extends Controller
                         if (File::exists($nid_front_image_path)) {
                             File::delete($nid_front_image_path);
                         }
-                    } else {
-                        $nid_front_image_path = $user->nid_front;
                     }
                 } else {
                     $nid_front_image_path = $user->nid_front;
                 }
+
 
                 if ($request->nid_back) {
                     $image_parts = explode(";base64,", $request->nid_back);
@@ -103,8 +102,6 @@ class ProfileController extends Controller
                         if (File::exists($nid_back_image_path)) {
                             File::delete($nid_back_image_path);
                         }
-                    } else {
-                        $nid_back_image_path = $user->nid_back;
                     }
                 } else {
                     $nid_back_image_path = $user->nid_back;
@@ -136,13 +133,18 @@ class ProfileController extends Controller
 
             if (strtolower($user->type) === 'consultant') {
                 if (is_array($request->experiances)) {
+                    //  return $request->experiances;
                     foreach ($request->experiances as $key => $experiance) {
+                        // return $experiance; // $experience part 1 ta full experience asbe
                         $existId = isset($request->experiances[$key]['id']);
-
+                        //  return $existId; if any experience that's already have for this particular user
+                        // then found 1 If that experiences was not found then 0(mane pore r dhukbei na)
                         if ($existId) {
                             $experianceId = $request->experiances[$key]['id'];
+                            //  return $experianceId; In this $experianceId which experience already exists
+                            // thats id will get in here.
                             $experiance = Experience::where('id', $experianceId)->first();
-
+                            // return $experiance;  $experiance here return that exists experience
                             if ($experiance) {
                                 $experiance->update([
                                     'institute_name' => $request->experiances[$key]['institute_name'],
@@ -170,7 +172,9 @@ class ProfileController extends Controller
 
                 if (is_array($request->academics)) {
                     foreach ($request->academics as $key => $academic) {
+                        //   return $academic;
                         $existId = isset($request->academics[$key]['id']);
+                        //   return $existId; if found then 1 paoua jabe
                         if ($existId) {
                             $academicsId = $request->academics[$key]['id'];
                             $academic = AcademicQualification::where('id', $academicsId)->first();
@@ -180,14 +184,14 @@ class ProfileController extends Controller
                         if ($request->academics[$key]['certification_copy']) {
                             $image_parts = explode(";base64,", $request->academics[$key]['certification_copy']);
                             if (isset($image_parts[1])) {
-                                $certificateImage = FileHandler::uploadImage($request->academics[$key]['certification_copy'], $request->type, $request->phone, 'certificate');
-                           //  return $certificateImage;
+                                $certificateImage = FileHandler::uploadCertificateImage($request->academics[$key]['certification_copy'],
+                                $request->type,$request->academics[$key]['education_level'], $request->phone, 'certificate');
+                                //  return $certificateImage;
                                 if (File::exists($certificateImage)) {
                                     File::delete($certificateImage);
                                 }
                             }
-                         }
-                         else {
+                        } else {
                             $certificateImage = $academic->certification_copy;
                         }
 
@@ -442,7 +446,8 @@ class ProfileController extends Controller
 
     }
 
-    public function getDownload(Request $request){
+    public function getDownload(Request $request)
+    {
 
         // $file = public_path()."/downloads/info.pdf";
         // $headers = array('Content-Type: application/pdf',);

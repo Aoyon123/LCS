@@ -22,7 +22,16 @@ class AuthController extends Controller
     use ResponseTrait;
     public function __construct()
     {
-        $this->middleware('auth:api', ['except' => ['login', 'register', 'registrationWithOTP', 'refreshOTP', 'forgetPassword','setPassword']]);
+        $this->middleware('auth:api', [
+            'except' => [
+                'login',
+                'register',
+                'registrationWithOTP',
+                'refreshOTP',
+                'forgetPasswordVerification',
+                'setPassword'
+            ]
+        ]);
     }
 
     public function index()
@@ -266,7 +275,7 @@ class AuthController extends Controller
     {
         $otp = SMSHelper::generateOTP();
         $userExist = User::where('phone', $request->phone)
-          //  ->where('is_phone_verified', 0)
+            //  ->where('is_phone_verified', 0)
             ->select(['id', 'name', 'phone', 'email', 'is_phone_verified', 'dob', 'password', 'updated_at', 'otp_code'])
             ->first();
         //  return $userExist;
@@ -288,7 +297,7 @@ class AuthController extends Controller
     }
 
 
-    public function forgetPassword(Request $request)
+    public function forgetPasswordVerification(Request $request)
     {
         $request->validate([
             'phone' => 'required|max:11|min:11|regex:/(01)[0-9]{9}/|',
@@ -302,6 +311,7 @@ class AuthController extends Controller
             $otp = SMSHelper::generateOTP();
             $smsMessage = $otp . ' is your LCS verification code';
             $messageSuccess = SMSHelper::sendSMS($userExist->phone, $smsMessage);
+
             $userOtpUpdate = $userExist->update([
                 'otp_code' => $otp,
             ]);
@@ -332,7 +342,7 @@ class AuthController extends Controller
             'phone' => $request->phone,
         ])->select(['id', 'name', 'phone', 'email', 'is_phone_verified', 'dob', 'password', 'updated_at'])
             ->first();
-       // return $user;
+        // return $user;
         if ($user) {
             $is_expired_time = $user->updated_at->addMinutes(3);
 

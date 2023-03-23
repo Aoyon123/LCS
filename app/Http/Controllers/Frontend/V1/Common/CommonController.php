@@ -191,6 +191,36 @@ class CommonController extends Controller
     }
 
 
+
+    public function consultationSelf(Request $request)
+    {
+
+
+        if(!empty($request->all()))
+        {
+            $params=$request->all();
+          //  return $params;
+            $services      =!empty($params['services'])?$params['services']:null;
+            $active   =!empty($params['active'])?$params['active']:null;
+            $ratingValue             =!empty($params['ratingValue'])?$params['ratingValue']:null;
+            $search             =!empty($params['search'])?$params['search']:null;
+         //   $ratingValue             =!empty($params['ratingValue'])?$params['ratingValue']:null;
+        }else{
+            $services      =null;
+            $applicant_mobile   =null;
+            $app_id             =null;
+            // $search_type        =null;
+            $start_date         =null;
+            $end_date           =null;
+        }
+
+    }
+
+
+
+
+
+
     public function activeServiceList()
     {
         $service = Service::activeservicelist()->get();

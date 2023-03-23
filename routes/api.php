@@ -36,7 +36,7 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/otp/verify', [AuthController::class, 'registrationWithOTP']);
 Route::post('/otp/refresh', [AuthController::class, 'refreshOTP']);
-Route::post('/forget/password', [AuthController::class, 'forgetPassword']);
+Route::post('/forget/password', [AuthController::class, 'forgetPasswordVerification']);
 Route::post('/set/password', [AuthController::class, 'setPassword']);
 Route::post('/index', [AuthController::class, 'index']);
 Route::post('/destroy', [AuthController::class, 'destroy']);
@@ -163,6 +163,7 @@ Route::group(["prefix" => "/frontend/common/", 'namespace' => 'Frontend/V1/'], f
     /// CommonController ////
     Route::get("dashboard", [CommonController::class, 'dashboardMobile']);
     Route::get("consultation", [CommonController::class, 'consultation']);
+    Route::get("consultationSelf", [CommonController::class, 'consultationSelf']);
     Route::get("frequentlyAskedQuestion/all", [CommonController::class, 'faqAll']);
     Route::get("serviceList", [CommonController::class, 'activeServiceList']);
     Route::get("district/list", [CommonController::class, 'allDistricts']);

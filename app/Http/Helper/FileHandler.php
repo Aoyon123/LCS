@@ -20,6 +20,19 @@ class FileHandler
         }
     }
 
+
+    public static function uploadCertificateImage($image, $type, $education_level, $unique, $path)
+    {
+        $image_parts = explode(";base64,", $image);
+        $filename_path = $type . '_' . $education_level. '_'. $unique . ".png";
+        if (isset($image_parts[1])) {
+            $image_path = "/uploads/$path/$filename_path";
+            $decoded = base64_decode($image_parts[1]);
+            file_put_contents(public_path() . $image_path, $decoded);
+            return $image_path;
+        }
+    }
+
     public static function uploadfaqImage($image, $type, $unique, $path)
     {
         $image_parts = explode(";base64,", $image);
