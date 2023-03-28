@@ -51,7 +51,7 @@ class BannerController extends Controller
             ]);
 
             DB::commit();
-            $message = "Conversation Created Successfull";
+            $message = "Banner Created Successfull";
             return $this->responseSuccess(200, true, $message, $data);
 
         } catch (QueryException $e) {

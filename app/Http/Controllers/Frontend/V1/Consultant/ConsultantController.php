@@ -195,7 +195,7 @@ class ConsultantController extends Controller
 
         // return $citizenReviewData;
         if (!empty($data)) {
-            $message = "Succesfully Data Shown";
+            $message = "Succesfully Review List Data Shown";
             return $this->responseSuccess(200, true, $message, $data);
         } else {
             $message = "Invalid credentials";

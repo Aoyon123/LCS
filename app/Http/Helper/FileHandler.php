@@ -8,10 +8,11 @@ use Illuminate\Support\Facades\Storage;
 
 class FileHandler
 {
-    public static function uploadImage($image, $type, $unique, $path)
+    public static function uploadImage($image, $type, $unique, $imageType, $path)
     {
         $image_parts = explode(";base64,", $image);
-        $filename_path = $type . '_' . $unique . ".png";
+        $imageType = explode("/", $image_parts[0])[1];
+        $filename_path = $type . '_' . $unique . ".".$imageType;
         if (isset($image_parts[1])) {
             $image_path = "/uploads/$path/$filename_path";
             $decoded = base64_decode($image_parts[1]);
@@ -21,10 +22,11 @@ class FileHandler
     }
 
 
-    public static function uploadCertificateImage($image, $type, $education_level, $unique, $path)
+    public static function uploadUniqueImage($image, $type, $education_level, $imageType, $unique, $path)
     {
         $image_parts = explode(";base64,", $image);
-        $filename_path = $type . '_' . $education_level. '_'. $unique . ".png";
+        $imageType = explode("/", $image_parts[0])[1];
+        $filename_path = $type . '_' . $unique . '_' . $education_level . "." . $imageType;
         if (isset($image_parts[1])) {
             $image_path = "/uploads/$path/$filename_path";
             $decoded = base64_decode($image_parts[1]);

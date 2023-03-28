@@ -23,7 +23,7 @@ class CreateExperiencesTable extends Migration
             $table->string('department');
             $table->string('start_date');
             $table->string('end_date');
-            $table->string('current_working')->nullable();
+            $table->tinyInteger('current_working', 2)->default(0);
             $table->timestamps();
         });
     }

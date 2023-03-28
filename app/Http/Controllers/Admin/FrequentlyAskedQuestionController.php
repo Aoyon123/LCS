@@ -35,15 +35,15 @@ class FrequentlyAskedQuestionController extends Controller
     {
         DB::beginTransaction();
         try {
-            //  return $request->id;
             if ($request->answer_image) {
                 $category_name = str_replace(' ', '', $request->category_name);
                 $image_parts = explode(";base64,", $request->answer_image);
+                $imageType = explode("/", $image_parts[0])[1];
                 if (isset($image_parts[0])) {
-                    $answer_image_path = FileHandler::uploadfaqImage($request->answer_image, $category_name, $request->id, 'faqAnswer');
+                    $answer_image_path = FileHandler::uploadImage($request->answer_image, $category_name, $request->id, $imageType, 'faqAnswer');
                 }
             }
-
+            // return $answer_image_path;
             $data = FrequentlyAskedQuestion::create([
                 'category_name' => $request->category_name,
                 'question' => $request->question,

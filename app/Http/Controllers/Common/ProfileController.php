@@ -45,8 +45,10 @@ class ProfileController extends Controller
 
             if ($request->profile_image) {
                 $image_parts = explode(";base64,", $request->profile_image);
+                $imageType = explode("/", $image_parts[0])[1];
                 if (isset($image_parts[1])) {
-                    $profile_image_path = FileHandler::uploadImage($request->profile_image, $request->type, $request->phone, 'profile');
+                    $profile_image_path = FileHandler::uploadImage($request->profile_image, $request->type, $request->phone, $imageType, 'profile');
+                    //   return $profile_image_path;
                     if (File::exists($profile_image_path)) {
                         File::delete($profile_image_path);
                     }
@@ -84,8 +86,11 @@ class ProfileController extends Controller
 
                 if ($request->nid_front) {
                     $image_parts = explode(";base64,", $request->nid_front);
+                    $imageType = explode("/", $image_parts[0])[1];
+                    // return $imageType;
                     if (isset($image_parts[1])) {
-                        $nid_front_image_path = FileHandler::uploadImage($request->nid_front, $request->type, $request->phone, 'nid_front');
+                        $nid_front_image_path = FileHandler::uploadImage($request->nid_front, $request->type, $request->phone, $imageType, 'nid_front');
+                        //   return $nid_front_image_path;
                         if (File::exists($nid_front_image_path)) {
                             File::delete($nid_front_image_path);
                         }
@@ -97,8 +102,10 @@ class ProfileController extends Controller
 
                 if ($request->nid_back) {
                     $image_parts = explode(";base64,", $request->nid_back);
+                    $imageType = explode("/", $image_parts[0])[1];
                     if (isset($image_parts[1])) {
-                        $nid_back_image_path = FileHandler::uploadImage($request->nid_back, $request->type, $request->phone, 'nid_back');
+                        $nid_back_image_path = FileHandler::uploadImage($request->nid_back, $request->type, $request->phone, $imageType, 'nid_back');
+                        //  return $nid_back_image_path;
                         if (File::exists($nid_back_image_path)) {
                             File::delete($nid_back_image_path);
                         }
@@ -183,10 +190,17 @@ class ProfileController extends Controller
 
                         if ($request->academics[$key]['certification_copy']) {
                             $image_parts = explode(";base64,", $request->academics[$key]['certification_copy']);
+                            $imageType = explode("/", $image_parts[0])[1];
                             if (isset($image_parts[1])) {
-                                $certificateImage = FileHandler::uploadCertificateImage($request->academics[$key]['certification_copy'],
-                                $request->type,$request->academics[$key]['education_level'], $request->phone, 'certificate');
-                                //  return $certificateImage;
+                                $certificateImage = FileHandler::uploadUniqueImage(
+                                    $request->academics[$key]['certification_copy'],
+                                    $request->type,
+                                    $request->academics[$key]['education_level'],
+                                    $imageType,
+                                    $request->phone,
+                                    'certificate'
+                                );
+                                // return $certificateImage;
                                 if (File::exists($certificateImage)) {
                                     File::delete($certificateImage);
                                 }
@@ -194,7 +208,6 @@ class ProfileController extends Controller
                         } else {
                             $certificateImage = $academic->certification_copy;
                         }
-
 
                         if ($existId) {
                             if ($academic) {
@@ -274,7 +287,7 @@ class ProfileController extends Controller
             $experience = Experience::where('id', $id)->first();
             if ($experience != null) {
                 $experience->delete();
-                $message = "Deleted Succesfully";
+                $message = "Experience Deleted Succesfully";
                 DB::commit();
                 return $this->responseSuccess(200, true, $message, []);
             } else {
@@ -294,7 +307,7 @@ class ProfileController extends Controller
             $academicQualification = AcademicQualification::where('id', $id)->first();
             if ($academicQualification != null) {
                 $academicQualification->delete();
-                $message = "Deleted Succesfully";
+                $message = "Academic Qualification Deleted Succesfully";
                 DB::commit();
                 return $this->responseSuccess(200, true, $message, []);
             } else {
@@ -362,7 +375,7 @@ class ProfileController extends Controller
         DB::beginTransaction();
         try {
             $consultants = User::active()->get();
-            return $consultants;
+          //  return $consultants;
 
             if ($consultants) {
                 $message = "Consultant List Successfully Shown";
@@ -393,10 +406,10 @@ class ProfileController extends Controller
     {
         $districts = DB::table('districts')->select(['id', 'name_bn', 'name_en'])->get();
         if (!empty($districts)) {
-            $message = "Succesfully Data Shown";
+            $message = "Succesfully Districts Data Shown";
             return $this->responseSuccess(200, true, $message, $districts);
         } else {
-            $message = "Invalid credentials";
+            $message = "Invalid Credentials";
             return $this->responseError(403, false, $message);
         }
     }
@@ -419,7 +432,7 @@ class ProfileController extends Controller
         }
 
         if (!empty($consultantData)) {
-            $message = "Consulatnt ActiveStatus Succesfully Updated";
+            $message = "Consulatnt Active Status Succesfully Updated";
             return $this->responseSuccess(200, true, $message, $consultantData);
         } else {
             $message = "Invalid credentials";
@@ -448,16 +461,7 @@ class ProfileController extends Controller
 
     public function getDownload(Request $request)
     {
-
-        // $file = public_path()."/downloads/info.pdf";
-        // $headers = array('Content-Type: application/pdf',);
-        // return Response::download($file, 'info.pdf',$headers);
         $filepath = public_path($request->path);
         return response()->download($filepath);
-
-
-        // $file = public_path()."/downloads".$download_path;
-        // $headers = array($content_type,);
-        // return Response::download($file, $download_path,$headers);
     }
 }

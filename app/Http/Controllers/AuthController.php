@@ -450,7 +450,8 @@ class AuthController extends Controller
 
     public function me()
     {
-        $user = User::with('experiances', 'academics', 'services')->where('id', auth()->user()->id)->first();
+        $user = User::with('experiances', 'academics', 'services')
+            ->where('id', auth()->user()->id)->first();
 
         if ($user != null) {
             $data = [
