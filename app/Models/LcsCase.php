@@ -29,6 +29,10 @@ class LcsCase extends Model
         // 'deleted_at'
     ];
 
+    protected $casts = [
+        'created_at' => "datetime:Y-m-d",
+    ];
+
     public function consultant()
     {
         return $this->belongsTo(User::class, 'consultant_id', 'id');
@@ -41,6 +45,16 @@ class LcsCase extends Model
     public function scopeCompleted($query)
     {
         return $query->where(['status' => 2]);
+    }
+
+    // public function services()
+    // {
+    //     return $this->belongsTo(User::class, 'consultant_id', 'id');
+    // }
+
+    public function service()
+    {
+        return $this->belongsTo(Service::class,'service_id','id');
     }
 
 }

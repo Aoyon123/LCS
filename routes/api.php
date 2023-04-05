@@ -47,8 +47,11 @@ Route::get('/me', [AuthController::class, 'me']);
 Route::group(["middleware" => ["auth:api"]], function () {
 
 
-    ///////// Consultant List  ////////////
+    ///////// AdminConsultantController  ////////////
+
     Route::get('/admin/consultants', [AdminConsultantController::class, 'index']);
+    Route::post("/consultant/approval", [AdminConsultantController::class, 'approvalConsultant']);
+
 
     ////////// Citizen List ///////////
     Route::get('/admin/citizens', [AdminCitizenController::class, 'index']);
@@ -62,15 +65,17 @@ Route::group(["middleware" => ["auth:api"]], function () {
     Route::post('/active_status/{consultant_id}/change', [ProfileController::class, 'activeStatusChange']);
     Route::delete('/profile/experience/{id}/delete', [ProfileController::class, 'experienceDestroy']);
     Route::delete('/profile/academic_qualification/{id}/delete', [ProfileController::class, 'academicQualificationDestroy']);
-    Route::post('/consultant/approve', [ProfileController::class, 'approved']);
+   // Route::post('/consultant/approve', [ProfileController::class, 'approved']);
     Route::get("district/list", [ProfileController::class, 'allDistricts']);
     Route::post('/imagefile/download', [ProfileController::class, 'getDownload']);
     // Route::get('/profile/consultantList', [ProfileController::class, 'consultantList']);
+    Route::post('/profile/image/update', [ProfileController::class, 'profileImageUpdateMobile']);
 
     /////////  Conversations /////////
     Route::get('/conversation/seenMessage/{purpose_id}', [ConversationController::class, 'seenMessage']);
     Route::get('/conversation/{purpose_id}/seeMoreMessage/{offset}', [ConversationController::class, 'seeMoreMessage']);
     Route::get('/conversation/{id}/allMessage', [ConversationController::class, 'allMessage']);
+    Route::get('/conversation/{purpose_id}/allMessage/mobile', [ConversationController::class, 'allMessageMobile']);
     Route::post('/conversation/store', [ConversationController::class, 'store']);
     Route::post('/conversation/{id}/delete', [ConversationController::class, 'destroy']);
 
@@ -79,7 +84,7 @@ Route::group(["middleware" => ["auth:api"]], function () {
     Route::get('/services/all', [ServiceController::class, 'allServices']);
     Route::get('/services/index', [ServiceController::class, 'index']);
     Route::get('/services/{id}/retrieve', [ServiceController::class, 'retrieve']);
-    Route::put('/services/{id}/update', [ServiceController::class, 'update']);
+    Route::post('/services/{id}/update', [ServiceController::class, 'update']);
     Route::post('/services/{id}/delete', [ServiceController::class, 'destroy']);
 
     ////////  Education Qualification   /////////////
@@ -120,9 +125,10 @@ Route::group(["middleware" => ["auth:api"]], function () {
 
 
     ///////////  Case ////////////
-    Route::get('/allcase', [CaseController::class, 'index']);
+    Route::get('/admin/allcase', [CaseController::class, 'index']);
     Route::get('/case/list', [CaseController::class, 'caseList']);
     Route::get('/case/{case_id}/details', [CaseController::class, 'caseDetailsInfo']);
+    Route::get('/admin/case/{case_id}/details', [CaseController::class, 'adminCaseDetailsInfo']);
     Route::post('/case/update', [CaseController::class, 'update']);
     Route::post('/citizen/case/store', [CaseController::class, 'store']);
     Route::delete('/case/{id}/delete', [CaseController::class, 'destroy']);

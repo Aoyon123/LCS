@@ -24,6 +24,7 @@ return new class extends Migration {
             1 inprogress,
             2 complete,
             3 cancel
+            4 accept
             ");
             $table->string('document_file', 255)->nullable();
             $table->string('document_link', 255)->nullable();

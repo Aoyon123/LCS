@@ -35,7 +35,7 @@ class FileHandler
         }
     }
 
-    public static function uploadfaqImage($image, $type, $unique, $path)
+    public static function upload4ParamsImage($image, $type, $unique, $path)
     {
         $image_parts = explode(";base64,", $image);
         $filename_path = $type . '_' . $unique . ".png";

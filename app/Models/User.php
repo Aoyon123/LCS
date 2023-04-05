@@ -4,12 +4,9 @@ namespace App\Models;
 
 use App\Models\LcsCase;
 use App\Models\Service;
-use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Traits\HasRoles;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 use Illuminate\Notifications\Notifiable;
-use illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
@@ -19,7 +16,7 @@ class User extends Authenticatable implements JWTSubject
     use HasFactory, Notifiable, HasRoles;
 
     protected $guarded = [];
-
+    protected $fillable =['approval','approved_by'];
     protected $hidden = [
         'password',
         'remember_token',
@@ -71,12 +68,6 @@ class User extends Authenticatable implements JWTSubject
             ->select(array('services.title', 'services.id', 'services.created_at'))->latest();
     }
 
-    // public function countRating()
-    // {
-    //     return $this->hasMany(LcsCase::class, 'consultant_id')
-    //          ->where('status', 2);
-    // }
-
     public function getJWTCustomClaims()
     {
         return [];
@@ -94,7 +85,7 @@ class User extends Authenticatable implements JWTSubject
 
     public function scopeApproval($query)
     {
-        return $query->where(['approval' => 2]);
+        return $query->where(['approval' => 1]);
     }
     public function scopeCitizen($query)
     {

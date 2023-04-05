@@ -44,6 +44,7 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
+
         DB::beginTransaction();
         try {
 
@@ -326,7 +327,6 @@ class AuthController extends Controller
             $message = "This Phone Number Is Not Exists!";
             return $this->responseError(400, false, $message);
         }
-
     }
 
     public function setPassword(Request $request)

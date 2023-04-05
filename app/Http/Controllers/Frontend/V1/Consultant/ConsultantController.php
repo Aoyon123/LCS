@@ -91,36 +91,6 @@ class ConsultantController extends Controller
         return $this->responseSuccess(200, true, $message, $data);
     }
 
-    // public function consultantList2(Request $request)
-    // {
-    //     $consultant = DB::table('users')
-    //         ->select(
-    //             'users.*',
-    //             'users.id as user_id',
-    //             'academic_qualifications.education_level',
-    //            'experiences.institute_name',
-    //             'service_user.service_id',
-    //            'services.title',
-    //            'services.status as services_status',
-    //         )
-    //         ->where(['users.status' => 1, 'users.approval' => 2, 'users.type' => 'consultant'])
-    //         ->join('academic_qualifications', 'users.id', '=', 'academic_qualifications.user_id')
-    //         ->join('experiences', 'users.id', '=', 'experiences.user_id')
-    //         ->join('service_user', 'users.id', '=', 'service_user.user_id')
-    //         ->join('services', 'service_user.service_id', '=', 'services.id')
-    //         ->latest('education_level','title','institute_name')
-    //         ->groupBy('users.id')
-    //         ->get();
-
-    //      return $consultant;
-    //     if (!empty($consultant)) {
-    //         $message = "Succesfully Data Shown";
-    //         return $this->responseSuccess(200, true, $message, $consultant);
-    //     } else {
-    //         $message = "Invalid credentials";
-    //         return $this->responseError(403, false, $message);
-    //     }
-    // }
 
     public function consultantDetails($consultant_id)
     {
@@ -143,7 +113,6 @@ class ConsultantController extends Controller
 
     public function reviewList(Request $request, $consultant_id)
     {
-
         $data = [];
         $params = $request->all();
         // return $params;

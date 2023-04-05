@@ -17,6 +17,7 @@ return new class extends Migration
             0 inactive,
             1 active,
             ");
+            $table->string('service_image')->nullable();
             $table->string('remark')->nullable();
             $table->timestamps();
         });

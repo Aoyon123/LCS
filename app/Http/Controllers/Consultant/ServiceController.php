@@ -6,10 +6,12 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Service;
 use Illuminate\Http\Request;
 use App\Traits\ResponseTrait;
+use App\Http\Helper\FileHandler;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ServiceRequest;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\File;
 
 class ServiceController extends Controller
 {
@@ -30,7 +32,7 @@ class ServiceController extends Controller
     public function index()
     {
         $data = Service::all();
-       // return $data;
+        // return $data;
         if (!empty($data)) {
             $message = "Succesfully Data Shown";
             return $this->responseSuccess(200, true, $message, $data);
@@ -40,15 +42,25 @@ class ServiceController extends Controller
         }
     }
 
-    public function store(ServiceRequest $request)
+    public function store(Request $request)
     {
 
         DB::beginTransaction();
         try {
+            if ($request->service_image) {
+                $image_parts = explode(";base64,", $request->service_image);
+                $imageType = explode("/", $image_parts[0])[1];
+                $type="service-icon";
+                if (isset($image_parts[1])) {
+                    $service_image_path = FileHandler::uploadImage($request->service_image,$type,$request->id,$imageType,'service');
+                }
+            }
+
             $data = Service::create([
                 'title' => $request->title,
                 'description' => $request->description,
                 'status' => $request->status,
+                'service_image' => $service_image_path,
                 'remark' => $request->remark,
             ]);
 
@@ -80,28 +92,46 @@ class ServiceController extends Controller
         }
     }
 
-    public function update(ServiceRequest $request, $id)
+    public function update(Request $request, $id)
     {
 
-        $input = Service::findOrFail($id);
-        DB::beginTransaction();
-        try {
-            if ($input) {
-                $input->title = $request['title'];
-                $input->description = $request['description'];
-                $input->status = $request['status'];
-                $input->remark = $request['remark'];
-                $input->save();
-                $message = "Service Updated Succesfully";
+        $serviceData = Service::findOrFail($id);
+
+            if ($request->service_image) {
+
+                $image_parts = explode(";base64,", $request->service_image);
+
+                $imageType = explode("/", $image_parts[0])[1];
+               // return explode("/", $request->title)[0];
+                $type="service-icon";
+                if (isset($image_parts[1])) {
+                    $service_image_path = FileHandler::uploadImage($request->service_image,$type,$request->id,$imageType,'service');
+
+                    if (File::exists($service_image_path)) {
+                        File::delete($service_image_path);
+                    }
+                } else {
+                    $service_image_path = $serviceData->service_image;
+                }
+            }
+
+            if ($serviceData) {
+                $serviceData->update([
+                    'title' => $request->title ?? $serviceData->title,
+                    'description' => $request->description ?? $serviceData->description,
+                    'status' => $request->status ?? $serviceData->status,
+                    'service_image' => $service_image_path ?? $serviceData->service_image,
+                    'remark' => $request->remark ?? $serviceData->remark,
+                ]);
                 DB::commit();
-                return $this->responseSuccess(200, true, $message, $input);
-            } else {
+                $message="Service Updated Succesfully";
+                return $this->responseSuccess(200, true, $message, $serviceData);
+            }
+            else {
                 $message = "No Data Found";
                 return $this->responseError(404, false, $message);
             }
-        } catch (QueryException $e) {
-            DB::rollBack();
-        }
+
     }
 
     public function destroy($id)

@@ -21,7 +21,7 @@ class CaseController extends Controller
 
     public function index()
     {
-        $data = LcsCase::all();
+        $data = LcsCase::with(['citizen','consultant'])->get();
         if (!empty($data)) {
             $message = "Succesfully Data Shown";
             return $this->responseSuccess(200, true, $message, $data);
@@ -38,7 +38,8 @@ class CaseController extends Controller
         $userType = $type === 'citizen' ? 'consultant' : 'citizen';
         $caseData = DB::table('lcs_cases')
             ->where('lcs_cases.' . $type . '_id', auth()->user()->id)
-            ->where('deleted_at', null)
+            ->where(['deleted_at'=> null])
+        //    ->where('status', '2')
             ->select(
                 'lcs_cases.id as case_id',
                 'lcs_cases.title',
@@ -218,7 +219,6 @@ class CaseController extends Controller
                         'status' => 2,
                     ])->where('rating', '>=', '0.0')->count('rating');
 
-                    //  return $totalRating;
                     if ($totalRating >= 1) {
                         $totalRatingSum = $totalRating + 1;
                     }
@@ -355,6 +355,48 @@ class CaseController extends Controller
             )->join('users', 'lcs_cases.' . $type . '_id', '=', 'users.id')
             ->join('services', 'lcs_cases.service_id', '=', 'services.id')
             ->first();
+
+        if ($caseData) {
+            $message = "Case details data succesfully shown";
+            return $this->responseSuccess(200, true, $message, $caseData);
+        } else {
+            $message = "No Data Found";
+            return $this->responseError(404, false, $message);
+        }
+    }
+
+
+    public function adminCaseDetailsInfo($case_id){
+
+        $caseData = LcsCase::with(['citizen','consultant','service'])
+                            ->where('lcs_cases.id', $case_id)->first();
+
+    //       $caseData = DB::table('lcs_cases')
+    //       ->where('lcs_cases.id', $id)
+    //       ->select(
+    //         'lcs_cases.id',
+    //         'lcs_cases.title',
+    //         'lcs_cases.case_code',
+    //         'lcs_cases.citizen_id',
+    //         'lcs_cases.consultant_id',
+    //         'lcs_cases.document_file',
+    //         'lcs_cases.document_link',
+    //         'lcs_cases.status',
+    //         'lcs_cases.rating as case_rate',
+    //         'lcs_cases.case_initial_date',
+    //         'lcs_cases.case_status_date',
+    //         'lcs_cases.description',
+    //         'lcs_cases.citizen_review_comment',
+    //         'lcs_cases.consultant_review_comment',
+    //         'users.name',
+    //         'users.profile_image',
+    //         'users.rates',
+    //         'services.title as service',
+    //     )
+    //     ->join('users', 'lcs_cases.' . 'citizen_id', '=', 'users.id')
+    //    // ->join('users', 'lcs_cases.' . 'consultant_id', '=', 'users.id')
+    //     ->join('services', 'lcs_cases.service_id', '=', 'services.id')
+    //     ->first();
 
         if ($caseData) {
             $message = "Case details data succesfully shown";

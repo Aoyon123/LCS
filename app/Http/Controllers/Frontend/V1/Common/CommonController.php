@@ -56,9 +56,7 @@ class CommonController extends Controller
 
     public function consultation(Request $request)
     {
-
         $totalConsultant = User::Status()->Approval()->Consultant()->count();
-        //return $totalConsultant;
         $data = [];
         $consultants_selected_fields = [
             'id',
@@ -79,6 +77,7 @@ class CommonController extends Controller
         ];
         $params = $request->all();
 
+
         $consultant = User::with(
             [
                 'experianceLatest:user_id,institute_name',
@@ -94,12 +93,12 @@ class CommonController extends Controller
             if ($key === 'services') {
                 $consultant = $consultant->whereHas('services', function ($q) use ($param) {
                     $q->where('services.id', $param);
-                    //  return $consultant;
+
                 });
                 $totalConsultant = $consultant->whereHas('services', function ($q) use ($param) {
                     $q->where('services.id', $param);
-                    //  return $consultant;
                 })->count();
+
             } elseif ($key === 'active') {
                 $totalConsultant = $consultant->where('active_status', $param)->count();
                 $consultant = $consultant->where('active_status', $param);
@@ -190,250 +189,82 @@ class CommonController extends Controller
         return $this->responseSuccess(200, true, $message, $data);
     }
 
-    // public function consultationSelfP(Request $request)
-    // {
-
-    //     $totalConsultant = User::Status()->Approval()->Consultant()->count();
-    //     //return $totalConsultant;
-    //     $data = [];
-    //     $consultants_selected_fields = [
-    //         'id',
-    //         'name',
-    //         'active_status',
-    //         'phone',
-    //         'email',
-    //         'address',
-    //         'code',
-    //         'type',
-    //         'district_id',
-    //         'profile_image',
-    //         'gender',
-    //         'rates',
-    //         'totalRating',
-    //         'years_of_experience',
-    //         'schedule'
-    //     ];
-    //     $params = $request->all();
-
-    //     $consultant = User::with(
-    //         [
-    //             'experianceLatest:user_id,institute_name',
-    //             'academicLatest:user_id,education_level',
-    //             'serviceLatest',
-    //             'serviceList',
-    //         ]
-
-    //     )->select($consultants_selected_fields)->status()->approval()->consultant();
-
-    //     foreach ($params as $key => $param) {
-
-    //         if ($key === 'services') {
-    //             $consultant = $consultant->whereHas('services', function ($q) use ($param) {
-    //                 $q->where('services.id', $param);
-    //                 //  return $consultant;
-    //             });
-    //             $totalConsultant = $consultant->whereHas('services', function ($q) use ($param) {
-    //                 $q->where('services.id', $param);
-    //                 //  return $consultant;
-    //             })->count();
-
-    //         } elseif ($key === 'active') {
-    //             $totalConsultant = $consultant->where('active_status', $param)->count();
-    //             $consultant = $consultant->where('active_status', $param);
-
-    //         } elseif ($key === 'ratingValue') {
-    //             $totalConsultant = $consultant->where('rates', $param)->count();
-    //             $consultant = $consultant->where('rates', $param);
-
-
-    //         } elseif ($key === 'search') {
-    //             $userSearchFields = [
-    //                 'name',
-    //                 'email',
-    //                 'address',
-    //                 'code',
-    //                 'schedule',
-    //                 'years_of_experience'
-    //             ];
-
-    //             $servicesSearchFields = ['title'];
-    //             $experienceSearchFields = ['institute_name'];
-    //             $academicSearchFields = ['education_level'];
-
-    //             $totalConsultant = $consultant->where(function ($query) use ($userSearchFields, $param) {
-    //                 foreach ($userSearchFields as $userSearchField) {
-    //                     $query->orWhere($userSearchField, 'like', '%' . $param . '%');
-    //                 }
-    //             })->count();
-
-
-    //             $totalConsultant = $consultant->orWhereHas('academics', function ($query) use ($academicSearchFields, $param) {
-    //                 foreach ($academicSearchFields as $academicSearchField) {
-    //                     $query->where($academicSearchField, 'like', '%' . $param . '%');
-    //                 }
-    //             })->count();
-
-    //             $totalConsultant = $consultant->orWhereHas('experiances', function ($query) use ($experienceSearchFields, $param) {
-    //                 foreach ($experienceSearchFields as $experienceSearchField) {
-    //                     $query->where($experienceSearchField, 'like', '%' . $param . '%');
-    //                 }
-    //             })->count();
-
-
-    //             $consultant = $consultant->where(function ($query) use ($userSearchFields, $param) {
-    //                 foreach ($userSearchFields as $userSearchField) {
-    //                     $query->orWhere($userSearchField, 'like', '%' . $param . '%');
-    //                 }
-    //             })
-
-    //                 ->orWhereHas('services', function ($query) use ($servicesSearchFields, $param) {
-    //                     foreach ($servicesSearchFields as $serviceSearchField) {
-    //                         $query->where($serviceSearchField, 'like', '%' . $param . '%');
-    //                     }
-    //                 })
-
-    //                 ->orWhereHas('experiances', function ($query) use ($experienceSearchFields, $param) {
-    //                     foreach ($experienceSearchFields as $experienceSearchField) {
-    //                         $query->where($experienceSearchField, 'like', '%' . $param . '%');
-    //                     }
-    //                 })
-
-    //                 ->orWhereHas('academics', function ($query) use ($academicSearchFields, $param) {
-    //                     foreach ($academicSearchFields as $academicSearchField) {
-    //                         $query->where($academicSearchField, 'like', '%' . $param . '%');
-    //                     }
-    //                 });
-    //             // $data[$key] = $consultant->get();
-    //         } elseif ($key === 'ratingTop') {
-    //             $totalConsultant = $consultant->orderBy('users.rates', $param)->count();
-    //             $consultant = $consultant->orderBy('users.rates', $param);
-    //         }
-    //     }
-
-    //     if (isset($params['limit'])) {
-    //         if (isset($params['offset'])) {
-    //             $data['totalConsultant'] = $totalConsultant;
-    //             $data['offset'] = $params['offset'];
-    //             $data['limit'] = $params['limit'];
-    //             $data['list'] = $consultant->offset($params['offset'])->limit($params['limit'])->get();
-    //         } else {
-    //             $data['limit'] = $params['limit'];
-    //             $data['list'] = $consultant->limit($params['limit'])->get();
-    //         }
-    //     } else {
-    //         $data['totalConsultant'] = $totalConsultant;
-    //         $data['list'] = $consultant->get();
-    //     }
-
-    //     $message = "Succesfully Data Shown";
-    //     return $this->responseSuccess(200, true, $message, $data);
-    // }
 
     public function consultationSelf(Request $request)
     {
         $params = $request->all();
 
         if (!empty($request->all())) {
-            //return $params;
             $services = !empty($params['services']) ? $params['services'] : null;
             $active = !empty($params['active']) ? $params['active'] : null;
             $ratingValue = !empty($params['ratingValue']) ? $params['ratingValue'] : null;
             $search = !empty($params['search']) ? $params['search'] : null;
-            //   $ratingValue             =!empty($params['ratingValue'])?$params['ratingValue']:null;
         } else {
             $services = null;
             $active = null;
             $ratingValue = null;
-            // $search_type = null;
             $search = null;
-
         }
 
-        $detailsInfo = DB::table('users')
-            ->where(['users.status' => 1, 'users.approval' => 2, 'users.type' => 'consultant'])
-            ->join('academic_qualifications', 'users.id', '=', 'academic_qualifications.user_id')
-            ->join('experiences', 'users.id', '=', 'experiences.user_id')
-            ->join('service_user', 'users.id', '=', 'service_user.user_id')
-            ->join('services', 'service_user.service_id', '=', 'services.id')
+            $detailsInfo = DB::table('users')
+             ->where(['users.status' => 1, 'users.approval' => 1, 'users.type' => 'consultant'])
+             ->join('academic_qualifications', 'users.id', '=', 'academic_qualifications.user_id')
+             ->join('experiences', 'users.id', '=', 'experiences.user_id')
+             ->join('service_user', 'users.id', '=', 'service_user.user_id')
+             ->join('services', 'service_user.service_id', '=', 'services.id')
 
-            ->when($services, function ($query) use ($services) {
-                $query->where('service_user.service_id', 'like', '%' . $services . '%');
-            })
+             ->when($services, function ($query) use ($services) {
+                 $query->where('service_user.service_id', 'like', '%' . $services . '%');
+             })
 
-            ->when($active, function ($query) use ($active) {
-                $query->where('users.active_status', 'like', '%' . $active . '%');
-            })
+             ->when($active, function ($query) use ($active) {
+                 $query->where('users.active_status', 'like', '%' . $active . '%');
+             })
 
-            ->when($ratingValue, function ($query) use ($ratingValue) {
-                $query->where('users.rates', '<=', $ratingValue + 1);
-                $query->where('users.rates', '>=', $ratingValue);
-            })
+             ->when($ratingValue, function ($query) use ($ratingValue) {
+                 $query->where('users.rates', '<', $ratingValue + 1);
+                 $query->where('users.rates', '>=', $ratingValue);
+             })
 
-            ->when($search, function ($query) use ($search) {
-                $query->where('users.name', 'like', '%' . $search . '%');
-            })
+             ->when($search, function ($query) use ($search) {
+                 $query->where('users.name', 'like', '%' . $search . '%');
+                 $query->orWhere('users.address', 'like', '%' . $search . '%');
+                 $query->orWhere('users.years_of_experience', 'like', '%' . $search . '%');
+                 $query->orWhere('academic_qualifications.education_level', 'like', '%' . $search . '%');
+                 $query->orWhere('experiences.institute_name', 'like', '%' . $search . '%');
+             })
 
-            // ->when($search, function ($query) use ($search) {
-            //     $query->where('users.address', 'like', '%' . $search . '%');
-            // })
+             ->select(
+                 'users.id',
+                 'users.name',
+                 'users.active_status',
+                 'users.phone',
+                 'users.email',
+                 'users.address',
+                 'users.code',
+                 'users.type',
+                 'users.district_id',
+                 'users.profile_image',
+                 'users.gender',
+                 'users.rates',
+                 'users.totalRating',
+                 'users.years_of_experience',
+                 'users.schedule',
 
-            // ->when($search, function ($query) use ($search) {
-            //     $query->where('experiences.institute_name', 'like', '%' . $search . '%');
-            // })
-
-            // ->when($search, function ($query) use ($search) {
-            //     $query->where('academic_qualifications.education_level', 'like', '%' . $search . '%');
-            // })
-
-            ->select(
-                'users.id',
-                'users.name',
-                'users.active_status',
-                'users.phone',
-                'users.email',
-                'users.address',
-                'users.code',
-                'users.type',
-                'users.district_id',
-                'users.profile_image',
-                'users.gender',
-                'users.rates',
-                'users.totalRating',
-                'users.years_of_experience',
-                'users.schedule',
-
-                'academic_qualifications.education_level',
-                'experiences.institute_name',
-                'service_user.service_id',
-                'services.title',
-                'services.status as services_status'
-            )
+                 'academic_qualifications.education_level',
+                 'experiences.institute_name',
+                 'service_user.service_id',
+                 'services.title',
+                 'services.status as services_status',
+             )
             ->groupBy('users.id')
             ->get();
+             // ->latest();
+           // ->get();
 
-        return $detailsInfo;
+            $message = "Succesfully Data Shown";
+            return $this->responseSuccess(200, true, $message, $detailsInfo);
 
-
-        // ->when($applicant_mobile, function ($query) use ($applicant_mobile) {
-        //     $query->where('company_applicant.applicant_phone', 'like', '%' . $applicant_mobile . '%');
-        // })
-        // ->when($app_id, function ($query) use ($app_id) {
-        //     $query->where('company_applicant.application_id', 'like', '%' . $app_id . '%');
-        //     $query->orWhere('company_applicant.tracking_no', 'like', '%' . $app_id . '%');
-        // })
-        // ->when($start_date, function ($query) use ($start_date) {
-
-        //     $query->where('companyinfo.updated_at', '>=', $start_date);
-        // })
-        // ->when($end_date, function ($query) use ($end_date) {
-
-        //     $query->where('companyinfo.updated_at', '<=', $end_date);
-
-        // })
-        // ->whereNotNull('companyinfo.ubid')
-        // ->select('companyinfo.*', 'companyinfo.id as company_id', 'users.name', 'company_applicant.applicant_name', 'company_applicant.applicant_phone')
-        // ->orderBy('companyinfo.issue_date', 'DESC')
-        // ->paginate($paginate)->withQueryString();
     }
 
 
@@ -465,7 +296,6 @@ class CommonController extends Controller
             return $this->responseError(403, false, $message);
         }
     }
-
 
     public function faqAll(Request $request)
     {

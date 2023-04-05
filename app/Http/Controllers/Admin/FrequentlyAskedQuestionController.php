@@ -72,7 +72,7 @@ class FrequentlyAskedQuestionController extends Controller
             if ($request->answer_image) {
                 $image_parts = explode(";base64,", $request->answer_image);
                 if (isset($image_parts[0])) {
-                    $answer_image_path = FileHandler::uploadfaqImage($request->answer_image, $faqData->category_name, $request->id, 'faqAnswer');
+                    $answer_image_path = FileHandler::upload4ParamsImage($request->answer_image, $faqData->category_name, $request->id, 'faqAnswer');
                     if (File::exists($answer_image_path)) {
                         File::delete($answer_image_path);
                     }

@@ -42,11 +42,10 @@ return new class extends Migration {
             $table->float('rates', 5, 1)->default(0.0);
             $table->float('totalRating')->default(0);
             $table->tinyInteger('approval')->comment("
-            0 intial,
-            1 pending,
-            2 approval,
-            3 Reject,
-            4 Deactivated
+            0 initial,
+            1 approved,
+            2 rejected,
+            3 deactivate
             ");
             $table->unsignedBigInteger('approved_by')->nullable();
             $table->string('schedule', 250)->nullable();

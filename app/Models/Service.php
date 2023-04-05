@@ -14,6 +14,7 @@ class Service extends Model
         'title',
         'description',
         'status',
+        'service_image',
         'remark',
     ];
 

@@ -360,7 +360,8 @@ class ProfileController extends Controller
                 DB::commit();
                 return $this->responseSuccess(200, true, $message, $user);
 
-            } else {
+            }
+             else {
                 $message = "Not Found Data";
                 return $this->responseError(404, false, $message);
             }
@@ -463,5 +464,33 @@ class ProfileController extends Controller
     {
         $filepath = public_path($request->path);
         return response()->download($filepath);
+    }
+
+    public function profileImageUpdateMobile(Request $request){
+
+        $userExist = User::where('id', $request->id)
+        ->select(['id', 'name','type','phone','profile_image','updated_at'])
+        ->first();
+
+        if ($request->profile_image) {
+            $image_parts = explode(";base64,", $request->profile_image);
+            $imageType = explode("/", $image_parts[0])[1];
+     
+            if (isset($image_parts[1])) {
+                $profile_image_path = FileHandler::uploadImage($request->profile_image, $userExist->type, $userExist->phone, $imageType, 'profile');
+                if (File::exists($profile_image_path)) {
+                    File::delete($profile_image_path);
+                }
+            } else {
+                $profile_image_path = $userExist->profile_image;
+            }
+        }
+
+        $userExist->update([
+            'profile_image' => $profile_image_path ?? $userExist->profile_image,
+        ]);
+
+        $message = "Profile Image Updated Succesfully.";
+        return $this->responseSuccess(200, true, $message, $userExist);
     }
 }

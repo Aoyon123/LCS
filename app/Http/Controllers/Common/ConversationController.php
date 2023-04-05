@@ -2,13 +2,14 @@
 
 namespace App\Http\Controllers\Common;
 
+use App\Models\User;
 use App\Models\Conversation;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
 use App\Traits\ResponseTrait;
 use Illuminate\Http\Response;
-use App\Http\Controllers\Controller;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Controller;
 use Illuminate\Database\QueryException;
 use App\Http\Requests\ConversationRequest;
 
@@ -104,20 +105,57 @@ class ConversationController extends Controller
         }
     }
 
-    public function destroy($id)
+    // public function destroy($id)
+    // {
+    //     DB::beginTransaction();
+    //     try {
+    //         $conversationsData = Conversation::findOrFail($id);
+    //         $conversationsData->delete();
+
+    //         Conversation::find($id)->update(['is_delete' => 1]);
+
+    //         $message = "Case Deleted Succesfully";
+    //         DB::commit();
+    //         return $this->responseSuccess(200, true, $message, []);
+    //     } catch (QueryException $e) {
+    //         DB::rollBack();
+    //     }
+    // }
+
+
+    public function allMessageMobile(Request $request, $purposeId)
     {
-        DB::beginTransaction();
-        try {
-            $conversationsData = Conversation::findOrFail($id);
-            $conversationsData->delete();
 
-            Conversation::find($id)->update(['is_delete' => 1]);
+        $this->seenMessage($purposeId);
+        $params = $request->all();
+        $totalConversation = Conversation::where(['purpose_id' => $purposeId])
+            ->get()
+            ->sortBy('id')
+            ->values()
+            ->count();
 
-            $message = "Case Deleted Succesfully";
-            DB::commit();
-            return $this->responseSuccess(200, true, $message, []);
-        } catch (QueryException $e) {
-            DB::rollBack();
+        $data = [];
+        $conversationData = Conversation::with(
+            ['sender:id,name,profile_image', 'receiver:id,name,profile_image']
+        )
+            ->where(['purpose_id' => $purposeId]);
+
+        if (isset($params['limit'])) {
+            if (isset($params['offset'])) {
+                $data['total'] = $totalConversation;
+                $data['offset'] = $params['offset'];
+                $data['limit'] = $params['limit'];
+                $data['list'] = $conversationData->offset($params['offset'])->limit($params['limit'])->get();
+            } else {
+                $data['limit'] = $params['limit'];
+                $data['list'] = $conversationData->limit($params['limit'])->get();
+            }
+        } else {
+            $data['totalConsultant'] = $totalConversation;
+            $data['list'] = $conversationData->get();
         }
+
+        $message = "Conversion Data Shown Successfull";
+        return $this->responseSuccess(200, true, $message, $data);
     }
 }

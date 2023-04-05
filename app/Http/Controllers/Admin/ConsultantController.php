@@ -8,6 +8,8 @@ use App\Traits\ResponseTrait;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Database\QueryException;
+use App\Http\Helper\SMSHelper;
+use Illuminate\Http\Response;
 
 class ConsultantController extends Controller
 {
@@ -18,7 +20,7 @@ class ConsultantController extends Controller
 
         try {
             $consultants = User::where('type', 'consultant')->get();
-            info($consultants);
+           // info($consultants);
             if ($consultants != null) {
                 $message = "";
                 DB::commit();
@@ -31,6 +33,31 @@ class ConsultantController extends Controller
             DB::rollBack();
         }
     }
+
+
+    public function approvalConsultant(Request $request)
+    {
+        $consultantData = User::where(['id' => $request->id])->first();
+
+        if ($consultantData) {
+            $consultantData->update([
+                'approval' => (int) $request->approvalStatus,
+                'approved_by' => auth()->user()->id
+            ]);
+
+            $messageSuccess = SMSHelper::sendSMS($consultantData->phone, $request->message);
+
+            if ($messageSuccess && $consultantData) {
+                $message = "Consultant Approval Update And Message Send Successfully";
+                return $this->responseSuccess(200, true, $message, $consultantData);
+            } else {
+                return $this->responseError(Response::HTTP_INTERNAL_SERVER_ERROR, false, 'Something wrong');
+            }
+        }
+
+    }
+
+
 
     /**
      * Show the form for creating a new resource.
