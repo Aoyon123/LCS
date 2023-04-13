@@ -15,13 +15,17 @@ class User extends Authenticatable implements JWTSubject
 {
     use HasFactory, Notifiable, HasRoles;
 
-    protected $guarded = [];
-    protected $fillable =['approval','approved_by'];
+   // protected $guarded = [];
+    protected $fillable =['id','name','phone','email','dob','district_id','type',
+            'code','password','terms_conditions','approval','approved_by','otp_code',
+           'nid','general_info','gender','profile_image','status','address','is_phone_verified',
+           'years_of_experience','current_profession','nid_front','nid_back','rates','totalRating',
+           'approval','approved_by','schedule','active_status','terms_conditions'
+];
     protected $hidden = [
         'password',
         'remember_token',
         'pivot',
-        // 'otp_code'
     ];
 
     // protected $casts = [

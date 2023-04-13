@@ -35,17 +35,17 @@ class FileHandler
         }
     }
 
-    public static function upload4ParamsImage($image, $type, $unique, $path)
-    {
-        $image_parts = explode(";base64,", $image);
-        $filename_path = $type . '_' . $unique . ".png";
-        if (isset($image_parts[0])) {
-            $image_path = "/uploads/$path/$filename_path";
-            $decoded = base64_decode($image_parts[0]);
-            file_put_contents(public_path() . $image_path, $decoded);
-            return $image_path;
-        }
-    }
+    // public static function upload4ParamsImage($image, $type, $unique, $path)
+    // {
+    //     $image_parts = explode(";base64,", $image);
+    //     $filename_path = $type . '_' . $unique . ".png";
+    //     if (isset($image_parts[0])) {
+    //         $image_path = "/uploads/$path/$filename_path";
+    //         $decoded = base64_decode($image_parts[0]);
+    //         file_put_contents(public_path() . $image_path, $decoded);
+    //         return $image_path;
+    //     }
+    // }
 
     public static function uploadFile($file, $extension, $unique, $path)
     {

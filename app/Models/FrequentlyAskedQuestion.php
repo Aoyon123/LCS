@@ -10,6 +10,7 @@ class FrequentlyAskedQuestion extends Model
     use HasFactory;
 
     protected $fillable = [
+        'id',
         'category_name',
         'question',
         'answer',

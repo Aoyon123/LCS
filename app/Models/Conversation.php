@@ -17,7 +17,8 @@ class Conversation extends Model
         'purpose_type',
         'time',
         'seen_status',
-        'status'
+        'status',
+        'is_delete'
     ];
 
     public function receiver()

@@ -105,22 +105,20 @@ class ConversationController extends Controller
         }
     }
 
-    // public function destroy($id)
-    // {
-    //     DB::beginTransaction();
-    //     try {
-    //         $conversationsData = Conversation::findOrFail($id);
-    //         $conversationsData->delete();
+    public function destroy($id)
+    {
+        DB::beginTransaction();
+        try {
 
-    //         Conversation::find($id)->update(['is_delete' => 1]);
-
-    //         $message = "Case Deleted Succesfully";
-    //         DB::commit();
-    //         return $this->responseSuccess(200, true, $message, []);
-    //     } catch (QueryException $e) {
-    //         DB::rollBack();
-    //     }
-    // }
+          Conversation::find($id)->update(['is_delete' => 1]);
+          $conversation = Conversation::findOrFail($id);
+            $message = "Conversation Data Deleted Succesfully";
+            DB::commit();
+            return $this->responseSuccess(200, true, $message, $conversation);
+        } catch (QueryException $e) {
+            DB::rollBack();
+        }
+    }
 
 
     public function allMessageMobile(Request $request, $purposeId)

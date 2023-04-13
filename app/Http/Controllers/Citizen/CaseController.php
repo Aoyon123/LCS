@@ -276,12 +276,6 @@ class CaseController extends Controller
     {
         DB::beginTransaction();
         try {
-            // $services = [];
-            // $user = User::with('services:id,title')->where('id', $id)->first();
-            // if ($user) {
-            //     $services = $user['services'];
-            // }
-            // return $user;
             $rating = LcsCase::select(DB::raw('count(rating) as total'))->where('consultant_id', $id)->completed()->first();
             // return $rating;
             DB::commit();
@@ -370,33 +364,6 @@ class CaseController extends Controller
 
         $caseData = LcsCase::with(['citizen','consultant','service'])
                             ->where('lcs_cases.id', $case_id)->first();
-
-    //       $caseData = DB::table('lcs_cases')
-    //       ->where('lcs_cases.id', $id)
-    //       ->select(
-    //         'lcs_cases.id',
-    //         'lcs_cases.title',
-    //         'lcs_cases.case_code',
-    //         'lcs_cases.citizen_id',
-    //         'lcs_cases.consultant_id',
-    //         'lcs_cases.document_file',
-    //         'lcs_cases.document_link',
-    //         'lcs_cases.status',
-    //         'lcs_cases.rating as case_rate',
-    //         'lcs_cases.case_initial_date',
-    //         'lcs_cases.case_status_date',
-    //         'lcs_cases.description',
-    //         'lcs_cases.citizen_review_comment',
-    //         'lcs_cases.consultant_review_comment',
-    //         'users.name',
-    //         'users.profile_image',
-    //         'users.rates',
-    //         'services.title as service',
-    //     )
-    //     ->join('users', 'lcs_cases.' . 'citizen_id', '=', 'users.id')
-    //    // ->join('users', 'lcs_cases.' . 'consultant_id', '=', 'users.id')
-    //     ->join('services', 'lcs_cases.service_id', '=', 'services.id')
-    //     ->first();
 
         if ($caseData) {
             $message = "Case details data succesfully shown";

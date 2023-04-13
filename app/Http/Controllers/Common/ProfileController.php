@@ -28,6 +28,17 @@ class ProfileController extends Controller
 
             $user = User::findOrFail($request->id);
             // return $user;
+            if (!preg_match('#^(\d{2})/(\d{2})/(\d{4})$#', $request->dob, $matches)) {
+                $message = "Date Format Not Valid";
+                return $this->responseError(403, false, $message);
+            }
+         
+            $dob = mktime(0, 0, 0, $matches[2], $matches[1], $matches[3]);
+          
+            if (date('d/m/Y', $dob) != $request->dob) {
+                $message = "Date Format Not Valid";
+                return $this->responseError(403, false, $message);
+            }
 
             $request->validate([
                 'name' => 'required|string|max:50',
@@ -126,7 +137,7 @@ class ProfileController extends Controller
                 'nid' => $request->nid ?? $user->nid,
                 'dob' => $request->dob ?? $user->dob,
                 'status' => $request->status ?? $user->status,
-                'gender' => $request->gender ?? $user->gender,
+                'gender' => strtolower($request->gender) ?? $user->gender,
                 'profile_image' => $profile_image_path ?? $user->profile_image,
                 'district_id' => $request->district_id ?? $user->district_id,
                 'years_of_experience' => $request->years_of_experience ?? $user->years_of_experience,
@@ -215,7 +226,7 @@ class ProfileController extends Controller
                                     'education_level' => $request->academics[$key]['education_level'],
                                     'institute_name' => $request->academics[$key]['institute_name'],
                                     'passing_year' => $request->academics[$key]['passing_year'],
-                                    'certification_copy' => $certificateImage,
+                                    'certification_copy' => $certificateImage ?? $academic->certification_copy,
                                     'user_id' => $user->id,
                                 ]);
                             }
@@ -469,28 +480,29 @@ class ProfileController extends Controller
     public function profileImageUpdateMobile(Request $request){
 
         $userExist = User::where('id', $request->id)
-        ->select(['id', 'name','type','phone','profile_image','updated_at'])
+        ->select(['id', 'name','type','phone','profile_image'])
         ->first();
 
         if ($request->profile_image) {
             $image_parts = explode(";base64,", $request->profile_image);
             $imageType = explode("/", $image_parts[0])[1];
-     
             if (isset($image_parts[1])) {
                 $profile_image_path = FileHandler::uploadImage($request->profile_image, $userExist->type, $userExist->phone, $imageType, 'profile');
                 if (File::exists($profile_image_path)) {
                     File::delete($profile_image_path);
                 }
-            } else {
+            }
+          }
+         else {
                 $profile_image_path = $userExist->profile_image;
             }
-        }
 
-        $userExist->update([
-            'profile_image' => $profile_image_path ?? $userExist->profile_image,
-        ]);
-
+          $userData = $userExist->update([
+            'profile_image' => $profile_image_path
+          ]);
+       if($userData){
         $message = "Profile Image Updated Succesfully.";
         return $this->responseSuccess(200, true, $message, $userExist);
+   }
     }
 }

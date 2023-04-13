@@ -19,7 +19,7 @@ class CommonController extends Controller
         $service = DB::table('services')->where('status', 1)->get();
         // $service = User::serviceList()->get();
         //  return $service;
-        $consultants_selected_fields = ['id', 'name', 'phone', 'email', 'address', 'code', 'type', 'profile_image', 'district_id', 'gender', 'rates', 'active_status', 'years_of_experience', 'schedule'];
+        $consultants_selected_fields = ['id', 'name', 'phone', 'email', 'address', 'code', 'type', 'profile_image', 'district_id', 'gender', 'rates','totalRating', 'active_status', 'years_of_experience', 'schedule'];
 
         $active = User::with(
             [

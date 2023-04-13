@@ -118,9 +118,12 @@ class AuthController extends Controller
 
     public function register(Request $request)
     {
+        
         $userExist = User::where('phone', $request->phone)
             ->select(['id', 'name', 'phone', 'email', 'is_phone_verified', 'dob', 'password', 'otp_code'])
             ->first();
+
+          //return  $userExist;
 
         if ($userExist && $userExist->is_phone_verified == 1) {
             if (Hash::check($request->password, $userExist->password)) {
@@ -170,6 +173,18 @@ class AuthController extends Controller
                 ]);
             } elseif ($type === 'consultant') {
 
+                if (!preg_match('#^(\d{2})/(\d{2})/(\d{4})$#', $request->dob, $matches)) {
+                    $message = "Date Format Not Valid";
+                    return $this->responseError(403, false, $message);
+                }
+             
+                $dob = mktime(0, 0, 0, $matches[2], $matches[1], $matches[3]);
+              
+                if (date('d/m/Y', $dob) != $request->dob) {
+                    $message = "Date Format Not Valid";
+                    return $this->responseError(403, false, $message);
+                }
+
                 $consultantTotalData = User::select(DB::raw('count(id) as total'))
                     ->where('type', 'consultant')
                     ->first();
@@ -195,6 +210,9 @@ class AuthController extends Controller
 
         DB::beginTransaction();
         try {
+              
+           
+
             $otp = SMSHelper::generateOTP();
             $user = User::create([
                 'name' => $request->first_name . ' ' . $request->last_name,
@@ -364,10 +382,6 @@ class AuthController extends Controller
         }
 
     }
-
-
-
-
 
     public function retrieve($id)
     {

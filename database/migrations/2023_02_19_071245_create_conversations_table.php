@@ -25,6 +25,7 @@ return new class extends Migration {
             0 inactive,
             1 active,
             ");
+            $table->tinyInteger('is_delete', 2)->default(0);
             $table->timestamps();
         });
     }

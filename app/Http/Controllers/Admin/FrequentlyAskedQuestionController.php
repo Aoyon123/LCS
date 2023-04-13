@@ -31,12 +31,30 @@ class FrequentlyAskedQuestionController extends Controller
         }
     }
 
+    public function retrieve($id)
+    {
+        DB::beginTransaction();
+        try {
+            $data = FrequentlyAskedQuestion::findOrFail($id);
+            if ($data) {
+                $message = "FAQ Found";
+                DB::commit();
+                return $this->responseSuccess(200, true, $message, $data);
+            } else {
+                $message = "No Data Found";
+                return $this->responseError(404, false, $message);
+            }
+        } catch (QueryException $e) {
+            DB::rollBack();
+        }
+    }
+
     public function store(FrequentlyAskedQuestionRequest $request)
     {
         DB::beginTransaction();
         try {
             if ($request->answer_image) {
-                $category_name = str_replace(' ', '', $request->category_name);
+                $category_name = $request->category_name;
                 $image_parts = explode(";base64,", $request->answer_image);
                 $imageType = explode("/", $image_parts[0])[1];
                 if (isset($image_parts[0])) {
@@ -61,26 +79,25 @@ class FrequentlyAskedQuestionController extends Controller
             return $this->responseError(Response::HTTP_INTERNAL_SERVER_ERROR, false, $e->getMessage());
         }
     }
-    public function update(FrequentlyAskedQuestionRequest $request, $id)
+    public function update(Request $request, $id)
     {
-        // return $request->question;
         $faqData = FrequentlyAskedQuestion::findOrFail($id);
-        //   return $faqData;
-        // return $faqData->category_name;
-        DB::beginTransaction();
-        try {
+        // return $request->answer_image;
             if ($request->answer_image) {
                 $image_parts = explode(";base64,", $request->answer_image);
-                if (isset($image_parts[0])) {
-                    $answer_image_path = FileHandler::upload4ParamsImage($request->answer_image, $faqData->category_name, $request->id, 'faqAnswer');
+                $imageType = explode("/", $image_parts[0])[1];
+                if (isset($image_parts[1])) {
+                    $answer_image_path = FileHandler::uploadImage($request->answer_image, $faqData->category_name, $faqData->id, $imageType, 'faqAnswer');
+                  //  return $answer_image_path;
                     if (File::exists($answer_image_path)) {
                         File::delete($answer_image_path);
                     }
-                } else {
+                }
+              }
+             else {
                     $answer_image_path = $faqData->answer_image;
                 }
-            }
-
+         // return $answer_image_path;
             if ($faqData) {
                 $faqData->update([
                     'category_name' => $request->category_name ?? $faqData->category_name,
@@ -97,18 +114,15 @@ class FrequentlyAskedQuestionController extends Controller
                 $message = "No Data Found";
                 return $this->responseError(404, false, $message);
             }
-        } catch (QueryException $e) {
-            DB::rollBack();
-        }
     }
 
     public function destroy($id)
     {
         DB::beginTransaction();
         try {
-            $user = FrequentlyAskedQuestion::findOrFail($id);
-            if ($user) {
-                $user->delete();
+            $faqData = FrequentlyAskedQuestion::findOrFail($id);
+            if ($faqData) {
+                $faqData->delete();
                 $message = "FAQ Deleted Succesfully";
                 DB::commit();
                 return $this->responseSuccess(200, true, $message, []);

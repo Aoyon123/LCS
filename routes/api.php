@@ -7,7 +7,6 @@ use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\ExperienceController;
 use App\Http\Controllers\Citizen\CaseController;
 use App\Http\Controllers\Admin\BannerController;
-//use App\Http\Controllers\Admin\BannerControlle;
 use App\Http\Controllers\Common\ProfileController;
 use App\Http\Controllers\Citizen\CitizenController;
 use App\Http\Controllers\Admin\PermissionController;
@@ -141,6 +140,7 @@ Route::group(["middleware" => ["auth:api"]], function () {
     /////////////// Frequently Asked Question  ////////////////////
     Route::post('/frequentlyAskedQuestion/store', [FrequentlyAskedQuestionController::class, 'store']);
     Route::get('/frequentlyAskedQuestion/all', [FrequentlyAskedQuestionController::class, 'index']);
+    Route::get('/frequentlyAskedQuestion/{faq_id}/retrieve', [FrequentlyAskedQuestionController::class, 'retrieve']);
     Route::put('/frequentlyAskedQuestion/{faq_id}/update', [FrequentlyAskedQuestionController::class, 'update']);
     Route::delete('/frequentlyAskedQuestion/{faq_id}/delete', [FrequentlyAskedQuestionController::class, 'destroy']);
 

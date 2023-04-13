@@ -30,8 +30,8 @@ return new class extends Migration {
             $table->string('document_link', 255)->nullable();
             $table->string('case_initial_date', 255)->nullable();
             $table->string('case_status_date', 255)->nullable();
-            $table->string('consultant_review_comment', 255)->nullable();
-            $table->string('citizen_review_comment', 255)->nullable();
+            $table->mediumText('consultant_review_comment')->nullable();
+            $table->mediumText('citizen_review_comment')->nullable();
             $table->string('case_code')->nullable();
             $table->text('rating')->nullable();
             $table->timestamps();
