@@ -19,13 +19,15 @@ class CaseController extends Controller
 {
     use ResponseTrait;
 
+    
     public function index()
     {
         $data = LcsCase::with(['citizen','consultant'])->get();
         if (!empty($data)) {
             $message = "Succesfully Data Shown";
             return $this->responseSuccess(200, true, $message, $data);
-        } else {
+        } 
+        else {
             $message = "Invalid credentials";
             return $this->responseError(403, false, $message);
         }
@@ -94,7 +96,7 @@ class CaseController extends Controller
             ->orderBy('id', 'DESC')->get();
 
         if ($caseData) {
-            $message = "Case list data succesfully shown";
+            $message = "Consultation list data succesfully shown";
             return $this->responseSuccess(200, true, $message, $caseData);
         } else {
             $message = "No Data Found";
@@ -103,44 +105,47 @@ class CaseController extends Controller
     }
 
 
-    public function store(CaseRequest $request)
+    public function store(Request $request)
     {
         DB::beginTransaction();
         try {
             $case = LcsCase::where('citizen_id', auth()->user()->id)
                 ->where('consultant_id', $request->consultant_id)
                 ->latest()->first();
-            $case_code = '';
+      
             $case_file_path = null;
 
-            if ($case) {
-                $caseCode = $case->case_code;
-                $output = substr($caseCode, 0, strrpos($caseCode, '-'));
-                // return $output;
-                $codeNumber = explode("-", $caseCode)[4] + 1;
-                $case_code = $output . '-' . $codeNumber;
-            } else {
+            $now = Carbon::now();
+            $case_code = $now->format('Hsu');
 
-                $citizenInfo = User::where('id', auth()->user()->id)->first();
+            // if ($case) {
+            //     $caseCode = $case->case_code;
+            //     $output = substr($caseCode, 0, strrpos($caseCode, '-'));
+            //     // return $output;
+            //     $codeNumber = explode("-", $caseCode)[4] + 1;
+            //     $case_code = $output . '-' . $codeNumber;
+            // } else {
 
-                $citizenCode = $citizenInfo->code;
-                //  return $citizenCode;
+            //     $citizenInfo = User::where('id', auth()->user()->id)->first();
+                
+            //     $citizenCode = $citizenInfo->code;
 
-                $citizenLastCodeNumber = explode("-", $citizenCode)[2];
+            //     $citizenLastCodeNumber = explode("-", $citizenCode)[2];
 
-                $consultantInfo = User::where('id', $request->consultant_id)->first();
+            //     $consultantInfo = User::where('id', $request->consultant_id)->first();
 
-                $consultantCode = $consultantInfo->code;
-                $consultantLastCodeNumber = explode("-", $consultantCode)[2];
+            //     $consultantCode = $consultantInfo->code;
+          
+            //     $consultantLastCodeNumber = explode("-", $consultantCode)[2];
 
-                $codeTotalData = LcsCase::select(DB::raw('count(id) as total'))
-                    ->where('id', auth()->user()->id)
-                    ->first();
+            //     $codeTotalData = LcsCase::select(DB::raw('count(id) as total'))
+            //         ->where('id', auth()->user()->id)
+            //         ->first();
 
-                $citizenData = $codeTotalData->total + 1;
+            //     $citizenData = $codeTotalData->total + 1;
 
-                $case_code = 'case' . '-' . date('dmy') . '-' . $citizenLastCodeNumber . '-' . $consultantLastCodeNumber . '-' . $citizenData;
-            }
+            //     $case_code = 'case' . '-' . date('dmy') . '-' . $citizenLastCodeNumber . '-' . $consultantLastCodeNumber . '-' . $citizenData;
+            // }
 
             if ($request->document_file) {
                 $extension = '';
@@ -165,15 +170,24 @@ class CaseController extends Controller
                 }
             }
 
+            $request->validate([
+                'service_id' => 'required',            
+                'title' => 'required|string',
+                'document_link' => 'nullable',
+                'document_file' => 'required|string',
+                'description' => 'nullable',
+            ]);
+
+
             $data = LcsCase::create([
                 'service_id' => $request->service_id,
                 'citizen_id' => auth()->user()->id,
                 'consultant_id' => $request->consultant_id,
                 'title' => $request->title,
                 'status' => 0,
-                'document_link' => $request->document_link,
+                'document_link' => $request->document_link ?? '',
                 'rating' => $request->rating,
-                'description' => $request->description,
+                'description' => $request->description ?? '',
                 'case_initial_date' => Carbon::now()->toDateTimeString(),
                 'case_status_date' => $request->case_status_date,
                 'consultant_review_comment' => $request->consultant_review_comment,
@@ -183,7 +197,7 @@ class CaseController extends Controller
             ]);
 
             DB::commit();
-            $message = "Case Created Successfull";
+            $message = "Consultation Created Successfull";
             return $this->responseSuccess(200, true, $message, $data);
 
         } catch (QueryException $e) {
@@ -226,7 +240,7 @@ class CaseController extends Controller
                     User::find($consultant_id)->update(['rates' => $roundRating, 'totalRating' => $totalRatingSum ?? 1]);
                 }
 
-                $message = "This " . $caseData->case_code . " data has been updated.";
+                $message = "This Consultation data has been updated";
                 DB::commit();
                 return $this->responseSuccess(200, true, $message, $caseData);
             }
@@ -243,7 +257,7 @@ class CaseController extends Controller
             $lcsCase = LcsCase::findOrFail($id);
             $lcsCase->delete();
 
-            $message = "Case Deleted Succesfully";
+            $message = "Consultation Deleted Succesfully";
             DB::commit();
             return $this->responseSuccess(200, true, $message, []);
         } catch (QueryException $e) {
@@ -351,7 +365,7 @@ class CaseController extends Controller
             ->first();
 
         if ($caseData) {
-            $message = "Case details data succesfully shown";
+            $message = "Consultation details data succesfully shown";
             return $this->responseSuccess(200, true, $message, $caseData);
         } else {
             $message = "No Data Found";
@@ -366,7 +380,7 @@ class CaseController extends Controller
                             ->where('lcs_cases.id', $case_id)->first();
 
         if ($caseData) {
-            $message = "Case details data succesfully shown";
+            $message = "Consultation details data succesfully shown";
             return $this->responseSuccess(200, true, $message, $caseData);
         } else {
             $message = "No Data Found";

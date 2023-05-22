@@ -87,7 +87,7 @@ class ConsultantController extends Controller
             $data['list'] = $consultant->get();
         }
 
-        $message = "Succesfully Data Shown";
+        $message = "Successfully Data Shown";
         return $this->responseSuccess(200, true, $message, $data);
     }
 
@@ -164,7 +164,7 @@ class ConsultantController extends Controller
 
         // return $citizenReviewData;
         if (!empty($data)) {
-            $message = "Succesfully Review List Data Shown";
+            $message = "Successfully Review List Data Shown";
             return $this->responseSuccess(200, true, $message, $data);
         } else {
             $message = "Invalid credentials";

@@ -42,9 +42,28 @@ class LcsCase extends Model
         return $this->belongsTo(User::class, 'citizen_id', 'id');
     }
 
+    public function scopeInitial($query)
+    {
+        return $query->where(['status' => 0]);
+    }
     public function scopeCompleted($query)
     {
         return $query->where(['status' => 2]);
+    }
+
+    public function scopeInProgress($query)
+    {
+        return $query->where(['status' => 1]);
+    }
+
+    public function scopeCancel($query)
+    {
+        return $query->where(['status' => 3]);
+    }
+
+    public function scopeAccepted($query)
+    {
+        return $query->where(['status' => 4]);
     }
 
     // public function services()

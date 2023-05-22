@@ -19,7 +19,7 @@ class FrequentlyAskedQuestionController extends Controller
     use ResponseTrait;
     public function index()
     {
-        $faqData = FrequentlyAskedQuestion::activefrequentlyaskedquestion()->get();
+        $faqData = FrequentlyAskedQuestion::activefrequentlyaskedquestion()->orderBy('frequently_asked_questions.id', 'desc')->get();
         $groupFaqData = $faqData->groupBy('category_name');
 
         if ($groupFaqData) {

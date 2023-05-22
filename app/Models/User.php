@@ -87,6 +87,16 @@ class User extends Authenticatable implements JWTSubject
         return $query->where(['status' => 1]);
     }
 
+    public function scopeInitial($query)
+    {
+        return $query->where(['approval' => 0]);
+    }
+
+    public function scopeRejected($query)
+    {
+        return $query->where(['approval' =>  2]);
+    }
+
     public function scopeApproval($query)
     {
         return $query->where(['approval' => 1]);
@@ -105,5 +115,14 @@ class User extends Authenticatable implements JWTSubject
     {
         return $this->belongsToMany(Service::class)->where(['status' => 1]);
     }
+
+    public function emptyInstituteName(){
+        return $this->hasMany(Experience::class, 'user_id')->where('institute_name', '!=', "");
+    }
+
+    // public function scopeCitizen($query)
+    // {
+    //     return $query->where(['type' => 'citizen']);
+    // }
 
 }

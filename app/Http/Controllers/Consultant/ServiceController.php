@@ -49,10 +49,11 @@ class ServiceController extends Controller
         try {
             if ($request->service_image) {
                 $image_parts = explode(";base64,", $request->service_image);
+                $unique =random_int(100000, 999999);
                 $imageType = explode("/", $image_parts[0])[1];
                 $type="service-icon";
                 if (isset($image_parts[1])) {
-                    $service_image_path = FileHandler::uploadImage($request->service_image,$type,$request->id,$imageType,'service');
+                    $service_image_path = FileHandler::uploadImage($request->service_image,$type,$unique,$imageType,'service');
                 }
             }
 

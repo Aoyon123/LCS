@@ -112,7 +112,7 @@ class ConversationController extends Controller
 
           Conversation::find($id)->update(['is_delete' => 1]);
           $conversation = Conversation::findOrFail($id);
-            $message = "Conversation Data Deleted Succesfully";
+            $message = "Conversation Data Deleted Successfully";
             DB::commit();
             return $this->responseSuccess(200, true, $message, $conversation);
         } catch (QueryException $e) {

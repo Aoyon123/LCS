@@ -46,7 +46,7 @@ class CommonController extends Controller
         }
 
         if (!empty($data)) {
-            $message = "Succesfully Data Shown";
+            $message = "Successfully Data Shown";
             return $this->responseSuccess(200, true, $message, $data);
         } else {
             $message = "Invalid credentials";
@@ -76,7 +76,7 @@ class CommonController extends Controller
             'schedule'
         ];
         $params = $request->all();
-
+     //  return $params;
 
         $consultant = User::with(
             [
@@ -85,7 +85,7 @@ class CommonController extends Controller
                 'serviceLatest',
                 'serviceList',
             ]
-
+       
         )->select($consultants_selected_fields)->status()->approval()->consultant();
 
         foreach ($params as $key => $param) {
@@ -106,7 +106,39 @@ class CommonController extends Controller
             } elseif ($key === 'ratingValue') {
                 $totalConsultant = $consultant->where('rates', $param)->count();
                 $consultant = $consultant->where('rates', $param);
-            } elseif ($key === 'search') {
+            }
+            
+            elseif ($key === 'consultantRating') {
+                $totalConsultant = $consultant->where('users.rates', '<=', $param)
+                                 ->orderBy('users.rates', 'desc')->count();
+                           
+                $consultant = $consultant->where('users.rates', '<=', $param)
+                              ->orderBy('users.rates', 'desc');
+            }
+
+            elseif ($key === 'popularity') {
+                $totalConsultant =  $consultant->orderBy('users.rates', $param)
+                                               ->count();          
+                $consultant = $consultant->orderBy('users.rates', $param);                             
+            } 
+
+            elseif ($key === 'yearsOfExperience') {
+
+                $totalConsultant =$consultant->orderBy('users.years_of_experience', $param)->count();
+
+                $consultant = $consultant->orderBy('users.years_of_experience', $param);
+            }
+
+            elseif ($key === 'ranking') {
+                $totalConsultant =  $consultant->orderBy('users.totalRating', $param) 
+                                               ->count();
+                           
+                $consultant = $consultant->orderBy('users.totalRating', $param);
+                                      
+                
+            } 
+   
+            elseif ($key === 'search') {
                 $userSearchFields = [
                     'name',
                     'email',
@@ -167,7 +199,7 @@ class CommonController extends Controller
             } elseif ($key === 'ratingTop') {
                 $totalConsultant = $consultant->orderBy('users.rates', $param)->count();
                 $consultant = $consultant->orderBy('users.rates', $param);
-            }
+            }             
         }
 
         if (isset($params['limit'])) {
@@ -185,7 +217,7 @@ class CommonController extends Controller
             $data['list'] = $consultant->get();
         }
 
-        $message = "Succesfully Data Shown";
+        $message = "Successfully Data Shown";
         return $this->responseSuccess(200, true, $message, $data);
     }
 
@@ -262,7 +294,7 @@ class CommonController extends Controller
              // ->latest();
            // ->get();
 
-            $message = "Succesfully Data Shown";
+            $message = "Successfully Data Shown";
             return $this->responseSuccess(200, true, $message, $detailsInfo);
 
     }
@@ -277,7 +309,7 @@ class CommonController extends Controller
         $service = Service::activeservicelist()->get();
 
         if (!empty($service)) {
-            $message = "Succesfully Service Data Shown";
+            $message = "Successfully Service Data Shown";
             return $this->responseSuccess(200, true, $message, $service);
         } else {
             $message = "Invalid credentials";
@@ -289,7 +321,7 @@ class CommonController extends Controller
     {
         $districts = DB::table('districts')->select(['id', 'name_bn', 'name_en'])->get();
         if (!empty($districts)) {
-            $message = "Succesfully Data Shown";
+            $message = "Successfully Data Shown";
             return $this->responseSuccess(200, true, $message, $districts);
         } else {
             $message = "Invalid credentials";
@@ -333,7 +365,7 @@ class CommonController extends Controller
         }
 
         if ($data) {
-            $message = "Succesfully FAQ Data Shown";
+            $message = "Successfully FAQ Data Shown";
             return $this->responseSuccess(200, true, $message, $data);
         } else {
             $message = "Invalid credentials";

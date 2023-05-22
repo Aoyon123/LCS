@@ -38,7 +38,7 @@ class AuthController extends Controller
     {
         $data = User::all();
 
-        $message = "Succesfully Data Shown";
+        $message = "Successfully Data Shown";
         return $this->responseSuccess(200, true, $message, $data);
     }
 
@@ -127,7 +127,7 @@ class AuthController extends Controller
 
         if ($userExist && $userExist->is_phone_verified == 1) {
             if (Hash::check($request->password, $userExist->password)) {
-                $message = $userExist->phone . " already registered, now you can login";
+                $message ="Already registered, now you can login";
                 // return $this->responseSuccess(200, true, $message, $userExist);
                 return $this->responseError(403, false, $message);
             } else {
@@ -156,12 +156,13 @@ class AuthController extends Controller
             //converts all the uppercase english alphabets present in the string to lowercase
             $type = strtolower($request->type);
             if ($type === 'citizen') {
-                $citizenTotalData = User::select(DB::raw('count(id) as total'))
-                    ->where('type', 'citizen')
-                    ->first();
-                //  return $citizenTotalData;
-                $citizenData = $citizenTotalData->total + 1;
-                $citizenCodeNo = 'cit-' . date('dmy-') . str_pad($citizenData, 4, '0', STR_PAD_LEFT);
+                
+                // $citizenTotalData = User::select(DB::raw('count(id) as total'))
+                //     ->where('type', 'citizen')
+                //     ->first();
+                // //  return $citizenTotalData;
+                // $citizenData = $citizenTotalData->total + 1;
+                // $citizenCodeNo = 'cit-' . date('dmy-') . str_pad($citizenData, 4, '0', STR_PAD_LEFT);
 
                 $request->validate([
                     'first_name' => 'required|string|max:50',
@@ -185,11 +186,11 @@ class AuthController extends Controller
                     return $this->responseError(403, false, $message);
                 }
 
-                $consultantTotalData = User::select(DB::raw('count(id) as total'))
-                    ->where('type', 'consultant')
-                    ->first();
-                $consultantData = $consultantTotalData->total + 1;
-                $consultantCodeNo = 'con-' . date('dmy-') . str_pad($consultantData, 4, '0', STR_PAD_LEFT);
+                // $consultantTotalData = User::select(DB::raw('count(id) as total'))
+                //     ->where('type', 'consultant')
+                //     ->first();
+                // $consultantData = $consultantTotalData->total + 1;
+                // $consultantCodeNo = 'con-' . date('dmy-') . str_pad($consultantData, 4, '0', STR_PAD_LEFT);
                 //  return $consultantCodeNo;
                 $request->validate([
                     'first_name' => 'required|string|max:50',
@@ -207,12 +208,14 @@ class AuthController extends Controller
             $message = "Type cannot be null";
             return $this->responseError(400, false, $message);
         }
-
+          
         DB::beginTransaction();
         try {
-              
-           
 
+            $now = Carbon::now();
+            $unique_code = $now->format('Hsu');
+        //    echo $unique_code;
+              
             $otp = SMSHelper::generateOTP();
             $user = User::create([
                 'name' => $request->first_name . ' ' . $request->last_name,
@@ -221,7 +224,7 @@ class AuthController extends Controller
                 'dob' => $request->dob ?? null,
                 'district_id' => $request->district_id ?? null,
                 'type' => strtolower($request->type),
-                'code' => $citizenCodeNo ?? $consultantCodeNo,
+                'code' => $unique_code,
                 'password' => Hash::make($request->password),
                 'terms_conditions' => $request->terms_conditions,
                 'otp_code' => $otp,
@@ -229,12 +232,14 @@ class AuthController extends Controller
 
             $smsMessage = $otp . ' is your LCS verification code ';
             $messageSuccess = SMSHelper::sendSMS($user->phone, $smsMessage);
+            // dd($messageSuccess);
             $role = Role::where('name', $request->type)->first();
             $user->assignRole($role);
 
             DB::commit();
 
             if ($messageSuccess) {
+
                 $message = "Phone Number Verification Code Send Successfully, Check Your Message!";
                 return $this->responseSuccess(200, true, $message, $user);
             } else {
@@ -250,7 +255,7 @@ class AuthController extends Controller
     public function registrationWithOTP(Request $request)
     {
         if (!$request->otp_code) {
-            $message = "Otp_Code Field Required!";
+            $message = "Otp Code Field Required!";
             return $this->responseError(403, false, $message);
         }
 
@@ -270,14 +275,14 @@ class AuthController extends Controller
             $is_expired_time = $user->updated_at->addMinutes(2);
             // return
             $nowTime = Carbon::now();
-
+ 
             if ($is_expired_time >= $nowTime) {
                 $userData = $user->update([
                     'is_phone_verified' => 1,
                 ]);
 
                 if ($userData) {
-                    $message = "Your Phone Number Verified, And Registration Successfull";
+                    $message = "Your Phone Number Verified";
                     return $this->responseSuccess(200, true, $message, $user);
                 }
             } else {
@@ -403,7 +408,7 @@ class AuthController extends Controller
             $users = DB::table('users')->whereIn('id', $request->all());
             if ($users) {
                 $users->delete();
-                $message = "Deleted Succesfully";
+                $message = "Deleted Successfully";
                 DB::commit();
                 return $this->responseSuccess(200, true, $message, []);
             }
@@ -415,7 +420,7 @@ class AuthController extends Controller
     public function logout()
     {
         auth()->logout();
-        $message = "User successfully logout";
+        $message = "Successfully logout";
         return $this->responseSuccess(200, true, $message, []);
     }
     public function refresh()

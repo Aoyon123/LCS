@@ -50,7 +50,7 @@ Route::group(["middleware" => ["auth:api"]], function () {
 
     Route::get('/admin/consultants', [AdminConsultantController::class, 'index']);
     Route::post("/consultant/approval", [AdminConsultantController::class, 'approvalConsultant']);
-
+    Route::get('/admin/consultants/information', [AdminConsultantController::class, 'adminConsultantInformation']);
 
     ////////// Citizen List ///////////
     Route::get('/admin/citizens', [AdminCitizenController::class, 'index']);
@@ -124,6 +124,7 @@ Route::group(["middleware" => ["auth:api"]], function () {
 
 
     ///////////  Case ////////////
+
     Route::get('/admin/allcase', [CaseController::class, 'index']);
     Route::get('/case/list', [CaseController::class, 'caseList']);
     Route::get('/case/{case_id}/details', [CaseController::class, 'caseDetailsInfo']);

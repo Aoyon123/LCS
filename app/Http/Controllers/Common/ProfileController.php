@@ -50,7 +50,6 @@ class ProfileController extends Controller
                 'dob' => 'required|max:50',
                 'gender' => 'required|max:10',
                 'district_id' => 'required|max:50',
-                // 'phone' => 'required|unique:users,phone,' . $user->id,
             ]);
 
 
@@ -243,7 +242,7 @@ class ProfileController extends Controller
                 }
             }
 
-            $message = $request->type . " Updated Succesfully";
+            $message = "Data Updated Successfully";
             DB::commit();
             return $this->responseSuccess(200, true, $message, $user);
         } catch (QueryException $e) {
@@ -277,7 +276,7 @@ class ProfileController extends Controller
                         'password' => Hash::make($request->new_password)
                     ]);
 
-                    $message = "Password Updated Succesfully";
+                    $message = "Password Updated Successfully";
                     DB::commit();
                     return $this->responseSuccess(200, true, $message, $user);
                 } else {
@@ -298,7 +297,7 @@ class ProfileController extends Controller
             $experience = Experience::where('id', $id)->first();
             if ($experience != null) {
                 $experience->delete();
-                $message = "Experience Deleted Succesfully";
+                $message = "Experience Deleted Successfully";
                 DB::commit();
                 return $this->responseSuccess(200, true, $message, []);
             } else {
@@ -318,7 +317,7 @@ class ProfileController extends Controller
             $academicQualification = AcademicQualification::where('id', $id)->first();
             if ($academicQualification != null) {
                 $academicQualification->delete();
-                $message = "Academic Qualification Deleted Succesfully";
+                $message = "Academic Qualification Deleted Successfully";
                 DB::commit();
                 return $this->responseSuccess(200, true, $message, []);
             } else {
@@ -367,7 +366,7 @@ class ProfileController extends Controller
                 } else {
                     $approvalStatus = 'Rejected';
                 }
-                $message = "This Consultant " . $approvalStatus;
+                $message = "This Consultant Status Is Updated";
                 DB::commit();
                 return $this->responseSuccess(200, true, $message, $user);
 
@@ -418,7 +417,7 @@ class ProfileController extends Controller
     {
         $districts = DB::table('districts')->select(['id', 'name_bn', 'name_en'])->get();
         if (!empty($districts)) {
-            $message = "Succesfully Districts Data Shown";
+            $message = "Successfully Districts Data Shown";
             return $this->responseSuccess(200, true, $message, $districts);
         } else {
             $message = "Invalid Credentials";
@@ -436,7 +435,8 @@ class ProfileController extends Controller
                 'active_status' => 0,
 
             ]);
-        } else if ($consultantData && $consultantData->active_status == 0) {
+        } 
+        else if ($consultantData && $consultantData->active_status == 0) {
             $consultantData->update([
                 'active_status' => 1,
 
@@ -444,7 +444,7 @@ class ProfileController extends Controller
         }
 
         if (!empty($consultantData)) {
-            $message = "Consulatnt Active Status Succesfully Updated";
+            $message = "Consultant Active Status Successfully Updated";
             return $this->responseSuccess(200, true, $message, $consultantData);
         } else {
             $message = "Invalid credentials";
@@ -501,7 +501,7 @@ class ProfileController extends Controller
             'profile_image' => $profile_image_path
           ]);
        if($userData){
-        $message = "Profile Image Updated Succesfully.";
+        $message = "Profile Image Updated Successfully.";
         return $this->responseSuccess(200, true, $message, $userExist);
    }
     }

@@ -31,7 +31,7 @@ class CaseRequest extends FormRequest
             'description' => 'nullable|string',
             'status' => 'nullable',
             'file' => 'nullable',
-            'link' => 'nullable',
+            'document_link' => 'nullable',
             'rating' => 'nullable|lte:5|gte:0',
             'case_initial_date' => 'nullable',
             'case_status_date' => 'nullable',
