@@ -5,8 +5,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\ExperienceController;
-use App\Http\Controllers\Citizen\CaseController;
 use App\Http\Controllers\Admin\BannerController;
+use App\Http\Controllers\Citizen\CaseController;
 use App\Http\Controllers\Common\ProfileController;
 use App\Http\Controllers\Citizen\CitizenController;
 use App\Http\Controllers\Admin\PermissionController;
@@ -16,6 +16,7 @@ use App\Http\Controllers\AcademicQualificationController;
 use App\Http\Controllers\Consultant\ConsultantRateController;
 use App\Http\Controllers\Frontend\V1\Common\CommonController;
 use App\Http\Controllers\Admin\FrequentlyAskedQuestionController;
+use App\Http\Controllers\Consultant\ConsultantInformationController;
 use App\Http\Controllers\Frontend\V1\Consultant\ConsultantController;
 use App\Http\Controllers\Admin\CitizenController as AdminCitizenController;
 use App\Http\Controllers\Admin\ConsultantController as AdminConsultantController;
@@ -151,6 +152,12 @@ Route::group(["middleware" => ["auth:api"]], function () {
     Route::post('/banner/update', [BannerController::class, 'update']);
     /////////////// Citizen Controller  //////////////
     Route::get('/citizen/conlsultants/list', [CitizenController::class, 'conlsultantList']);
+
+    ///////////// ConsultantInformationController   ////////////
+    Route::get('consultant/dashboard', [ConsultantInformationController::class, 'consultantDashboardInformation']);
+    Route::get('consultants/mobile/dashboard/', [ConsultantInformationController::class, 'consultantMobileDashboardInformation']);
+    Route::get('consultant/performance/graph', [ConsultantInformationController::class, 'consultantPerformance']);
+
 });
 
 

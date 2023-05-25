@@ -22,7 +22,7 @@ class CaseController extends Controller
     
     public function index()
     {
-        $data = LcsCase::with(['citizen','consultant'])->get();
+        $data = LcsCase::with(['citizen','consultant','service:id,title'])->get();
         if (!empty($data)) {
             $message = "Succesfully Data Shown";
             return $this->responseSuccess(200, true, $message, $data);
@@ -46,6 +46,7 @@ class CaseController extends Controller
                 'lcs_cases.id as case_id',
                 'lcs_cases.title',
                 'lcs_cases.document_file',
+                'lcs_cases.rating',
                 'lcs_cases.document_link',
                 'lcs_cases.case_initial_date',
                 'lcs_cases.case_status_date',
@@ -54,8 +55,11 @@ class CaseController extends Controller
                 'lcs_cases.status',
                 'users.name',
                 'users.code',
-                'users.profile_image'
+                'users.profile_image',
+                'services.id as service_id',
+                'services.title as service_title'
             )->join('users', 'lcs_cases.' . $userType . '_id', '=', 'users.id')
+             ->join('services', 'lcs_cases.service_id', '=', 'services.id')
             ->orderBy('case_id', 'DESC')->get();
 
         if ($caseData) {
@@ -91,8 +95,10 @@ class CaseController extends Controller
                 'lcs_cases.updated_at',
                 'users.name',
                 'users.code',
-                'users.profile_image'
+                'users.profile_image',
+                'services.title as service_title'
             )->join('users', 'lcs_cases.' . $userType . '_id', '=', 'users.id')
+            ->join('services', 'lcs_cases.service_id', '=', 'services.id')
             ->orderBy('id', 'DESC')->get();
 
         if ($caseData) {

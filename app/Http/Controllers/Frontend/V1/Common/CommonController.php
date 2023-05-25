@@ -109,11 +109,9 @@ class CommonController extends Controller
             }
             
             elseif ($key === 'consultantRating') {
-                $totalConsultant = $consultant->where('users.rates', '<=', $param)
-                                 ->orderBy('users.rates', 'desc')->count();
+                $totalConsultant = $consultant->where('users.rates', $param)->count();
                            
-                $consultant = $consultant->where('users.rates', '<=', $param)
-                              ->orderBy('users.rates', 'desc');
+                $consultant = $consultant->where('users.rates', $param);
             }
 
             elseif ($key === 'popularity') {

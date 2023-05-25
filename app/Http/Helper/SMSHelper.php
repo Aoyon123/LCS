@@ -2,8 +2,6 @@
 
 namespace App\Http\Helper;
 
-
-
 class SMSHelper
 {
     public static function sendSMS($to, $message)
