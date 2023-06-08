@@ -36,7 +36,6 @@ class ConsultantController extends Controller
                 $consultant = $consultant->whereHas('services', function ($q) use ($param) {
                     $q->where('services.id', $param);
                 });
-
             } elseif ($key === 'active') {
                 $consultant = $consultant->where('active_status', $param);
                 // return $consultant;
@@ -174,36 +173,36 @@ class ConsultantController extends Controller
 
 
 
-// public function dashboard()
-// {
-//     $service = DB::table('services')->get();
+    // public function dashboard()
+    // {
+    //     $service = DB::table('services')->get();
 
-//     $consultants_selected_fields = ['id', 'name', 'phone', 'email', 'address', 'code', 'profile_image', 'gender', 'rates', 'years_of_experience', 'schedule'];
+    //     $consultants_selected_fields = ['id', 'name', 'phone', 'email', 'address', 'code', 'profile_image', 'gender', 'rates', 'years_of_experience', 'schedule'];
 
-//     $consultant = User::with(
-//         [
-//             'experianceLatest:user_id,institute_name',
-//             'academicLatest:user_id,education_level',
-//             'serviceLatest',
-//         ]
+    //     $consultant = User::with(
+    //         [
+    //             'experianceLatest:user_id,institute_name',
+    //             'academicLatest:user_id,education_level',
+    //             'serviceLatest',
+    //         ]
 
-//     )->select($consultants_selected_fields)->active()->get();
+    //     )->select($consultants_selected_fields)->active()->get();
 
-//     if ($consultant && $service) {
-//         $data = [
-//             'topRated' => $consultant,
-//             'active' => $consultant,
-//             'service' => $service
-//         ];
-//     }
-//     if (!empty($data)) {
-//         $message = "Succesfully Data Shown";
-//         return $this->responseSuccess(200, true, $message, $data);
-//     } else {
-//         $message = "Invalid credentials";
-//         return $this->responseError(403, false, $message);
-//     }
-// }
+    //     if ($consultant && $service) {
+    //         $data = [
+    //             'topRated' => $consultant,
+    //             'active' => $consultant,
+    //             'service' => $service
+    //         ];
+    //     }
+    //     if (!empty($data)) {
+    //         $message = "Succesfully Data Shown";
+    //         return $this->responseSuccess(200, true, $message, $data);
+    //     } else {
+    //         $message = "Invalid credentials";
+    //         return $this->responseError(403, false, $message);
+    //     }
+    // }
 }
 
 // $consultant = User::with(

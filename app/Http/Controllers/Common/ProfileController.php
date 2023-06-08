@@ -27,14 +27,15 @@ class ProfileController extends Controller
         try {
 
             $user = User::findOrFail($request->id);
-            // return $user;
+            // return $request->services;
+            // return $user->services()->sync($request->services);
             if (!preg_match('#^(\d{2})/(\d{2})/(\d{4})$#', $request->dob, $matches)) {
                 $message = "Date Format Not Valid";
                 return $this->responseError(403, false, $message);
             }
-         
+
             $dob = mktime(0, 0, 0, $matches[2], $matches[1], $matches[3]);
-          
+
             if (date('d/m/Y', $dob) != $request->dob) {
                 $message = "Date Format Not Valid";
                 return $this->responseError(403, false, $message);
@@ -77,7 +78,7 @@ class ProfileController extends Controller
                 $request->validate([
                     'years_of_experience' => 'required',
                     'current_profession' => 'nullable',
-                    'general_info' => 'nullable',
+                    'general_info' => 'required',
                     'email' => 'required|email|unique:users,email,' . $user->id,
                     'nid' => 'required|unique:users,nid,' . $user->id,
                 ]);
@@ -125,6 +126,7 @@ class ProfileController extends Controller
                 }
 
                 $user->services()->sync($request->services);
+                // return $user->services()->sync($request->services);
             }
 
             $user->update([
@@ -135,7 +137,8 @@ class ProfileController extends Controller
                 'address' => $request->address ?? $user->address,
                 'nid' => $request->nid ?? $user->nid,
                 'dob' => $request->dob ?? $user->dob,
-                'status' => $request->status ?? $user->status,
+                // 'status' => $request->status ?? $user->status,
+                'status' => 1,
                 'gender' => strtolower($request->gender) ?? $user->gender,
                 'profile_image' => $profile_image_path ?? $user->profile_image,
                 'district_id' => $request->district_id ?? $user->district_id,
@@ -167,7 +170,7 @@ class ProfileController extends Controller
                                     'institute_name' => $request->experiances[$key]['institute_name'],
                                     'address' => $request->experiances[$key]['address'],
                                     'designation' => $request->experiances[$key]['designation'],
-                                    'department' => $request->experiances[$key]['department'],
+                                    'department' => $request->experiances[$key]['department'] ?? '',
                                     'start_date' => $request->experiances[$key]['start_date'],
                                     'end_date' => $request->experiances[$key]['end_date'],
                                     'user_id' => $user->id,
@@ -178,7 +181,7 @@ class ProfileController extends Controller
                                 'institute_name' => $request->experiances[$key]['institute_name'],
                                 'address' => $request->experiances[$key]['address'],
                                 'designation' => $request->experiances[$key]['designation'],
-                                'department' => $request->experiances[$key]['department'],
+                                'department' => $request->experiances[$key]['department'] ?? '',
                                 'start_date' => $request->experiances[$key]['start_date'],
                                 'end_date' => $request->experiances[$key]['end_date'],
                                 'user_id' => $user->id,
@@ -215,9 +218,10 @@ class ProfileController extends Controller
                                     File::delete($certificateImage);
                                 }
                             }
-                        } else {
-                            $certificateImage = $academic->certification_copy;
                         }
+                        // else {
+                        //     $certificateImage = $academic->certification_copy;
+                        // }
 
                         if ($existId) {
                             if ($academic) {
@@ -234,14 +238,14 @@ class ProfileController extends Controller
                                 'education_level' => $request->academics[$key]['education_level'],
                                 'institute_name' => $request->academics[$key]['institute_name'],
                                 'passing_year' => $request->academics[$key]['passing_year'],
-                                'certification_copy' => $certificateImage,
+                                'certification_copy' => $certificateImage ?? '',
                                 'user_id' => $user->id,
                             ]);
                         }
                     }
                 }
             }
-
+            //    return $user;
             $message = "Data Updated Successfully";
             DB::commit();
             return $this->responseSuccess(200, true, $message, $user);
@@ -304,7 +308,6 @@ class ProfileController extends Controller
                 $message = "No Data Found";
                 return $this->responseError(404, false, $message);
             }
-
         } catch (QueryException $e) {
             DB::rollBack();
         }
@@ -324,7 +327,6 @@ class ProfileController extends Controller
                 $message = "No Data Found";
                 return $this->responseError(404, false, $message);
             }
-
         } catch (QueryException $e) {
             DB::rollBack();
         }
@@ -369,9 +371,7 @@ class ProfileController extends Controller
                 $message = "This Consultant Status Is Updated";
                 DB::commit();
                 return $this->responseSuccess(200, true, $message, $user);
-
-            }
-             else {
+            } else {
                 $message = "Not Found Data";
                 return $this->responseError(404, false, $message);
             }
@@ -386,7 +386,7 @@ class ProfileController extends Controller
         DB::beginTransaction();
         try {
             $consultants = User::active()->get();
-          //  return $consultants;
+            //  return $consultants;
 
             if ($consultants) {
                 $message = "Consultant List Successfully Shown";
@@ -435,8 +435,7 @@ class ProfileController extends Controller
                 'active_status' => 0,
 
             ]);
-        } 
-        else if ($consultantData && $consultantData->active_status == 0) {
+        } else if ($consultantData && $consultantData->active_status == 0) {
             $consultantData->update([
                 'active_status' => 1,
 
@@ -477,11 +476,12 @@ class ProfileController extends Controller
         return response()->download($filepath);
     }
 
-    public function profileImageUpdateMobile(Request $request){
+    public function profileImageUpdateMobile(Request $request)
+    {
 
         $userExist = User::where('id', $request->id)
-        ->select(['id', 'name','type','phone','profile_image'])
-        ->first();
+            ->select(['id', 'name', 'type', 'phone', 'profile_image'])
+            ->first();
 
         if ($request->profile_image) {
             $image_parts = explode(";base64,", $request->profile_image);
@@ -492,17 +492,16 @@ class ProfileController extends Controller
                     File::delete($profile_image_path);
                 }
             }
-          }
-         else {
-                $profile_image_path = $userExist->profile_image;
-            }
+        } else {
+            $profile_image_path = $userExist->profile_image;
+        }
 
-          $userData = $userExist->update([
+        $userData = $userExist->update([
             'profile_image' => $profile_image_path
-          ]);
-       if($userData){
-        $message = "Profile Image Updated Successfully.";
-        return $this->responseSuccess(200, true, $message, $userExist);
-   }
+        ]);
+        if ($userData) {
+            $message = "Profile Image Updated Successfully.";
+            return $this->responseSuccess(200, true, $message, $userExist);
+        }
     }
 }

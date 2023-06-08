@@ -7,6 +7,7 @@ use App\Models\LcsCase;
 use App\Models\Service;
 use Illuminate\Http\Request;
 use App\Traits\ResponseTrait;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Models\FrequentlyAskedQuestion;
@@ -76,7 +77,7 @@ class CommonController extends Controller
             'schedule'
         ];
         $params = $request->all();
-     //  return $params;
+    //  return $params;
 
         $consultant = User::with(
             [
@@ -85,21 +86,55 @@ class CommonController extends Controller
                 'serviceLatest',
                 'serviceList',
             ]
-       
+
         )->select($consultants_selected_fields)->status()->approval()->consultant();
 
         foreach ($params as $key => $param) {
-
+        //   return $param;
             if ($key === 'services') {
-                $consultant = $consultant->whereHas('services', function ($q) use ($param) {
-                    $q->where('services.id', $param);
+                // $ids = $request->input('services',[]);
+                // // $ids =[7,8];
+                // return $ids;
+                // if (!is_array($ids)) {
+                //     $id = $ids;
+                // }
+                 //return $id;
+                // $consultant = $consultant->whereHas('services', function ($q) use ($ids) {
+                //     $q->whereIn('services.id', $ids)->get();
+                // });
+                // // $data = $consultant->toArray();
+                // return $consultant;
+                // return $param;
+                if (is_array($param)) {
+                    $consultant = $consultant->whereHas('services', function ($q) use ($param) {
+                        $q->whereIn('services.id', $param)->get();
+                    });
+                }
+                // return $consultant;
+            }
 
-                });
-                $totalConsultant = $consultant->whereHas('services', function ($q) use ($param) {
-                    $q->where('services.id', $param);
-                })->count();
 
-            } elseif ($key === 'active') {
+// $ids = $request->input('ids', []);
+    //
+    // if (!is_array($ids)) {
+    //     $ids = [$ids];
+         // Convert a single string ID into an array
+
+//                 $ids = $request->input('ids');
+
+// $consultant = $consultant->whereHas('services', function ($q) use ($ids) {
+//     $q->whereIn('services.id', $ids);
+// });
+
+
+
+
+                // $totalConsultant = $consultant->whereHas('services', function ($q) use ($param) {
+                //     $q->where('services.id', $param);
+                // })->count();
+
+          //  }
+            elseif ($key === 'active') {
                 $totalConsultant = $consultant->where('active_status', $param)->count();
                 $consultant = $consultant->where('active_status', $param);
 
@@ -107,18 +142,18 @@ class CommonController extends Controller
                 $totalConsultant = $consultant->where('rates', $param)->count();
                 $consultant = $consultant->where('rates', $param);
             }
-            
+
             elseif ($key === 'consultantRating') {
                 $totalConsultant = $consultant->where('users.rates', $param)->count();
-                           
+
                 $consultant = $consultant->where('users.rates', $param);
             }
 
             elseif ($key === 'popularity') {
                 $totalConsultant =  $consultant->orderBy('users.rates', $param)
-                                               ->count();          
-                $consultant = $consultant->orderBy('users.rates', $param);                             
-            } 
+                                               ->count();
+                $consultant = $consultant->orderBy('users.rates', $param);
+            }
 
             elseif ($key === 'yearsOfExperience') {
 
@@ -128,14 +163,14 @@ class CommonController extends Controller
             }
 
             elseif ($key === 'ranking') {
-                $totalConsultant =  $consultant->orderBy('users.totalRating', $param) 
+                $totalConsultant =  $consultant->orderBy('users.totalRating', $param)
                                                ->count();
-                           
+
                 $consultant = $consultant->orderBy('users.totalRating', $param);
-                                      
-                
-            } 
-   
+
+
+            }
+
             elseif ($key === 'search') {
                 $userSearchFields = [
                     'name',
@@ -197,7 +232,7 @@ class CommonController extends Controller
             } elseif ($key === 'ratingTop') {
                 $totalConsultant = $consultant->orderBy('users.rates', $param)->count();
                 $consultant = $consultant->orderBy('users.rates', $param);
-            }             
+            }
         }
 
         if (isset($params['limit'])) {

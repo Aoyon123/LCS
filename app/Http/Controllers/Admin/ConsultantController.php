@@ -22,7 +22,7 @@ class ConsultantController extends Controller
 
         try {
             $consultants = User::where('type', 'consultant')->get();
-           // info($consultants);
+            // info($consultants);
             if ($consultants != null) {
                 $message = "";
                 DB::commit();
@@ -56,7 +56,6 @@ class ConsultantController extends Controller
                 return $this->responseError(Response::HTTP_INTERNAL_SERVER_ERROR, false, 'Something wrong');
             }
         }
-
     }
 
 
@@ -66,12 +65,12 @@ class ConsultantController extends Controller
         $data = [];
         $totalConsultant = User::Consultant()->Approval()->count();
         $totalActiveConsulatnt = User::Consultant()->Status()->Approval()->Active()->count();
-      
-        $newRegisterCitizen = User::where(['type' => 'citizen'])
-                      ->whereDate('created_at', '>=', date('Y-m-d H:i:s',strtotime('-7 days')) )
-                      ->count();
 
-       $todaysTotalConsultation = LcsCase::Completed()->whereDate('updated_at', Carbon::today())->count();
+        $newRegisterCitizen = User::where(['type' => 'citizen'])
+            ->whereDate('created_at', '>=', date('Y-m-d H:i:s', strtotime('-7 days')))
+            ->count();
+
+        $todaysTotalConsultation = LcsCase::Completed()->whereDate('updated_at', Carbon::today())->count();
 
 
         $waitingForService = LcsCase::InProgress()->count();
@@ -84,8 +83,8 @@ class ConsultantController extends Controller
         // $totalRejectedConsulatnt = User::Consultant()->Rejected()->count();
 
         $topRatedConsulatnt = User::Consultant()->Status()->Approval()
-                           ->where('users.rates', '>=', 4.0)->count();
-        
+            ->where('users.rates', '>=', 4.0)->count();
+
         // $data['totalConsultant'] = $totalConsultant;
         $data['nowActiveConsulatnt'] = $totalActiveConsulatnt;
         $data['newRegisterCitizen'] = $newRegisterCitizen;

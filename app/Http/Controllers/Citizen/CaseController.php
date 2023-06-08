@@ -19,15 +19,14 @@ class CaseController extends Controller
 {
     use ResponseTrait;
 
-    
+
     public function index()
     {
-        $data = LcsCase::with(['citizen','consultant','service:id,title'])->get();
+        $data = LcsCase::with(['citizen', 'consultant', 'service:id,title'])->get();
         if (!empty($data)) {
             $message = "Succesfully Data Shown";
             return $this->responseSuccess(200, true, $message, $data);
-        } 
-        else {
+        } else {
             $message = "Invalid credentials";
             return $this->responseError(403, false, $message);
         }
@@ -40,8 +39,8 @@ class CaseController extends Controller
         $userType = $type === 'citizen' ? 'consultant' : 'citizen';
         $caseData = DB::table('lcs_cases')
             ->where('lcs_cases.' . $type . '_id', auth()->user()->id)
-            ->where(['deleted_at'=> null])
-        //    ->where('status', '2')
+            ->where(['deleted_at' => null])
+            //    ->where('status', '2')
             ->select(
                 'lcs_cases.id as case_id',
                 'lcs_cases.title',
@@ -59,7 +58,7 @@ class CaseController extends Controller
                 'services.id as service_id',
                 'services.title as service_title'
             )->join('users', 'lcs_cases.' . $userType . '_id', '=', 'users.id')
-             ->join('services', 'lcs_cases.service_id', '=', 'services.id')
+            ->join('services', 'lcs_cases.service_id', '=', 'services.id')
             ->orderBy('case_id', 'DESC')->get();
 
         if ($caseData) {
@@ -118,7 +117,7 @@ class CaseController extends Controller
             $case = LcsCase::where('citizen_id', auth()->user()->id)
                 ->where('consultant_id', $request->consultant_id)
                 ->latest()->first();
-      
+
             $case_file_path = null;
 
             $now = Carbon::now();
@@ -133,7 +132,7 @@ class CaseController extends Controller
             // } else {
 
             //     $citizenInfo = User::where('id', auth()->user()->id)->first();
-                
+
             //     $citizenCode = $citizenInfo->code;
 
             //     $citizenLastCodeNumber = explode("-", $citizenCode)[2];
@@ -141,7 +140,7 @@ class CaseController extends Controller
             //     $consultantInfo = User::where('id', $request->consultant_id)->first();
 
             //     $consultantCode = $consultantInfo->code;
-          
+
             //     $consultantLastCodeNumber = explode("-", $consultantCode)[2];
 
             //     $codeTotalData = LcsCase::select(DB::raw('count(id) as total'))
@@ -177,7 +176,7 @@ class CaseController extends Controller
             }
 
             $request->validate([
-                'service_id' => 'required',            
+                'service_id' => 'required',
                 'title' => 'required|string',
                 'document_link' => 'nullable',
                 'document_file' => 'required|string',
@@ -205,7 +204,6 @@ class CaseController extends Controller
             DB::commit();
             $message = "Consultation Created Successfull";
             return $this->responseSuccess(200, true, $message, $data);
-
         } catch (QueryException $e) {
             DB::rollBack();
             return $this->responseError(Response::HTTP_INTERNAL_SERVER_ERROR, false, $e->getMessage());
@@ -250,7 +248,6 @@ class CaseController extends Controller
                 DB::commit();
                 return $this->responseSuccess(200, true, $message, $caseData);
             }
-
         } catch (QueryException $e) {
             DB::rollBack();
         }
@@ -380,10 +377,11 @@ class CaseController extends Controller
     }
 
 
-    public function adminCaseDetailsInfo($case_id){
+    public function adminCaseDetailsInfo($case_id)
+    {
 
-        $caseData = LcsCase::with(['citizen','consultant','service'])
-                            ->where('lcs_cases.id', $case_id)->first();
+        $caseData = LcsCase::with(['citizen', 'consultant', 'service'])
+            ->where('lcs_cases.id', $case_id)->first();
 
         if ($caseData) {
             $message = "Consultation details data succesfully shown";

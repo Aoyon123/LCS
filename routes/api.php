@@ -13,8 +13,10 @@ use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Consultant\ServiceController;
 use App\Http\Controllers\Common\ConversationController;
 use App\Http\Controllers\AcademicQualificationController;
+use App\Http\Controllers\Admin\AdminInformationController;
 use App\Http\Controllers\Consultant\ConsultantRateController;
 use App\Http\Controllers\Frontend\V1\Common\CommonController;
+use App\Http\Controllers\Citizen\CitizenInformationController;
 use App\Http\Controllers\Admin\FrequentlyAskedQuestionController;
 use App\Http\Controllers\Consultant\ConsultantInformationController;
 use App\Http\Controllers\Frontend\V1\Consultant\ConsultantController;
@@ -65,7 +67,7 @@ Route::group(["middleware" => ["auth:api"]], function () {
     Route::post('/active_status/{consultant_id}/change', [ProfileController::class, 'activeStatusChange']);
     Route::delete('/profile/experience/{id}/delete', [ProfileController::class, 'experienceDestroy']);
     Route::delete('/profile/academic_qualification/{id}/delete', [ProfileController::class, 'academicQualificationDestroy']);
-   // Route::post('/consultant/approve', [ProfileController::class, 'approved']);
+    // Route::post('/consultant/approve', [ProfileController::class, 'approved']);
     Route::get("district/list", [ProfileController::class, 'allDistricts']);
     Route::post('/imagefile/download', [ProfileController::class, 'getDownload']);
     // Route::get('/profile/consultantList', [ProfileController::class, 'consultantList']);
@@ -158,6 +160,10 @@ Route::group(["middleware" => ["auth:api"]], function () {
     Route::get('consultants/mobile/dashboard/', [ConsultantInformationController::class, 'consultantMobileDashboardInformation']);
     Route::get('consultant/performance/graph', [ConsultantInformationController::class, 'consultantPerformance']);
 
+    /////////////////// CitizenInformationController   //////////////////////////
+    Route::get('citizen/dashboard', [CitizenInformationController::class, 'citizenDashboardInformation']);
+    /////////////////     AdminInformationController   ////////////////////////
+    Route::get('admin/dashboard', [AdminInformationController::class, 'adminDashboardInformation']);
 });
 
 
