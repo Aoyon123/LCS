@@ -97,6 +97,11 @@ class User extends Authenticatable implements JWTSubject
         return $query->where(['approval' =>  2]);
     }
 
+    public function scopeDeactivated($query)
+    {
+        return $query->where(['approval' =>  3]);
+    }
+
     public function scopeApproval($query)
     {
         return $query->where(['approval' => 1]);

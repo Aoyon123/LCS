@@ -2,16 +2,14 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Models\User;
-use App\Models\LcsCase;
-use Illuminate\Http\Request;
-use App\Traits\ResponseTrait;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Carbon;
 use App\Http\Controllers\Controller;
-use Illuminate\Database\QueryException;
 use App\Http\Helper\SMSHelper;
+use App\Models\User;
+use App\Traits\ResponseTrait;
+use Illuminate\Database\QueryException;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\DB;
 
 class ConsultantController extends Controller
 {
@@ -36,7 +34,6 @@ class ConsultantController extends Controller
         }
     }
 
-
     public function approvalConsultant(Request $request)
     {
         $consultantData = User::where(['id' => $request->id])->first();
@@ -44,7 +41,7 @@ class ConsultantController extends Controller
         if ($consultantData) {
             $consultantData->update([
                 'approval' => (int) $request->approvalStatus,
-                'approved_by' => auth()->user()->id
+                'approved_by' => auth()->user()->id,
             ]);
 
             $messageSuccess = SMSHelper::sendSMS($consultantData->phone, $request->message);
@@ -58,50 +55,151 @@ class ConsultantController extends Controller
         }
     }
 
-
     public function adminConsultantInformation(Request $request)
     {
 
         $data = [];
-        $totalConsultant = User::Consultant()->Approval()->count();
-        $totalActiveConsulatnt = User::Consultant()->Status()->Approval()->Active()->count();
+        $totalConsultantationDataCount = User::Consultant()->count();
+        $totalActiveConsulatntCount = User::Consultant()->Status()->Approval()->count();
+        $totalWaitingConsultantCount = User::Consultant()->Initial()->count();
+        $totalRejectedConsultantCount = User::Consultant()->Rejected()->count();
 
-        $newRegisterCitizen = User::where(['type' => 'citizen'])
-            ->whereDate('created_at', '>=', date('Y-m-d H:i:s', strtotime('-7 days')))
-            ->count();
+        $highestRatingConsultantCount = User::Consultant()->Approval()->Status()
+            ->where('rates', '>=', '4.0')->count();
+            // return $highestRatingConsultantCount;
+        // $newRegisterCitizen = User::where(['type' => 'citizen'])
+        //     ->whereDate('created_at', '>=', date('Y-m-d H:i:s', strtotime('-7 days')))
+        //     ->count();
+        $totalDeactivatedConsultantCount = User::Consultant()->Deactivated()->count();
+        $highestPaidConsultantCount = 0;
+        $highestConsultationConsultantCount = 15;
+        // $highestConsultationConsultantCount = User::Consultant()->Approval()->Status()
+        //     ->where('totalRating', '>=', '100')->count();
 
-        $todaysTotalConsultation = LcsCase::Completed()->whereDate('updated_at', Carbon::today())->count();
+        // $type = auth()->user()->type;
+        // $userType = $type === 'consultant' ? 'consultant' : 'citizen';
 
 
-        $waitingForService = LcsCase::InProgress()->count();
+        // $takingConsultation = LcsCase::with('service:id,title')
+        //     ->select('id', 'service_id', 'citizen_id')
 
-        $cancelConsultation = LcsCase::Cancel()->count();
+        //     ->orderBy('id', 'desc')
+        //     ->groupBy('service_id')
+        //     ->get();
 
-        $serviceHelpRequest = LcsCase::Initial()->count();
 
-        // $totalNewApplyConsultant = User::Consultant()->Initial()->count();
-        // $totalRejectedConsulatnt = User::Consultant()->Rejected()->count();
 
-        $topRatedConsulatnt = User::Consultant()->Status()->Approval()
-            ->where('users.rates', '>=', 4.0)->count();
 
-        // $data['totalConsultant'] = $totalConsultant;
-        $data['nowActiveConsulatnt'] = $totalActiveConsulatnt;
-        $data['newRegisterCitizen'] = $newRegisterCitizen;
-        $data['waitingForService'] = $waitingForService;
-        $data['cancelConsultation'] = $cancelConsultation;
-        $data['serviceHelpRequest'] = $serviceHelpRequest;
-        $data['todaysTotalConsultation'] = $todaysTotalConsultation;
-        $data['topRatingConsulatnt'] = $topRatedConsulatnt;
+        //  return $highestConsultationConsultantCount;
+
+
+        $params = $request->all();
+
+        $consultantData = User::where('type', 'consultant')->orderBy('id', 'DESC');
+
+        foreach ($params as $key => $param) {
+
+            if ($key === 'active') {
+                //active=1
+                $totalConsultantationDataCount = $consultantData
+                    ->where('users.status', $param)
+                    ->where('users.approval', $param)->count();
+                $consultantData = $consultantData
+                    ->where('users.status', $param)
+                    ->where('users.approval', $param);
+            } else if ($key === 'waitingConsultant') {
+                //waitingConsultant=0
+                $totalConsultantationDataCount = $consultantData
+                    ->where('users.approval', $param)->count();
+                $consultantData = $consultantData
+                    ->where('users.approval', $param);
+            } else if ($key === 'rejectedConsultant') {
+                //rejectedConsultant=2
+                $totalConsultantationDataCount = $consultantData
+                    ->where('users.approval', $param)->count();
+                $consultantData = $consultantData
+                    ->where('users.approval', $param);
+            } else if ($key === 'highestRatingConsultant') {
+                //highestRatingConsultant=4.0
+                $totalConsultantationDataCount = $consultantData
+                    ->where('users.approval', '1')
+                    ->where('users.status', '1')
+                    ->where('users.rates', '>=', $param)
+                    ->count();
+                $consultantData = $consultantData
+                    ->where('users.approval', '1')
+                    ->where('users.status', '1')
+                    ->where('users.rates', '>=', $param);
+
+            } else if ($key === 'deactivatedConsultant') {
+                //deactivatedConsultant=3
+                $totalConsultantationDataCount = $consultantData
+                    ->where('users.approval', '>=', $param)
+                    ->count();
+
+                $consultantData = $consultantData
+                    ->where('users.approval', '>=', $param);
+
+            } else if ($key === 'highestConsultationConsultant') {
+
+                    $consultantData = DB::table('lcs_cases')
+                    ->where('lcs_cases.status',2)
+                    ->where(['deleted_at' => null])
+                    ->select(
+                        (DB::raw('COUNT(lcs_cases.consultant_id) AS caseCount')),
+                        'users.name',
+                        'users.profile_image',
+                        'users.code',
+                        'users.phone',
+                        'users.email',
+                        'users.approval',
+                        'users.address',
+                        'users.district_id',
+                    )->join('users', 'lcs_cases.' . $param . '_id', '=', 'users.id')
+                    ->join('services', 'lcs_cases.service_id', '=', 'services.id')
+                    ->groupBy('consultant_id')
+                    ->orderBy('caseCount', 'DESC')
+                    ->limit(15);
+                    // ->get();
+
+            }
+
+        }
+
+        $totalConsultant['totalConsultantCount'] = $totalConsultantationDataCount;
+        $totalActiveConsulatnt['totalActiveConsulatntCount'] = $totalActiveConsulatntCount;
+        $totalWaitingConsultant['totalWaitingConsultantCount'] = $totalWaitingConsultantCount;
+        $totalRejectedConsultant['totalRejectedConsultantCount'] = $totalRejectedConsultantCount;
+
+        $highestRatingConsultant['highestRatingConsultantCount'] = $highestRatingConsultantCount;
+        $totalDeactivatedConsultant['totalDeactivatedConsultantCount'] = $totalDeactivatedConsultantCount;
+        $highestPaidConsultant['highestPaidConsultantCount'] = $highestPaidConsultantCount;
+        $highestConsultationConsultant['highestConsultationConsultantCount'] = $highestConsultationConsultantCount;
+        $Cards = [$totalConsultant, $totalActiveConsulatnt, $totalWaitingConsultant, $totalRejectedConsultant,
+            $highestRatingConsultant, $totalDeactivatedConsultant, $highestPaidConsultant, $highestConsultationConsultant];
+
+        $ItemAll = [];
+
+        if (isset($params['limit'])) {
+            if (isset($params['offset'])) {
+                $ItemAll['totalConsultantation'] = $totalConsultantationDataCount;
+                $ItemAll['offset'] = $params['offset'];
+                $ItemAll['limit'] = $params['limit'];
+                $ItemAll['consultation'] = $consultantData->offset($params['offset'])->limit($params['limit'])->get();
+            } else {
+                $ItemAll['limit'] = $params['limit'];
+                $ItemAll['consultation'] = $consultantData->limit($params['limit'])->get();
+            }
+        } else {
+            $ItemAll['totalConsultantation'] = $totalConsultantationDataCount;
+            $ItemAll['consultation'] = $consultantData->get();
+        }
+        $data['cardInformation'] = $Cards;
+        $data['filterInformation'] = [$ItemAll];
 
         $message = "Successfully Data Shown";
         return $this->responseSuccess(200, true, $message, $data);
     }
-
-
-
-
-
 
     /**
      * Show the form for creating a new resource.

@@ -56,7 +56,9 @@ class AdminInformationController extends Controller
         $initialCount = LcsCase::Initial()->count();
         $completeCount = LcsCase::Completed()->count();
         $cancelConsultationCount = LcsCase::Cancel()->count();
-        $totalActiveConsultantCount = User::Consultant()->Status()->Approval()->Status()->count();
+
+
+        $totalActiveConsultantCount = User::Consultant()->Status()->Approval()->count();
         $totalWaitingConsultantApproveCount = User::Consultant()->Initial()->count();
         $totalRegisterCitizenCount = User::where(['type' => 'citizen'])
             ->where('is_phone_verified', 1)
@@ -401,6 +403,142 @@ class AdminInformationController extends Controller
         $data['feedBackRating'] = $itemAllFeedbackRating;
         $data['topConsultantList'] = $topConsultant;
         $data['serviceRequest'] = $serviceRequest;
+
+        $message = "Successfully Data Shown";
+        return $this->responseSuccess(200, true, $message, $data);
+    }
+
+    public function adminAllConsultationInformation(Request $request)
+    {
+
+        $data = [];
+        $id = auth()->user()->id;
+
+        $runningConsultationCount = LcsCase::where('consultant_id', $id)->InProgress()->count();
+        $acceptConsultationCount = LcsCase::where('consultant_id', $id)->Accepted()->count();
+        $cancelConsultationCount = LcsCase::where('consultant_id', $id)->Cancel()->count();
+        $completeConsultationCount = LcsCase::where('consultant_id', $id)->Completed()->count();
+
+        //  -------------- Start For Filter Information ----------
+        $type = auth()->user()->type;
+        $userType = $type === 'citizen' ? 'consultant' : 'citizen';
+
+        $totalConsultantationDataCount = DB::table('lcs_cases')
+            ->where('lcs_cases.' . $type . '_id', auth()->user()->id)
+            ->where(['deleted_at' => null])
+            ->select(
+                'lcs_cases.id as case_id',
+                'lcs_cases.title',
+                'lcs_cases.document_file',
+                'lcs_cases.rating',
+                'lcs_cases.document_link',
+                'lcs_cases.case_initial_date',
+                'lcs_cases.case_status_date',
+                'lcs_cases.description',
+                'lcs_cases.case_code',
+                'lcs_cases.status',
+                'users.name',
+                'users.code',
+                'users.profile_image',
+                'services.id as service_id',
+                'services.title as service_title'
+            )->join('users', 'lcs_cases.' . $userType . '_id', '=', 'users.id')
+            ->join('services', 'lcs_cases.service_id', '=', 'services.id')
+            ->orderBy('case_id', 'DESC')->count();
+
+        $allConsultationData = DB::table('lcs_cases')
+            ->where('lcs_cases.' . $type . '_id', auth()->user()->id)
+            ->where(['deleted_at' => null])
+            ->select(
+                'lcs_cases.id as case_id',
+                'lcs_cases.title',
+                'lcs_cases.document_file',
+                'lcs_cases.rating',
+                'lcs_cases.document_link',
+                'lcs_cases.case_initial_date',
+                'lcs_cases.case_status_date',
+                'lcs_cases.created_at',
+                'lcs_cases.description',
+                'lcs_cases.case_code',
+                'lcs_cases.status',
+                'users.name',
+                'users.code',
+                'users.profile_image',
+                'services.id as service_id',
+                'services.title as service_title'
+            )->join('users', 'lcs_cases.' . $userType . '_id', '=', 'users.id')
+            ->join('services', 'lcs_cases.service_id', '=', 'services.id')
+            ->orderBy('case_id', 'DESC');
+
+        $params = $request->all();
+        //-------------- Start filter loop based on parameter---------------
+        foreach ($params as $key => $param) {
+            if ($key === 'services') {
+                $totalConsultantationDataCount = $allConsultationData->where('lcs_cases.service_id', $param)->count();
+                $allConsultationData = $allConsultationData->where('lcs_cases.service_id', $param);
+            } elseif ($key === 'filterWithDate') {
+                $paramDate = explode(',', $param);
+                $starBracket = $paramDate[0];
+                $startDateBracket = explode('[', $starBracket);
+                $startdataFormat = Carbon::createFromFormat('d-m-Y', $startDateBracket[1]);
+                $startDate = $startdataFormat->format('Y-m-d');
+                $endBracket = $paramDate[1];
+                $endDateBracket = explode(']', $endBracket);
+                $enddataFormat = Carbon::createFromFormat('d-m-Y', $endDateBracket[0]);
+                $endDate = $enddataFormat->format('Y-m-d');
+                $totalConsultantationDataCount = $allConsultationData->whereBetween('lcs_cases.case_initial_date', [$startDate, $endDate])->count();
+                $allConsultationData = $allConsultationData->whereBetween('lcs_cases.case_initial_date', [$startDate, $endDate]);
+            } elseif ($key === 'rating') {
+                $totalConsultantationDataCount = $allConsultationData->where('lcs_cases.rating', '>=', $param)
+                    ->where('lcs_cases.status', 2)->count();
+                $allConsultationData = $allConsultationData->where('lcs_cases.rating', '>=', $param)
+                    ->where('lcs_cases.status', 2);
+
+            }
+            // return $allConsultationData;
+
+            elseif ($key === 'runningConsultation') {
+                $totalConsultantationDataCount = $allConsultationData->where('lcs_cases.status', $param)->count();
+                $allConsultationData = $allConsultationData->where('lcs_cases.status', $param);
+            } elseif ($key === 'waitForPayment') {
+                $totalConsultantationDataCount = $allConsultationData->where('lcs_cases.status', $param)->count();
+                $allConsultationData = $allConsultationData->where('lcs_cases.status', $param);
+            } elseif ($key === 'cancelConsultation') {
+                $totalConsultantationDataCount = $allConsultationData->where('lcs_cases.status', $param)->count();
+                $allConsultationData = $allConsultationData->where('lcs_cases.status', $param);
+            } elseif ($key === 'serviceRequest') {
+                $totalConsultantationDataCount = $allConsultationData->where('lcs_cases.status', $param)->count();
+                $allConsultationData = $allConsultationData->where('lcs_cases.status', $param);
+            }
+
+        }
+        //-------------- END filter loop based on parameter---------------
+
+        $runningConsultation['runningConsultation'] = $runningConsultationCount;
+        $acceptConsultation['acceptConsultation'] = $acceptConsultationCount;
+        $cancelConsultation['cancelConsultation'] = $cancelConsultationCount;
+        $completeConsultation['completeConsultation'] = $completeConsultationCount;
+
+        $Cards = [$runningConsultation, $acceptConsultation, $cancelConsultation, $completeConsultation];
+
+        $ItemAll = [];
+
+        if (isset($params['limit'])) {
+            if (isset($params['offset'])) {
+                $ItemAll['totalConsultantation'] = $totalConsultantationDataCount;
+                $ItemAll['offset'] = $params['offset'];
+                $ItemAll['limit'] = $params['limit'];
+                $ItemAll['consultation'] = $allConsultationData->offset($params['offset'])->limit($params['limit'])->get();
+            } else {
+                $ItemAll['limit'] = $params['limit'];
+                $ItemAll['consultation'] = $allConsultationData->limit($params['limit'])->get();
+            }
+        } else {
+            $ItemAll['totalConsultantation'] = $totalConsultantationDataCount;
+            $ItemAll['consultation'] = $allConsultationData->get();
+        }
+        $data['cardInformation'] = $Cards;
+        $data['filterInformation'] = [$ItemAll];
 
         $message = "Successfully Data Shown";
         return $this->responseSuccess(200, true, $message, $data);

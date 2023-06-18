@@ -55,8 +55,11 @@ Route::group(["middleware" => ["auth:api"]], function () {
     Route::post("/consultant/approval", [AdminConsultantController::class, 'approvalConsultant']);
     Route::get('/admin/consultants/information', [AdminConsultantController::class, 'adminConsultantInformation']);
 
+
     ////////// Citizen List ///////////
     Route::get('/admin/citizens', [AdminCitizenController::class, 'index']);
+    // Route::get('/admin/{type}/information', [AdminCitizenController::class, 'adminCitizenInformation']);
+
     //Route::get('/admins', [RegisterController::class, 'index']);
 
     ////////////  Profile //////////////
@@ -67,6 +70,7 @@ Route::group(["middleware" => ["auth:api"]], function () {
     Route::post('/active_status/{consultant_id}/change', [ProfileController::class, 'activeStatusChange']);
     Route::delete('/profile/experience/{id}/delete', [ProfileController::class, 'experienceDestroy']);
     Route::delete('/profile/academic_qualification/{id}/delete', [ProfileController::class, 'academicQualificationDestroy']);
+
     // Route::post('/consultant/approve', [ProfileController::class, 'approved']);
     Route::get("district/list", [ProfileController::class, 'allDistricts']);
     Route::post('/imagefile/download', [ProfileController::class, 'getDownload']);
@@ -158,12 +162,17 @@ Route::group(["middleware" => ["auth:api"]], function () {
     ///////////// ConsultantInformationController   ////////////
     Route::get('consultant/dashboard', [ConsultantInformationController::class, 'consultantDashboardInformation']);
     Route::get('consultants/mobile/dashboard/', [ConsultantInformationController::class, 'consultantMobileDashboardInformation']);
-    Route::get('consultant/performance/graph', [ConsultantInformationController::class, 'consultantPerformance']);
+   // Route::get('consultant/performance/graph', [ConsultantInformationController::class, 'consultantPerformance']);
+   Route::get('consultant/consultation', [ConsultantInformationController::class, 'consultantConsultationInformation']);
 
     /////////////////// CitizenInformationController   //////////////////////////
     Route::get('citizen/dashboard', [CitizenInformationController::class, 'citizenDashboardInformation']);
+    Route::get('citizen/consultation', [CitizenInformationController::class, 'citizenConsultationInformation']);
+
+
     /////////////////     AdminInformationController   ////////////////////////
     Route::get('admin/dashboard', [AdminInformationController::class, 'adminDashboardInformation']);
+    Route::get('admin/all/consultations', [AdminInformationController::class, 'adminDashboardInformation']);
 });
 
 

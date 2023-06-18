@@ -10,7 +10,8 @@ class SMSHelper
         $mobile = substr($to, -10); //remove unwanted number
         $user = 'MysoftH'; //user name
         $pwd = 'pbm96bsy'; //user password
-        $sender = '8809612442238'; //sender id
+        // $sender = '8809612442238'; //sender id
+        $sender = '8809617611146';
         $msg = str_replace(' ', '%20', $message); //message remove space with %20
         $smsAPI = 'https://mshastra.com/sendurlcomma.aspx'; //sms url
 

@@ -40,9 +40,10 @@ class CaseController extends Controller
         $caseData = DB::table('lcs_cases')
             ->where('lcs_cases.' . $type . '_id', auth()->user()->id)
             ->where(['deleted_at' => null])
-            //    ->where('status', '2')
+            //    ->where('lcs_cases.status', '2')
             ->select(
                 'lcs_cases.id as case_id',
+                'lcs_cases.consultant_id',
                 'lcs_cases.title',
                 'lcs_cases.document_file',
                 'lcs_cases.rating',
@@ -60,6 +61,7 @@ class CaseController extends Controller
             )->join('users', 'lcs_cases.' . $userType . '_id', '=', 'users.id')
             ->join('services', 'lcs_cases.service_id', '=', 'services.id')
             ->orderBy('case_id', 'DESC')->get();
+            // return $caseData;
 
         if ($caseData) {
             $message = "Case list data succesfully shown";
@@ -366,6 +368,10 @@ class CaseController extends Controller
             )->join('users', 'lcs_cases.' . $type . '_id', '=', 'users.id')
             ->join('services', 'lcs_cases.service_id', '=', 'services.id')
             ->first();
+
+            
+
+
 
         if ($caseData) {
             $message = "Consultation details data succesfully shown";

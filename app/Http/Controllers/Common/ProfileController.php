@@ -22,6 +22,8 @@ class ProfileController extends Controller
     use ResponseTrait;
     public function update(Request $request)
     {
+
+        // return $number;
         //  return $request->all();
         DB::beginTransaction();
         try {
@@ -35,6 +37,8 @@ class ProfileController extends Controller
             }
 
             $dob = mktime(0, 0, 0, $matches[2], $matches[1], $matches[3]);
+            // return $dob;
+
 
             if (date('d/m/Y', $dob) != $request->dob) {
                 $message = "Date Format Not Valid";
@@ -54,19 +58,25 @@ class ProfileController extends Controller
             ]);
 
 
+
             if ($request->profile_image) {
                 $image_parts = explode(";base64,", $request->profile_image);
                 $imageType = explode("/", $image_parts[0])[1];
+                $unique =uniqid();
                 if (isset($image_parts[1])) {
-                    $profile_image_path = FileHandler::uploadImage($request->profile_image, $request->type, $request->phone, $imageType, 'profile');
-                    //   return $profile_image_path;
-                    if (File::exists($profile_image_path)) {
-                        File::delete($profile_image_path);
+                    // return $request->profile_image;
+                    $profile_image_path = FileHandler::uploadImage($request->profile_image, $user->type, $unique , $imageType, 'profile');
+                    if (File::exists(public_path($user->profile_image))) {
+                        File::delete(public_path($user->profile_image));
                     }
-                } else {
+                }else{
                     $profile_image_path = $user->profile_image;
                 }
             }
+            else{
+                $profile_image_path = $user->profile_image;
+            }
+
 
             if (strtolower($request->type) === 'citizen') {
                 $request->validate([
@@ -98,15 +108,20 @@ class ProfileController extends Controller
                 if ($request->nid_front) {
                     $image_parts = explode(";base64,", $request->nid_front);
                     $imageType = explode("/", $image_parts[0])[1];
+                    $unique =uniqid();
                     // return $imageType;
                     if (isset($image_parts[1])) {
-                        $nid_front_image_path = FileHandler::uploadImage($request->nid_front, $request->type, $request->phone, $imageType, 'nid_front');
+                        $nid_front_image_path = FileHandler::uploadImage($request->nid_front, $request->type, $unique, $imageType, 'nid_front');
                         //   return $nid_front_image_path;
-                        if (File::exists($nid_front_image_path)) {
-                            File::delete($nid_front_image_path);
+                        if (File::exists(public_path($user->nid_front))) {
+                            File::delete(public_path($user->nid_front));
                         }
                     }
-                } else {
+                    else {
+                        $nid_front_image_path = $user->nid_front;
+                    }
+                }
+                else {
                     $nid_front_image_path = $user->nid_front;
                 }
 
@@ -114,14 +129,19 @@ class ProfileController extends Controller
                 if ($request->nid_back) {
                     $image_parts = explode(";base64,", $request->nid_back);
                     $imageType = explode("/", $image_parts[0])[1];
+                    $unique =uniqid();
                     if (isset($image_parts[1])) {
-                        $nid_back_image_path = FileHandler::uploadImage($request->nid_back, $request->type, $request->phone, $imageType, 'nid_back');
+                        $nid_back_image_path = FileHandler::uploadImage($request->nid_back, $request->type, $unique, $imageType, 'nid_back');
                         //  return $nid_back_image_path;
-                        if (File::exists($nid_back_image_path)) {
-                            File::delete($nid_back_image_path);
+                        if (File::exists(public_path($user->nid_back))) {
+                            File::delete(public_path($user->nid_back));
                         }
                     }
-                } else {
+                    else {
+                        $nid_back_image_path = $user->nid_back;
+                    }
+                }
+                else {
                     $nid_back_image_path = $user->nid_back;
                 }
 
@@ -140,13 +160,13 @@ class ProfileController extends Controller
                 // 'status' => $request->status ?? $user->status,
                 'status' => 1,
                 'gender' => strtolower($request->gender) ?? $user->gender,
-                'profile_image' => $profile_image_path ?? $user->profile_image,
+                'profile_image' => $profile_image_path,
                 'district_id' => $request->district_id ?? $user->district_id,
                 'years_of_experience' => $request->years_of_experience ?? $user->years_of_experience,
                 'current_profession' => $request->current_profession ?? $user->current_profession,
                 'general_info' => $request->general_info ?? $user->general_info,
-                'nid_front' => $nid_front_image_path ?? $user->nid_front,
-                'nid_back' => $nid_back_image_path ?? $user->nid_back,
+                'nid_front' => $nid_front_image_path,
+                'nid_back' => $nid_back_image_path,
                 'schedule' => $request->schedule ?? $user->schedule
             ]);
 
@@ -166,25 +186,29 @@ class ProfileController extends Controller
                             $experiance = Experience::where('id', $experianceId)->first();
                             // return $experiance;  $experiance here return that exists experience
                             if ($experiance) {
+
                                 $experiance->update([
                                     'institute_name' => $request->experiances[$key]['institute_name'],
                                     'address' => $request->experiances[$key]['address'],
                                     'designation' => $request->experiances[$key]['designation'],
                                     'department' => $request->experiances[$key]['department'] ?? '',
                                     'start_date' => $request->experiances[$key]['start_date'],
-                                    'end_date' => $request->experiances[$key]['end_date'],
+                                    'end_date' => $request->experiances[$key]['current_working'] ?  '' :$request->experiances[$key]['end_date'],
                                     'user_id' => $user->id,
+                                    'current_working'=>$request->experiances[$key]['current_working'] ?? '',
                                 ]);
                             }
-                        } else {
+                        }
+                        else {
                             Experience::create([
                                 'institute_name' => $request->experiances[$key]['institute_name'],
                                 'address' => $request->experiances[$key]['address'],
                                 'designation' => $request->experiances[$key]['designation'],
                                 'department' => $request->experiances[$key]['department'] ?? '',
                                 'start_date' => $request->experiances[$key]['start_date'],
-                                'end_date' => $request->experiances[$key]['end_date'],
+                                'end_date' => $request->experiances[$key]['current_working'] ? '' : $request->experiances[$key]['end_date'],
                                 'user_id' => $user->id,
+                                'current_working'=>$request->experiances[$key]['current_working'] ?? '',
                             ]);
                         }
                     }
@@ -204,24 +228,29 @@ class ProfileController extends Controller
                         if ($request->academics[$key]['certification_copy']) {
                             $image_parts = explode(";base64,", $request->academics[$key]['certification_copy']);
                             $imageType = explode("/", $image_parts[0])[1];
+                            $unique =uniqid();
                             if (isset($image_parts[1])) {
                                 $certificateImage = FileHandler::uploadUniqueImage(
                                     $request->academics[$key]['certification_copy'],
                                     $request->type,
                                     $request->academics[$key]['education_level'],
                                     $imageType,
-                                    $request->phone,
+                                    $unique,
                                     'certificate'
                                 );
                                 // return $certificateImage;
-                                if (File::exists($certificateImage)) {
-                                    File::delete($certificateImage);
+
+                                if (File::exists(public_path($academic->certification_copy))) {
+                                    File::delete(public_path($academic->certification_copy));
                                 }
                             }
+                            else {
+                                $certificateImage = $academic->certification_copy;
+                            }
                         }
-                        // else {
-                        //     $certificateImage = $academic->certification_copy;
-                        // }
+                        else {
+                            $certificateImage = $academic->certification_copy;
+                        }
 
                         if ($existId) {
                             if ($academic) {
@@ -229,7 +258,7 @@ class ProfileController extends Controller
                                     'education_level' => $request->academics[$key]['education_level'],
                                     'institute_name' => $request->academics[$key]['institute_name'],
                                     'passing_year' => $request->academics[$key]['passing_year'],
-                                    'certification_copy' => $certificateImage ?? $academic->certification_copy,
+                                    'certification_copy' => $certificateImage ?? '',
                                     'user_id' => $user->id,
                                 ]);
                             }

@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use App\Traits\ResponseTrait;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Database\Eloquent\Builder;
 use App\Http\Controllers\Controller;
 use App\Models\FrequentlyAskedQuestion;
 
@@ -77,7 +78,6 @@ class CommonController extends Controller
             'schedule'
         ];
         $params = $request->all();
-    //  return $params;
 
         $consultant = User::with(
             [
@@ -85,60 +85,37 @@ class CommonController extends Controller
                 'academicLatest:user_id,education_level',
                 'serviceLatest',
                 'serviceList',
+                'services'
             ]
 
         )->select($consultants_selected_fields)->status()->approval()->consultant();
 
         foreach ($params as $key => $param) {
-        //   return $param;
+
             if ($key === 'services') {
-                // $ids = $request->input('services',[]);
-                // // $ids =[7,8];
+                $ids = $request->input('services',[]);
                 // return $ids;
-                // if (!is_array($ids)) {
-                //     $id = $ids;
-                // }
-                 //return $id;
-                // $consultant = $consultant->whereHas('services', function ($q) use ($ids) {
-                //     $q->whereIn('services.id', $ids)->get();
-                // });
-                // // $data = $consultant->toArray();
-                // return $consultant;
-                // return $param;
-                if (is_array($param)) {
-                    $consultant = $consultant->whereHas('services', function ($q) use ($param) {
-                        $q->whereIn('services.id', $param)->get();
+                if (is_array($ids)) {
+                    $consultant = $consultant->whereHas('services', function ($q) use ($ids) {
+                        $q->whereIn('services.id', $ids);
                     });
+
+                    $totalConsultant = $consultant->whereHas('services', function ($q) use ($ids) {
+                        $q->whereIn('services.id', $ids);
+                    })->count();
                 }
+                // $response = new \Symfony\Component\HttpFoundation\Response();
+                // $response->setContent($consultant->toJson());
                 // return $consultant;
+
             }
 
-
-// $ids = $request->input('ids', []);
-    //
-    // if (!is_array($ids)) {
-    //     $ids = [$ids];
-         // Convert a single string ID into an array
-
-//                 $ids = $request->input('ids');
-
-// $consultant = $consultant->whereHas('services', function ($q) use ($ids) {
-//     $q->whereIn('services.id', $ids);
-// });
-
-
-
-
-                // $totalConsultant = $consultant->whereHas('services', function ($q) use ($param) {
-                //     $q->where('services.id', $param);
-                // })->count();
-
-          //  }
             elseif ($key === 'active') {
                 $totalConsultant = $consultant->where('active_status', $param)->count();
                 $consultant = $consultant->where('active_status', $param);
 
-            } elseif ($key === 'ratingValue') {
+            }
+             elseif ($key === 'ratingValue') {
                 $totalConsultant = $consultant->where('rates', $param)->count();
                 $consultant = $consultant->where('rates', $param);
             }
@@ -167,7 +144,6 @@ class CommonController extends Controller
                                                ->count();
 
                 $consultant = $consultant->orderBy('users.totalRating', $param);
-
 
             }
 

@@ -118,12 +118,12 @@ class AuthController extends Controller
 
     public function register(Request $request)
     {
-        
+
         $userExist = User::where('phone', $request->phone)
             ->select(['id', 'name', 'phone', 'email', 'is_phone_verified', 'dob', 'password', 'otp_code'])
             ->first();
 
-          //return  $userExist;
+        //   return  $userExist;
 
         if ($userExist && $userExist->is_phone_verified == 1) {
             if (Hash::check($request->password, $userExist->password)) {
@@ -156,7 +156,7 @@ class AuthController extends Controller
             //converts all the uppercase english alphabets present in the string to lowercase
             $type = strtolower($request->type);
             if ($type === 'citizen') {
-                
+
                 // $citizenTotalData = User::select(DB::raw('count(id) as total'))
                 //     ->where('type', 'citizen')
                 //     ->first();
@@ -178,9 +178,9 @@ class AuthController extends Controller
                     $message = "Date Format Not Valid";
                     return $this->responseError(403, false, $message);
                 }
-             
+
                 $dob = mktime(0, 0, 0, $matches[2], $matches[1], $matches[3]);
-              
+
                 if (date('d/m/Y', $dob) != $request->dob) {
                     $message = "Date Format Not Valid";
                     return $this->responseError(403, false, $message);
@@ -208,14 +208,14 @@ class AuthController extends Controller
             $message = "Type cannot be null";
             return $this->responseError(400, false, $message);
         }
-          
+
         DB::beginTransaction();
         try {
 
             $now = Carbon::now();
             $unique_code = $now->format('Hsu');
         //    echo $unique_code;
-              
+
             $otp = SMSHelper::generateOTP();
             $user = User::create([
                 'name' => $request->first_name . ' ' . $request->last_name,
@@ -275,7 +275,7 @@ class AuthController extends Controller
             $is_expired_time = $user->updated_at->addMinutes(2);
             // return
             $nowTime = Carbon::now();
- 
+
             if ($is_expired_time >= $nowTime) {
                 $userData = $user->update([
                     'is_phone_verified' => 1,

@@ -18,7 +18,7 @@ class ConsultantController extends Controller
     {
 
         $data = [];
-        $consultants_selected_fields = ['id', 'name', 'active_status', 'phone', 'email', 'address', 'code', 'type', 'profile_image', 'gender', 'rates', 'years_of_experience', 'schedule'];
+        $consultants_selected_fields = ['id', 'name', 'active_status', 'phone', 'email', 'address', 'code', 'type','rates','totalRating','profile_image', 'gender', 'rates', 'years_of_experience', 'schedule'];
         $params = $request->all();
         //  return $params;
         $consultant = User::with(
@@ -36,7 +36,8 @@ class ConsultantController extends Controller
                 $consultant = $consultant->whereHas('services', function ($q) use ($param) {
                     $q->where('services.id', $param);
                 });
-            } elseif ($key === 'active') {
+            }
+             elseif ($key === 'active') {
                 $consultant = $consultant->where('active_status', $param);
                 // return $consultant;
             } elseif ($key === 'search') {
