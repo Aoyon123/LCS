@@ -495,14 +495,69 @@ class ConsultantInformationController extends Controller
         $data = [];
         $id = auth()->user()->id;
 
-        $runningConsultationCount = LcsCase::where('consultant_id', $id)->InProgress()->count();
-        $acceptConsultationCount = LcsCase::where('consultant_id', $id)->Accepted()->count();
-        $cancelConsultationCount = LcsCase::where('consultant_id', $id)->Cancel()->count();
-        $completeConsultationCount = LcsCase::where('consultant_id', $id)->Completed()->count();
-
-        //  -------------- Start For Filter Information ----------
         $type = auth()->user()->type;
         $userType = $type === 'citizen' ? 'consultant' : 'citizen';
+
+        // $runningConsultationCount = LcsCase::where('consultant_id', $id)->InProgress()->count();
+        // $acceptConsultationCount = LcsCase::where('consultant_id', $id)->Accepted()->count();
+        // $cancelConsultationCount = LcsCase::where('consultant_id', $id)->Cancel()->count();
+        // $completeConsultationCount = LcsCase::where('consultant_id', $id)->Completed()->count();
+
+        $runningConsultationCount = DB::table('lcs_cases')
+        ->where('lcs_cases.' . $type . '_id', auth()->user()->id)
+        ->where(['lcs_cases.deleted_at' => null])
+        ->where(['lcs_cases.status' => 1])
+        ->select(
+            'lcs_cases.id as case_id',
+            'lcs_cases.consultant_id',
+            'services.id as service_id',
+            'services.title as service_title'
+        )->join('users', 'lcs_cases.' . $userType . '_id', '=', 'users.id')
+        ->join('services', 'lcs_cases.service_id', '=', 'services.id')
+        ->orderBy('case_id', 'DESC')->count();
+
+        $acceptConsultationCount = DB::table('lcs_cases')
+        ->where('lcs_cases.' . $type . '_id', auth()->user()->id)
+        ->where(['lcs_cases.deleted_at' => null])
+        ->where(['lcs_cases.status' => 4])
+        ->select(
+            'lcs_cases.id as case_id',
+            'lcs_cases.consultant_id',
+            'services.id as service_id',
+            'services.title as service_title'
+        )->join('users', 'lcs_cases.' . $userType . '_id', '=', 'users.id')
+        ->join('services', 'lcs_cases.service_id', '=', 'services.id')
+        ->orderBy('case_id', 'DESC')->count();
+
+        $cancelConsultationCount = DB::table('lcs_cases')
+        ->where('lcs_cases.' . $type . '_id', auth()->user()->id)
+        ->where(['lcs_cases.deleted_at' => null])
+        ->where(['lcs_cases.status' => 3])
+        ->select(
+            'lcs_cases.id as case_id',
+            'lcs_cases.consultant_id',
+            'services.id as service_id',
+            'services.title as service_title'
+        )->join('users', 'lcs_cases.' . $userType . '_id', '=', 'users.id')
+        ->join('services', 'lcs_cases.service_id', '=', 'services.id')
+        ->orderBy('case_id', 'DESC')->count();
+
+        $completeConsultationCount = DB::table('lcs_cases')
+        ->where('lcs_cases.' . $type . '_id', auth()->user()->id)
+        ->where(['lcs_cases.deleted_at' => null])
+        ->where(['lcs_cases.status' => 2])
+        ->select(
+            'lcs_cases.id as case_id',
+            'lcs_cases.consultant_id',
+            'services.id as service_id',
+            'services.title as service_title'
+        )->join('users', 'lcs_cases.' . $userType . '_id', '=', 'users.id')
+        ->join('services', 'lcs_cases.service_id', '=', 'services.id')
+        ->orderBy('case_id', 'DESC')->count();
+
+      // return $acceptConsultationCount;
+
+        //  -------------- Start For Filter Information ----------
 
         $totalConsultantationDataCount = DB::table('lcs_cases')
             ->where('lcs_cases.' . $type . '_id', auth()->user()->id)

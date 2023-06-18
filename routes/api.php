@@ -172,7 +172,7 @@ Route::group(["middleware" => ["auth:api"]], function () {
 
     /////////////////     AdminInformationController   ////////////////////////
     Route::get('admin/dashboard', [AdminInformationController::class, 'adminDashboardInformation']);
-    Route::get('admin/all/consultations', [AdminInformationController::class, 'adminDashboardInformation']);
+    Route::get('admin/all/consultations', [AdminInformationController::class, 'adminAllConsultationInformation']);
 });
 
 

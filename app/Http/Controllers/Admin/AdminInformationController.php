@@ -3,12 +3,12 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\User;
 use App\Models\LcsCase;
+use App\Models\User;
 use App\Traits\ResponseTrait;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class AdminInformationController extends Controller
 {
@@ -57,14 +57,12 @@ class AdminInformationController extends Controller
         $completeCount = LcsCase::Completed()->count();
         $cancelConsultationCount = LcsCase::Cancel()->count();
 
-
         $totalActiveConsultantCount = User::Consultant()->Status()->Approval()->count();
         $totalWaitingConsultantApproveCount = User::Consultant()->Initial()->count();
         $totalRegisterCitizenCount = User::where(['type' => 'citizen'])
             ->where('is_phone_verified', 1)
             ->count();
         $onlineConsultantCount = User::Consultant()->Status()->Approval()->Active()->count();
-
 
         // $topRatedConsulatntCount = User::Consultant()->Status()->Approval()
         //     ->where('users.rates', '>=', 4.0)->count();
@@ -75,122 +73,120 @@ class AdminInformationController extends Controller
         //     ->whereDate('created_at', '>=', date('Y-m-d H:i:s', strtotime('-7 days')))
         //     ->count();
 
-
-
-    // --------  Start Consultant Performance  ------------
+        // --------  Start Consultant Performance  ------------
 
         $complete = DB::table('lcs_cases')
-        ->where('status', 2)
-        ->selectRaw("DATE_FORMAT(updated_at, '%m') as month")
-        ->selectRaw("COUNT(updated_at) as complete")
-        ->orderBy('updated_at', 'ASC')
-        ->groupBy('month')
-        ->get()->toArray();
+            ->where('status', 2)
+            ->selectRaw("DATE_FORMAT(updated_at, '%m') as month")
+            ->selectRaw("COUNT(updated_at) as complete")
+            ->orderBy('updated_at', 'ASC')
+            ->groupBy('month')
+            ->get()->toArray();
         // return $complete;
 
         $cancel = DB::table('lcs_cases')
-        ->where('status', 3)
-        ->selectRaw("DATE_FORMAT(updated_at, '%m') as month")
-        ->selectRaw("COUNT(updated_at) as cancel")
-        ->orderBy('updated_at', 'ASC')
-        ->groupBy('month')
-        ->get()->toArray();
+            ->where('status', 3)
+            ->selectRaw("DATE_FORMAT(updated_at, '%m') as month")
+            ->selectRaw("COUNT(updated_at) as cancel")
+            ->orderBy('updated_at', 'ASC')
+            ->groupBy('month')
+            ->get()->toArray();
 
-    //  return $cancel;
-    $numberOfMonths = 12;
-    $currentMonth = strtotime('now');
-    $months = [];
+        //  return $cancel;
+        $numberOfMonths = 12;
+        $currentMonth = strtotime('now');
+        $months = [];
 
-    for ($i = 0; $i < $numberOfMonths; $i++) {
-        $completeMonth[] = date('F', $currentMonth);
-        $currentMonth = strtotime('last day of previous month', $currentMonth);
-    }
-    // return $completeMonth;
-    foreach ($completeMonth as $key => $month) {
-        // return $month;
-        $flag = 0;
-        foreach ($complete as $value) {
-            if ($value->month == '01') {
-                $value->month = "January";
-            } else if ($value->month == '02') {
-                $value->month = "February";
-            } else if ($value->month == '03') {
-                $value->month = "March";
-            } else if ($value->month == '04') {
-                $value->month = "April";
-            } else if ($value->month == '05') {
-                $value->month = "May";
-            } else if ($value->month == '06') {
-                $value->month = "June";
-            } else if ($value->month == '07') {
-                $value->month = "July";
-            } else if ($value->month == '08') {
-                $value->month = "August";
-            } else if ($value->month == '09') {
-                $value->month = "September";
-            } else if ($value->month == '10') {
-                $value->month = "October";
-            } else if ($value->month == '11') {
-                $value->month = "November";
-            } else if ($value->month == '12') {
-                $value->month = "December";
+        for ($i = 0; $i < $numberOfMonths; $i++) {
+            $completeMonth[] = date('F', $currentMonth);
+            $currentMonth = strtotime('last day of previous month', $currentMonth);
+        }
+        // return $completeMonth;
+        foreach ($completeMonth as $key => $month) {
+            // return $month;
+            $flag = 0;
+            foreach ($complete as $value) {
+                if ($value->month == '01') {
+                    $value->month = "January";
+                } else if ($value->month == '02') {
+                    $value->month = "February";
+                } else if ($value->month == '03') {
+                    $value->month = "March";
+                } else if ($value->month == '04') {
+                    $value->month = "April";
+                } else if ($value->month == '05') {
+                    $value->month = "May";
+                } else if ($value->month == '06') {
+                    $value->month = "June";
+                } else if ($value->month == '07') {
+                    $value->month = "July";
+                } else if ($value->month == '08') {
+                    $value->month = "August";
+                } else if ($value->month == '09') {
+                    $value->month = "September";
+                } else if ($value->month == '10') {
+                    $value->month = "October";
+                } else if ($value->month == '11') {
+                    $value->month = "November";
+                } else if ($value->month == '12') {
+                    $value->month = "December";
+                }
+                if ($value->month == $month) {
+                    array_push($monthList, $month);
+                    array_push($competition_complete, $value->complete);
+                    $flag = 1;
+                    break;
+                }
             }
-            if ($value->month == $month) {
+            if ($flag == 0) {
                 array_push($monthList, $month);
-                array_push($competition_complete, $value->complete);
-                $flag = 1;
-                break;
+                array_push($competition_complete, 0);
             }
         }
-        if ($flag == 0) {
-            array_push($monthList, $month);
-            array_push($competition_complete, 0);
-        }
-    }
 
-   foreach ($completeMonth as $key => $month) {
-    // return $month;
-    $flag = 0;
-    foreach ($cancel as $value) {
-        if ($value->month == '01') {
-            $value->month = "January";
-        } else if ($value->month == '02') {
-            $value->month = "February";
-        } else if ($value->month == '03') {
-            $value->month = "March";
-        } else if ($value->month == '04') {
-            $value->month = "April";
-        } else if ($value->month == '05') {
-            $value->month = "May";
-        } else if ($value->month == '06') {
-            $value->month = "June";
-        } else if ($value->month == '07') {
-            $value->month = "July";
-        } else if ($value->month == '08') {
-            $value->month = "August";
-        } else if ($value->month == '09') {
-            $value->month = "September";
-        } else if ($value->month == '10') {
-            $value->month = "October";
-        } else if ($value->month == '11') {
-            $value->month = "November";
-        } else if ($value->month == '12') {
-            $value->month = "December";
+        foreach ($completeMonth as $key => $month) {
+            // return $month;
+            $flag = 0;
+            foreach ($cancel as $value) {
+                if ($value->month == '01') {
+                    $value->month = "January";
+                } else if ($value->month == '02') {
+                    $value->month = "February";
+                } else if ($value->month == '03') {
+                    $value->month = "March";
+                } else if ($value->month == '04') {
+                    $value->month = "April";
+                } else if ($value->month == '05') {
+                    $value->month = "May";
+                } else if ($value->month == '06') {
+                    $value->month = "June";
+                } else if ($value->month == '07') {
+                    $value->month = "July";
+                } else if ($value->month == '08') {
+                    $value->month = "August";
+                } else if ($value->month == '09') {
+                    $value->month = "September";
+                } else if ($value->month == '10') {
+                    $value->month = "October";
+                } else if ($value->month == '11') {
+                    $value->month = "November";
+                } else if ($value->month == '12') {
+                    $value->month = "December";
+                }
+                if ($value->month == $month) {
+                    // array_push($monthList, $month);
+                    array_push($competition_cancel, $value->cancel);
+                    $flag = 1;
+                    break;
+                }
+            }
+            if ($flag == 0) {
+                // array_push($monthList, $month);
+                array_push($competition_cancel, 0);
+            }
         }
-        if ($value->month == $month) {
-            // array_push($monthList, $month);
-            array_push($competition_cancel, $value->cancel);
-            $flag = 1;
-            break;
-        }
-    }
-    if ($flag == 0) {
-        // array_push($monthList, $month);
-        array_push($competition_cancel, 0);
-    }
-}
 
- //  -------------------------- End consultant performance ----------
+        //  -------------------------- End consultant performance ----------
 
         // --------------Start New Registration Rating --------------
 
@@ -267,107 +263,101 @@ class AdminInformationController extends Controller
             }
         }
 
-       foreach ($allMonth as $key => $month) {
-        // return $month;
-        $flag = 0;
-        foreach ($consultantRegistration as $value) {
-            if ($value->month == '01') {
-                $value->month = "January";
-            } else if ($value->month == '02') {
-                $value->month = "February";
-            } else if ($value->month == '03') {
-                $value->month = "March";
-            } else if ($value->month == '04') {
-                $value->month = "April";
-            } else if ($value->month == '05') {
-                $value->month = "May";
-            } else if ($value->month == '06') {
-                $value->month = "June";
-            } else if ($value->month == '07') {
-                $value->month = "July";
-            } else if ($value->month == '08') {
-                $value->month = "August";
-            } else if ($value->month == '09') {
-                $value->month = "September";
-            } else if ($value->month == '10') {
-                $value->month = "October";
-            } else if ($value->month == '11') {
-                $value->month = "November";
-            } else if ($value->month == '12') {
-                $value->month = "December";
+        foreach ($allMonth as $key => $month) {
+            // return $month;
+            $flag = 0;
+            foreach ($consultantRegistration as $value) {
+                if ($value->month == '01') {
+                    $value->month = "January";
+                } else if ($value->month == '02') {
+                    $value->month = "February";
+                } else if ($value->month == '03') {
+                    $value->month = "March";
+                } else if ($value->month == '04') {
+                    $value->month = "April";
+                } else if ($value->month == '05') {
+                    $value->month = "May";
+                } else if ($value->month == '06') {
+                    $value->month = "June";
+                } else if ($value->month == '07') {
+                    $value->month = "July";
+                } else if ($value->month == '08') {
+                    $value->month = "August";
+                } else if ($value->month == '09') {
+                    $value->month = "September";
+                } else if ($value->month == '10') {
+                    $value->month = "October";
+                } else if ($value->month == '11') {
+                    $value->month = "November";
+                } else if ($value->month == '12') {
+                    $value->month = "December";
+                }
+                if ($value->month == $month) {
+                    // array_push($monthList, $month);
+                    array_push($Consultant, $value->totalConsultant);
+                    $flag = 1;
+                    break;
+                }
             }
-            if ($value->month == $month) {
+            if ($flag == 0) {
                 // array_push($monthList, $month);
-                array_push($Consultant, $value->totalConsultant);
-                $flag = 1;
-                break;
+                array_push($Consultant, 0);
             }
         }
-        if ($flag == 0) {
-            // array_push($monthList, $month);
-            array_push($Consultant, 0);
-        }
-    }
 
-    // Start FeedBack rating  -----------
+        // Start FeedBack rating  -----------
 
-
-    $feedbackRating = DB::table('lcs_cases')
-    ->where('rating', '>=', 0.0)
-    ->where('status', 2)
-    ->select(DB::raw('count(lcs_cases.rating) as totalRatingCount'), DB::Raw('(lcs_cases.rating) rating'))
-    ->groupBy('rating')
-    ->get()->toArray();
+        $feedbackRating = DB::table('lcs_cases')
+            ->where('rating', '>=', 0.0)
+            ->where('status', 2)
+            ->select(DB::raw('count(lcs_cases.rating) as totalRatingCount'), DB::Raw('(lcs_cases.rating) rating'))
+            ->groupBy('rating')
+            ->get()->toArray();
 
 // return $feedbackRating;
-  $ratingCount = [];
-  for ($i = 0; $i <= 5; $i++) {
-    $number = $i;
-    array_push($ratingCount, $number);
-  }
-
-  foreach ($ratingCount as $key => $rating) {
-    $flag = 0;
-    foreach ($feedbackRating as $ratingValue) {
-        if ($ratingValue->rating == $rating) {
-            array_push($competition_rating, $rating);
-            array_push($competition_complete_totalRating, $ratingValue->totalRatingCount);
-            $flag = 1;
-            break;
+        $ratingCount = [];
+        for ($i = 0; $i <= 5; $i++) {
+            $number = $i;
+            array_push($ratingCount, $number);
         }
-    }
 
-    if ($flag == 0) {
-        array_push($competition_rating, $rating);
-        array_push($competition_complete_totalRating, 0);
-    }
-  }
+        foreach ($ratingCount as $key => $rating) {
+            $flag = 0;
+            foreach ($feedbackRating as $ratingValue) {
+                if ($ratingValue->rating == $rating) {
+                    array_push($competition_rating, $rating);
+                    array_push($competition_complete_totalRating, $ratingValue->totalRatingCount);
+                    $flag = 1;
+                    break;
+                }
+            }
 
+            if ($flag == 0) {
+                array_push($competition_rating, $rating);
+                array_push($competition_complete_totalRating, 0);
+            }
+        }
 
+        //  --------  End FeedBack rating  -----------
 
-   //  --------  End FeedBack rating  -----------
+        // ---------- Start Top Consultant List -------
 
-   // ---------- Start Top Consultant List -------
+        $topConsultant = User::select('id', 'name', 'profile_image', 'current_profession')
+            ->Consultant()->Status()->Approval()->orderBy('rates', 'desc')
+            ->take(5)->get();
 
-   $topConsultant = User::select('id', 'name', 'profile_image', 'current_profession')
-                         ->Consultant()->Status()->Approval()->orderBy('rates', 'desc')
-                         ->take(5)->get();
+        // ---------- End Top Consultant List -------
+        // -------- Start Service Help Request --------
 
+        $serviceRequest = LcsCase::with('service:id,title')
+            ->select('id', 'service_id')
+            ->where('status', 0)
+            ->orderBy('id', 'desc')
+            ->groupBy('service_id')
+            ->take(10)
+            ->get();
 
-  // ---------- End Top Consultant List -------
-  // -------- Start Service Help Request --------
-
-  $serviceRequest = LcsCase::with('service:id,title')
-  ->select('id', 'service_id')
-  ->where('status', 0)
-  ->orderBy('id', 'desc')
-  ->groupBy('service_id')
-  ->take(10)
-  ->get();
-
-  //  -------- End Service Help Request ---------
-
-
+        //  -------- End Service Help Request ---------
 
         $inProgressConsultation['inProgressConsultation'] = $inProgressCount;
         $initialConsultationCount['initialConsultation'] = $initialCount;
@@ -414,40 +404,80 @@ class AdminInformationController extends Controller
         $data = [];
         $id = auth()->user()->id;
 
-        $runningConsultationCount = LcsCase::where('consultant_id', $id)->InProgress()->count();
-        $acceptConsultationCount = LcsCase::where('consultant_id', $id)->Accepted()->count();
-        $cancelConsultationCount = LcsCase::where('consultant_id', $id)->Cancel()->count();
-        $completeConsultationCount = LcsCase::where('consultant_id', $id)->Completed()->count();
-
-        //  -------------- Start For Filter Information ----------
         $type = auth()->user()->type;
         $userType = $type === 'citizen' ? 'consultant' : 'citizen';
 
-        $totalConsultantationDataCount = DB::table('lcs_cases')
-            ->where('lcs_cases.' . $type . '_id', auth()->user()->id)
-            ->where(['deleted_at' => null])
+        // $waitingConsultationCount = LcsCase::where(['deleted_at' => null])->Initial()->count();
+        // $runningConsultationCount = LcsCase::where(['deleted_at' => null])->inProgress()->count();
+        // $cancelConsultationCount = LcsCase::where(['deleted_at' => null])->Cancel()->count();
+        // $completeConsultationCount = LcsCase::where(['deleted_at' => null])->Completed()->count();
+
+        // return $runningConsultationCount;
+        $waitingConsultationCount = DB::table('lcs_cases')
+            ->where(['lcs_cases.deleted_at' => null])
+            ->where(['lcs_cases.status' => 0])
             ->select(
                 'lcs_cases.id as case_id',
-                'lcs_cases.title',
-                'lcs_cases.document_file',
-                'lcs_cases.rating',
-                'lcs_cases.document_link',
+                'lcs_cases.consultant_id',
+                'lcs_cases.citizen_id',
                 'lcs_cases.case_initial_date',
-                'lcs_cases.case_status_date',
-                'lcs_cases.description',
-                'lcs_cases.case_code',
                 'lcs_cases.status',
-                'users.name',
-                'users.code',
-                'users.profile_image',
+                'services.id as service_id',
+                'services.title as service_title',
+                'citizen.name as citizen_name',
+                'consultant.name as consultant_name',
+                'citizen.profile_image as citizen_profile_image',
+                'consultant.profile_image as consultant_profile_image',
+            )->join('users as citizen', 'lcs_cases.' .'citizen_id', '=', 'citizen.id')
+            ->join('users as consultant', 'lcs_cases.' .'consultant_id', '=', 'consultant.id')
+            ->join('services', 'lcs_cases.service_id', '=', 'services.id')
+            ->orderBy('case_id', 'DESC')->count();
+
+        // return $waitingConsultationCount;
+
+        $acceptConsultationCount = DB::table('lcs_cases')
+            ->where('lcs_cases.' . $type . '_id', auth()->user()->id)
+            ->where(['lcs_cases.deleted_at' => null])
+            ->where(['lcs_cases.status' => 4])
+            ->select(
+                'lcs_cases.id as case_id',
+                'lcs_cases.consultant_id',
                 'services.id as service_id',
                 'services.title as service_title'
             )->join('users', 'lcs_cases.' . $userType . '_id', '=', 'users.id')
             ->join('services', 'lcs_cases.service_id', '=', 'services.id')
             ->orderBy('case_id', 'DESC')->count();
 
-        $allConsultationData = DB::table('lcs_cases')
+        $cancelConsultationCount = DB::table('lcs_cases')
             ->where('lcs_cases.' . $type . '_id', auth()->user()->id)
+            ->where(['lcs_cases.deleted_at' => null])
+            ->where(['lcs_cases.status' => 3])
+            ->select(
+                'lcs_cases.id as case_id',
+                'lcs_cases.consultant_id',
+                'services.id as service_id',
+                'services.title as service_title'
+            )->join('users', 'lcs_cases.' . $userType . '_id', '=', 'users.id')
+            ->join('services', 'lcs_cases.service_id', '=', 'services.id')
+            ->orderBy('case_id', 'DESC')->count();
+
+        $completeConsultationCount = DB::table('lcs_cases')
+            ->where('lcs_cases.' . $type . '_id', auth()->user()->id)
+            ->where(['lcs_cases.deleted_at' => null])
+            ->where(['lcs_cases.status' => 2])
+            ->select(
+                'lcs_cases.id as case_id',
+                'lcs_cases.consultant_id',
+                'services.id as service_id',
+                'services.title as service_title'
+            )->join('users', 'lcs_cases.' . $userType . '_id', '=', 'users.id')
+            ->join('services', 'lcs_cases.service_id', '=', 'services.id')
+            ->orderBy('case_id', 'DESC')->count();
+
+        //  -------------- Start For Filter Information ----------
+
+        $totalConsultantationDataCount = DB::table('lcs_cases')
+        // ->where('lcs_cases.' . $type . '_id', auth()->user()->id)
             ->where(['deleted_at' => null])
             ->select(
                 'lcs_cases.id as case_id',
@@ -457,16 +487,46 @@ class AdminInformationController extends Controller
                 'lcs_cases.document_link',
                 'lcs_cases.case_initial_date',
                 'lcs_cases.case_status_date',
-                'lcs_cases.created_at',
                 'lcs_cases.description',
                 'lcs_cases.case_code',
                 'lcs_cases.status',
-                'users.name',
-                'users.code',
-                'users.profile_image',
+                'citizen.name as citizen_name',
+                'consultant.name as consultant_name',
+                'citizen.profile_image as citizen_profile_image',
+                'consultant.profile_image as consultant_profile_image',
                 'services.id as service_id',
                 'services.title as service_title'
-            )->join('users', 'lcs_cases.' . $userType . '_id', '=', 'users.id')
+            )
+            ->join('users as citizen', 'lcs_cases.' . 'citizen_id', '=', 'citizen.id')
+            ->join('users as consultant', 'lcs_cases.' . 'consultant_id', '=', 'consultant.id')
+            ->join('services', 'lcs_cases.service_id', '=', 'services.id')
+            ->orderBy('case_id', 'DESC')->count();
+
+        // return $totalConsultantationDataCount;
+
+        $allConsultationData = DB::table('lcs_cases')
+        // ->where('lcs_cases.' . $type . '_id', auth()->user()->id)
+            ->where(['deleted_at' => null])
+            ->select(
+                'lcs_cases.id as case_id',
+                'lcs_cases.title',
+                'lcs_cases.document_file',
+                'lcs_cases.rating',
+                'lcs_cases.document_link',
+                'lcs_cases.case_initial_date',
+                'lcs_cases.case_status_date',
+                'lcs_cases.description',
+                'lcs_cases.case_code',
+                'lcs_cases.status',
+                'citizen.name as citizen_name',
+                'consultant.name as consultant_name',
+                'citizen.profile_image as citizen_profile_image',
+                'consultant.profile_image as consultant_profile_image',
+                'services.id as service_id',
+                'services.title as service_title'
+            )
+            ->join('users as citizen', 'lcs_cases.' . 'citizen_id', '=', 'citizen.id')
+            ->join('users as consultant', 'lcs_cases.' . 'consultant_id', '=', 'consultant.id')
             ->join('services', 'lcs_cases.service_id', '=', 'services.id')
             ->orderBy('case_id', 'DESC');
 
@@ -514,12 +574,12 @@ class AdminInformationController extends Controller
         }
         //-------------- END filter loop based on parameter---------------
 
+        $waitingConsultation['waitingConsultation'] = $waitingConsultationCount;
         $runningConsultation['runningConsultation'] = $runningConsultationCount;
-        $acceptConsultation['acceptConsultation'] = $acceptConsultationCount;
-        $cancelConsultation['cancelConsultation'] = $cancelConsultationCount;
         $completeConsultation['completeConsultation'] = $completeConsultationCount;
+        $cancelConsultation['cancelConsultation'] = $cancelConsultationCount;
 
-        $Cards = [$runningConsultation, $acceptConsultation, $cancelConsultation, $completeConsultation];
+        $Cards = [$waitingConsultation, $runningConsultation, $completeConsultation, $cancelConsultation];
 
         $ItemAll = [];
 

@@ -2,20 +2,19 @@
 
 namespace App\Http\Controllers\Common;
 
-use App\Models\User;
-use App\Models\Experience;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Response;
-use App\Traits\ResponseTrait;
-use App\Http\Helper\FileHandler;
-use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
+use App\Http\Helper\FileHandler;
+use App\Models\AcademicQualification;
+use App\Models\Experience;
+use App\Models\User;
+use App\Traits\ResponseTrait;
+use Illuminate\Database\QueryException;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
-use App\Models\AcademicQualification;
-use Illuminate\Database\QueryException;
-
+use Illuminate\Support\Facades\Response;
 
 class ProfileController extends Controller
 {
@@ -39,7 +38,6 @@ class ProfileController extends Controller
             $dob = mktime(0, 0, 0, $matches[2], $matches[1], $matches[3]);
             // return $dob;
 
-
             if (date('d/m/Y', $dob) != $request->dob) {
                 $message = "Date Format Not Valid";
                 return $this->responseError(403, false, $message);
@@ -57,26 +55,22 @@ class ProfileController extends Controller
                 'district_id' => 'required|max:50',
             ]);
 
-
-
             if ($request->profile_image) {
                 $image_parts = explode(";base64,", $request->profile_image);
                 $imageType = explode("/", $image_parts[0])[1];
-                $unique =uniqid();
+                $unique = uniqid();
                 if (isset($image_parts[1])) {
                     // return $request->profile_image;
-                    $profile_image_path = FileHandler::uploadImage($request->profile_image, $user->type, $unique , $imageType, 'profile');
+                    $profile_image_path = FileHandler::uploadImage($request->profile_image, $user->type, $unique, $imageType, 'profile');
                     if (File::exists(public_path($user->profile_image))) {
                         File::delete(public_path($user->profile_image));
                     }
-                }else{
+                } else {
                     $profile_image_path = $user->profile_image;
                 }
-            }
-            else{
+            } else {
                 $profile_image_path = $user->profile_image;
             }
-
 
             if (strtolower($request->type) === 'citizen') {
                 $request->validate([
@@ -108,7 +102,7 @@ class ProfileController extends Controller
                 if ($request->nid_front) {
                     $image_parts = explode(";base64,", $request->nid_front);
                     $imageType = explode("/", $image_parts[0])[1];
-                    $unique =uniqid();
+                    $unique = uniqid();
                     // return $imageType;
                     if (isset($image_parts[1])) {
                         $nid_front_image_path = FileHandler::uploadImage($request->nid_front, $request->type, $unique, $imageType, 'nid_front');
@@ -116,32 +110,27 @@ class ProfileController extends Controller
                         if (File::exists(public_path($user->nid_front))) {
                             File::delete(public_path($user->nid_front));
                         }
-                    }
-                    else {
+                    } else {
                         $nid_front_image_path = $user->nid_front;
                     }
-                }
-                else {
+                } else {
                     $nid_front_image_path = $user->nid_front;
                 }
-
 
                 if ($request->nid_back) {
                     $image_parts = explode(";base64,", $request->nid_back);
                     $imageType = explode("/", $image_parts[0])[1];
-                    $unique =uniqid();
+                    $unique = uniqid();
                     if (isset($image_parts[1])) {
                         $nid_back_image_path = FileHandler::uploadImage($request->nid_back, $request->type, $unique, $imageType, 'nid_back');
                         //  return $nid_back_image_path;
                         if (File::exists(public_path($user->nid_back))) {
                             File::delete(public_path($user->nid_back));
                         }
-                    }
-                    else {
+                    } else {
                         $nid_back_image_path = $user->nid_back;
                     }
-                }
-                else {
+                } else {
                     $nid_back_image_path = $user->nid_back;
                 }
 
@@ -165,11 +154,10 @@ class ProfileController extends Controller
                 'years_of_experience' => $request->years_of_experience ?? $user->years_of_experience,
                 'current_profession' => $request->current_profession ?? $user->current_profession,
                 'general_info' => $request->general_info ?? $user->general_info,
-                'nid_front' => $nid_front_image_path,
-                'nid_back' => $nid_back_image_path,
-                'schedule' => $request->schedule ?? $user->schedule
+                'nid_front' => $nid_front_image_path ?? $user->nid_front,
+                'nid_back' => $nid_back_image_path ?? $user->nid_back,
+                'schedule' => $request->schedule ?? $user->schedule,
             ]);
-
 
             if (strtolower($user->type) === 'consultant') {
                 if (is_array($request->experiances)) {
@@ -193,13 +181,12 @@ class ProfileController extends Controller
                                     'designation' => $request->experiances[$key]['designation'],
                                     'department' => $request->experiances[$key]['department'] ?? '',
                                     'start_date' => $request->experiances[$key]['start_date'],
-                                    'end_date' => $request->experiances[$key]['current_working'] ?  '' :$request->experiances[$key]['end_date'],
+                                    'end_date' => $request->experiances[$key]['current_working'] ? '' : $request->experiances[$key]['end_date'],
                                     'user_id' => $user->id,
-                                    'current_working'=>$request->experiances[$key]['current_working'] ?? '',
+                                    'current_working' => $request->experiances[$key]['current_working'] ?? '',
                                 ]);
                             }
-                        }
-                        else {
+                        } else {
                             Experience::create([
                                 'institute_name' => $request->experiances[$key]['institute_name'],
                                 'address' => $request->experiances[$key]['address'],
@@ -208,27 +195,103 @@ class ProfileController extends Controller
                                 'start_date' => $request->experiances[$key]['start_date'],
                                 'end_date' => $request->experiances[$key]['current_working'] ? '' : $request->experiances[$key]['end_date'],
                                 'user_id' => $user->id,
-                                'current_working'=>$request->experiances[$key]['current_working'] ?? '',
+                                'current_working' => $request->experiances[$key]['current_working'] ?? '',
                             ]);
                         }
                     }
                 }
 
+                // if (is_array($request->academics)) {
+                //     foreach ($request->academics as $key => $academic) {
+                //         // return $academic->certification_copy;
+
+                //         $existId = isset($request->academics[$key]['id']);
+                //         //   return $existId; //if found then 1 paoua jabe
+                //         if ($existId) {
+                //             $academicsId = $request->academics[$key]['id'];
+                //             $academic = AcademicQualification::where('id', $academicsId)->first();
+
+                //             // if (File::exists(public_path($academic->certification_copy))) {
+                //             //     File::delete(public_path($academic->certification_copy));
+                //             // }
+                //         }
+
+                //         // return $request->academics[$key]['certification_copy'];
+
+                //         if ($request->academics[$key]['certification_copy']) {
+                //             $image_parts = explode(";base64,", $request->academics[$key]['certification_copy']);
+                //             $imageType = explode("/", $image_parts[0])[1];
+                //             $unique = uniqid();
+                //             if (isset($image_parts[1])) {
+                //                 $certificateImage = FileHandler::uploadUniqueImage(
+                //                     $request->academics[$key]['certification_copy'],
+                //                     $request->type,
+                //                     $request->academics[$key]['education_level'],
+                //                     $imageType,
+                //                     $unique,
+                //                     'certificate'
+                //                 );
+
+                //                 // if (File::exists(public_path($academic->certification_copy))) {
+                //                 //     File::delete(public_path($academic->certification_copy));
+                //                 // }
+                //             }
+
+                //              else {
+                //                 $certificateImage = '';
+                //             }
+                //         }
+                //          else {
+
+                //             $certificateImage = $academic->certification_copy ?? '';
+                //         }
+                //         // return $certificateImage;
+
+                //         if ($existId) {
+                //             if ($academic) {
+                //                 $academic->update([
+                //                     'education_level' => $request->academics[$key]['education_level'],
+                //                     'institute_name' => $request->academics[$key]['institute_name'],
+                //                     'passing_year' => $request->academics[$key]['passing_year'],
+                //                     'certification_copy' => $request->academics[$key]['certification_copy'] ? $certificateImage : '',
+                //                     'user_id' => $user->id,
+                //                 ]);
+                //             }
+                //         } else {
+
+                //             AcademicQualification::create([
+                //                 'education_level' => $request->academics[$key]['education_level'],
+                //                 'institute_name' => $request->academics[$key]['institute_name'],
+                //                 'passing_year' => $request->academics[$key]['passing_year'],
+                //                 'certification_copy' => $request->academics[$key]['certification_copy'] ? $certificateImage : '',
+                //                 'user_id' => $user->id,
+                //             ]);
+                //         }
+                //     }
+                // }
+
+
+
                 if (is_array($request->academics)) {
                     foreach ($request->academics as $key => $academic) {
-                        //   return $academic;
+                            //   return $request->academics[$key]['id'];
                         $existId = isset($request->academics[$key]['id']);
-                        //   return $existId; if found then 1 paoua jabe
+                        //   return $existId; //if found then 1 paoua jabe
                         if ($existId) {
                             $academicsId = $request->academics[$key]['id'];
-                            $academic = AcademicQualification::where('id', $academicsId)->first();
+                            $academicFound = AcademicQualification::where('id', $academicsId)->first();
+
+                            // if (File::exists(public_path($academic->certification_copy))) {
+                            //     File::delete(public_path($academic->certification_copy));
+                            // }
                         }
 
+                        // return $request->academics[$key]['certification_copy'];
 
                         if ($request->academics[$key]['certification_copy']) {
                             $image_parts = explode(";base64,", $request->academics[$key]['certification_copy']);
                             $imageType = explode("/", $image_parts[0])[1];
-                            $unique =uniqid();
+                            $unique = uniqid();
                             if (isset($image_parts[1])) {
                                 $certificateImage = FileHandler::uploadUniqueImage(
                                     $request->academics[$key]['certification_copy'],
@@ -238,43 +301,46 @@ class ProfileController extends Controller
                                     $unique,
                                     'certificate'
                                 );
-                                // return $certificateImage;
 
-                                if (File::exists(public_path($academic->certification_copy))) {
-                                    File::delete(public_path($academic->certification_copy));
-                                }
+                                // if (File::exists(public_path($academic->certification_copy))) {
+                                //     File::delete(public_path($academic->certification_copy));
+                                // }
                             }
-                            else {
-                                $certificateImage = $academic->certification_copy;
+
+                             else {
+                                $certificateImage = '';
                             }
                         }
-                        else {
-                            $certificateImage = $academic->certification_copy;
+                         else {
+
+                            $certificateImage = $academic->certification_copy ?? '';
                         }
+                        // return $certificateImage;
 
                         if ($existId) {
-                            if ($academic) {
-                                $academic->update([
+                            if ($academicFound) {
+                                $academicFound->update([
                                     'education_level' => $request->academics[$key]['education_level'],
                                     'institute_name' => $request->academics[$key]['institute_name'],
                                     'passing_year' => $request->academics[$key]['passing_year'],
-                                    'certification_copy' => $certificateImage ?? '',
+                                    'certification_copy' => $request->academics[$key]['certification_copy'] ? $certificateImage : '',
                                     'user_id' => $user->id,
                                 ]);
                             }
                         } else {
+
                             AcademicQualification::create([
                                 'education_level' => $request->academics[$key]['education_level'],
                                 'institute_name' => $request->academics[$key]['institute_name'],
                                 'passing_year' => $request->academics[$key]['passing_year'],
-                                'certification_copy' => $certificateImage ?? '',
+                                'certification_copy' => $request->academics[$key]['certification_copy'] ? $certificateImage : '',
                                 'user_id' => $user->id,
                             ]);
                         }
                     }
                 }
             }
-            //    return $user;
+
             $message = "Data Updated Successfully";
             DB::commit();
             return $this->responseSuccess(200, true, $message, $user);
@@ -282,7 +348,6 @@ class ProfileController extends Controller
             DB::rollBack();
         }
     }
-
 
     public function updatePassword(Request $request)
     {
@@ -306,7 +371,7 @@ class ProfileController extends Controller
                 ///  return auth()->user()->password;
                 if ($user && Hash::check($request->old_password, $user->password)) {
                     $user->update([
-                        'password' => Hash::make($request->new_password)
+                        'password' => Hash::make($request->new_password),
                     ]);
 
                     $message = "Password Updated Successfully";
@@ -369,7 +434,7 @@ class ProfileController extends Controller
             $data = [
                 'user' => $user,
                 'role' => $user->getRoleNames(),
-                'permissions' => $user->getAllPermissions()->pluck('name')
+                'permissions' => $user->getAllPermissions()->pluck('name'),
             ];
 
             $message = "";
@@ -388,7 +453,7 @@ class ProfileController extends Controller
             if ($user) {
                 $user->update([
                     'approval' => $request->approvalStatus,
-                    'approved_by' => auth()->user()->id
+                    'approved_by' => auth()->user()->id,
                 ]);
                 if ($request->approvalStatus == 2) {
                     $approvalStatus = 'Approved';
@@ -458,7 +523,6 @@ class ProfileController extends Controller
     {
         $consultantData = User::findOrFail($consultant_id);
 
-
         if ($consultantData && $consultantData->active_status == 1) {
             $consultantData->update([
                 'active_status' => 0,
@@ -481,7 +545,6 @@ class ProfileController extends Controller
 
         // return $consultantData;
 
-
         // if ($consultantData) {
         //     $consultantData->update([
         //         'active_status' => $request->active_status,
@@ -495,7 +558,6 @@ class ProfileController extends Controller
 
         // $message = "This Consultant " . $activeStatus;
         // return $this->responseSuccess(200, true, $message, $consultantData);
-
 
     }
 
@@ -526,7 +588,7 @@ class ProfileController extends Controller
         }
 
         $userData = $userExist->update([
-            'profile_image' => $profile_image_path
+            'profile_image' => $profile_image_path,
         ]);
         if ($userData) {
             $message = "Profile Image Updated Successfully.";
