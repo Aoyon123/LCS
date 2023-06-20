@@ -201,89 +201,19 @@ class ProfileController extends Controller
                     }
                 }
 
-                // if (is_array($request->academics)) {
-                //     foreach ($request->academics as $key => $academic) {
-                //         // return $academic->certification_copy;
-
-                //         $existId = isset($request->academics[$key]['id']);
-                //         //   return $existId; //if found then 1 paoua jabe
-                //         if ($existId) {
-                //             $academicsId = $request->academics[$key]['id'];
-                //             $academic = AcademicQualification::where('id', $academicsId)->first();
-
-                //             // if (File::exists(public_path($academic->certification_copy))) {
-                //             //     File::delete(public_path($academic->certification_copy));
-                //             // }
-                //         }
-
-                //         // return $request->academics[$key]['certification_copy'];
-
-                //         if ($request->academics[$key]['certification_copy']) {
-                //             $image_parts = explode(";base64,", $request->academics[$key]['certification_copy']);
-                //             $imageType = explode("/", $image_parts[0])[1];
-                //             $unique = uniqid();
-                //             if (isset($image_parts[1])) {
-                //                 $certificateImage = FileHandler::uploadUniqueImage(
-                //                     $request->academics[$key]['certification_copy'],
-                //                     $request->type,
-                //                     $request->academics[$key]['education_level'],
-                //                     $imageType,
-                //                     $unique,
-                //                     'certificate'
-                //                 );
-
-                //                 // if (File::exists(public_path($academic->certification_copy))) {
-                //                 //     File::delete(public_path($academic->certification_copy));
-                //                 // }
-                //             }
-
-                //              else {
-                //                 $certificateImage = '';
-                //             }
-                //         }
-                //          else {
-
-                //             $certificateImage = $academic->certification_copy ?? '';
-                //         }
-                //         // return $certificateImage;
-
-                //         if ($existId) {
-                //             if ($academic) {
-                //                 $academic->update([
-                //                     'education_level' => $request->academics[$key]['education_level'],
-                //                     'institute_name' => $request->academics[$key]['institute_name'],
-                //                     'passing_year' => $request->academics[$key]['passing_year'],
-                //                     'certification_copy' => $request->academics[$key]['certification_copy'] ? $certificateImage : '',
-                //                     'user_id' => $user->id,
-                //                 ]);
-                //             }
-                //         } else {
-
-                //             AcademicQualification::create([
-                //                 'education_level' => $request->academics[$key]['education_level'],
-                //                 'institute_name' => $request->academics[$key]['institute_name'],
-                //                 'passing_year' => $request->academics[$key]['passing_year'],
-                //                 'certification_copy' => $request->academics[$key]['certification_copy'] ? $certificateImage : '',
-                //                 'user_id' => $user->id,
-                //             ]);
-                //         }
-                //     }
-                // }
-
-
-
                 if (is_array($request->academics)) {
                     foreach ($request->academics as $key => $academic) {
-                            //   return $request->academics[$key]['id'];
+                        //   return $request->academics[$key]['id'];
+                        // return $academic['passing_year'];
                         $existId = isset($request->academics[$key]['id']);
                         //   return $existId; //if found then 1 paoua jabe
                         if ($existId) {
                             $academicsId = $request->academics[$key]['id'];
                             $academicFound = AcademicQualification::where('id', $academicsId)->first();
 
-                            // if (File::exists(public_path($academic->certification_copy))) {
-                            //     File::delete(public_path($academic->certification_copy));
-                            // }
+                            if (File::exists(public_path($academicFound->certification_copy))) {
+                                File::delete(public_path($academicFound->certification_copy));
+                            }
                         }
 
                         // return $request->academics[$key]['certification_copy'];
@@ -305,17 +235,14 @@ class ProfileController extends Controller
                                 // if (File::exists(public_path($academic->certification_copy))) {
                                 //     File::delete(public_path($academic->certification_copy));
                                 // }
+                            } else {
+                                $certificateImage = $academic['certification_copy'];
                             }
+                        } else {
 
-                             else {
-                                $certificateImage = '';
-                            }
+                            $certificateImage = $academic['certification_copy'];
                         }
-                         else {
-
-                            $certificateImage = $academic->certification_copy ?? '';
-                        }
-                        // return $certificateImage;
+                        // return $academicFound['certification_copy'];
 
                         if ($existId) {
                             if ($academicFound) {
@@ -428,8 +355,9 @@ class ProfileController extends Controller
 
     public function profile($id)
     {
+        if($id==auth()->user()->id){
         $user = User::with('experiances', 'academics', 'services')->where('id', $id)->first();
-        //  return $user;
+        
         if ($user != null) {
             $data = [
                 'user' => $user,
@@ -439,7 +367,9 @@ class ProfileController extends Controller
 
             $message = "";
             return $this->responseSuccess(200, true, $message, $data);
-        } else {
+        }
+    }
+        else {
             $message = "No Data Found";
             return $this->responseError(404, false, $message);
         }

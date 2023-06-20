@@ -52,10 +52,10 @@ class AdminInformationController extends Controller
         //   return $newRegisterCitizenCount;
         // $todaysTotalConsultationCount = LcsCase::whereDate('updated_at', Carbon::today())->count();
 
-        $inProgressCount = LcsCase::InProgress()->count();
-        $initialCount = LcsCase::Initial()->count();
-        $completeCount = LcsCase::Completed()->count();
-        $cancelConsultationCount = LcsCase::Cancel()->count();
+        $inProgressCount = LcsCase::where(['deleted_at' => null])->InProgress()->count();
+        $initialCount = LcsCase::where(['deleted_at' => null])->Initial()->count();
+        $completeCount = LcsCase::where(['deleted_at' => null])->Completed()->count();
+        $cancelConsultationCount = LcsCase::where(['deleted_at' => null])->Cancel()->count();
 
         $totalActiveConsultantCount = User::Consultant()->Status()->Approval()->count();
         $totalWaitingConsultantApproveCount = User::Consultant()->Initial()->count();
@@ -77,6 +77,7 @@ class AdminInformationController extends Controller
 
         $complete = DB::table('lcs_cases')
             ->where('status', 2)
+            ->where(['deleted_at' => null])
             ->selectRaw("DATE_FORMAT(updated_at, '%m') as month")
             ->selectRaw("COUNT(updated_at) as complete")
             ->orderBy('updated_at', 'ASC')
@@ -86,6 +87,7 @@ class AdminInformationController extends Controller
 
         $cancel = DB::table('lcs_cases')
             ->where('status', 3)
+            ->where(['deleted_at' => null])
             ->selectRaw("DATE_FORMAT(updated_at, '%m') as month")
             ->selectRaw("COUNT(updated_at) as cancel")
             ->orderBy('updated_at', 'ASC')
@@ -310,6 +312,7 @@ class AdminInformationController extends Controller
         $feedbackRating = DB::table('lcs_cases')
             ->where('rating', '>=', 0.0)
             ->where('status', 2)
+            ->where(['deleted_at' => null])
             ->select(DB::raw('count(lcs_cases.rating) as totalRatingCount'), DB::Raw('(lcs_cases.rating) rating'))
             ->groupBy('rating')
             ->get()->toArray();
@@ -352,6 +355,7 @@ class AdminInformationController extends Controller
         $serviceRequest = LcsCase::with('service:id,title')
             ->select('id', 'service_id')
             ->where('status', 0)
+            // ->where(['deleted_at' => null])
             ->orderBy('id', 'desc')
             ->groupBy('service_id')
             ->take(10)
@@ -575,11 +579,11 @@ class AdminInformationController extends Controller
         //-------------- END filter loop based on parameter---------------
 
         $waitingConsultation['waitingConsultation'] = $waitingConsultationCount;
-        $runningConsultation['runningConsultation'] = $runningConsultationCount;
+        $acceptConsultation['acceptConsultation'] = $acceptConsultationCount;
         $completeConsultation['completeConsultation'] = $completeConsultationCount;
         $cancelConsultation['cancelConsultation'] = $cancelConsultationCount;
 
-        $Cards = [$waitingConsultation, $runningConsultation, $completeConsultation, $cancelConsultation];
+        $Cards = [$waitingConsultation, $acceptConsultation, $completeConsultation, $cancelConsultation];
 
         $ItemAll = [];
 

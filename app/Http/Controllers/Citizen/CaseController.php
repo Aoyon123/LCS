@@ -2,23 +2,21 @@
 
 namespace App\Http\Controllers\Citizen;
 
-use App\Models\User;
-use App\Models\LcsCase;
-use Illuminate\Http\Request;
-use App\Traits\ResponseTrait;
-use Illuminate\Http\Response;
-use Illuminate\Support\Carbon;
+use App\Http\Controllers\Controller;
 use App\Http\Helper\FileHandler;
 use App\Http\Requests\CaseRequest;
-use Illuminate\Support\Facades\DB;
-use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\File;
+use App\Models\LcsCase;
+use App\Models\User;
+use App\Traits\ResponseTrait;
 use Illuminate\Database\QueryException;
+use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class CaseController extends Controller
 {
     use ResponseTrait;
-
 
     public function index()
     {
@@ -40,7 +38,7 @@ class CaseController extends Controller
         $caseData = DB::table('lcs_cases')
             ->where('lcs_cases.' . $type . '_id', auth()->user()->id)
             ->where(['deleted_at' => null])
-            //    ->where('lcs_cases.status', '2')
+        //    ->where('lcs_cases.status', '2')
             ->select(
                 'lcs_cases.id as case_id',
                 'lcs_cases.consultant_id',
@@ -61,7 +59,7 @@ class CaseController extends Controller
             )->join('users', 'lcs_cases.' . $userType . '_id', '=', 'users.id')
             ->join('services', 'lcs_cases.service_id', '=', 'services.id')
             ->orderBy('case_id', 'DESC')->get();
-            // return $caseData;
+        // return $caseData;
 
         if ($caseData) {
             $message = "Case list data succesfully shown";
@@ -71,7 +69,6 @@ class CaseController extends Controller
             return $this->responseError(404, false, $message);
         }
     }
-
 
     public function adminCaseList($type, $user_id)
     {
@@ -110,7 +107,6 @@ class CaseController extends Controller
             return $this->responseError(404, false, $message);
         }
     }
-
 
     public function store(Request $request)
     {
@@ -185,7 +181,6 @@ class CaseController extends Controller
                 'description' => 'nullable',
             ]);
 
-
             $data = LcsCase::create([
                 'service_id' => $request->service_id,
                 'citizen_id' => auth()->user()->id,
@@ -234,12 +229,17 @@ class CaseController extends Controller
                     $averageRating = LcsCase::where(['consultant_id' => $consultant_id, 'status' => 2])
                         ->avg('rating');
 
+                    // $totalRating = LcsCase::where([
+                    //     'consultant_id' => $consultant_id,
+                    //     'status' => 2,
+                    // ])->where('rating', '>=', '0.0')->count('rating');
+
                     $totalRating = LcsCase::where([
                         'consultant_id' => $consultant_id,
                         'status' => 2,
-                    ])->where('rating', '>=', '0.0')->count('rating');
+                    ])->whereNotNull('rating')->count('rating');
 
-                    if ($totalRating >= 1) {
+                    if ($totalRating > 1) {
                         $totalRatingSum = $totalRating + 1;
                     }
                     $roundRating = round($averageRating, 1);
@@ -290,7 +290,6 @@ class CaseController extends Controller
         }
     }
 
-
     public function consultantRating($id)
     {
         DB::beginTransaction();
@@ -305,9 +304,6 @@ class CaseController extends Controller
             return $this->responseError(Response::HTTP_INTERNAL_SERVER_ERROR, false, $e->getMessage());
         }
     }
-
-
-
 
     // public function statusUpdate(Request $request)
     // {
@@ -369,10 +365,6 @@ class CaseController extends Controller
             ->join('services', 'lcs_cases.service_id', '=', 'services.id')
             ->first();
 
-            
-
-
-
         if ($caseData) {
             $message = "Consultation details data succesfully shown";
             return $this->responseSuccess(200, true, $message, $caseData);
@@ -381,7 +373,6 @@ class CaseController extends Controller
             return $this->responseError(404, false, $message);
         }
     }
-
 
     public function adminCaseDetailsInfo($case_id)
     {

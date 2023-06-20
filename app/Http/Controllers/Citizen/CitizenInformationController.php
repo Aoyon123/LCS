@@ -22,10 +22,10 @@ class CitizenInformationController extends Controller
         $monthList = [];
 
         $id = auth()->user()->id;
-        $completeConsultationCount = LcsCase::where('citizen_id', $id)->Completed()->count();
-        $runningConsultationCount = LcsCase::where('citizen_id', $id)->InProgress()->count();
-        $pendingConsultationCount = LcsCase::where('citizen_id', $id)->Initial()->count();
-        $cancelConsultationCount = LcsCase::where('citizen_id', $id)->Cancel()->count();
+        $completeConsultationCount = LcsCase::where('citizen_id', $id)->where(['deleted_at' => null])->Completed()->count();
+        $runningConsultationCount = LcsCase::where('citizen_id', $id)->where(['deleted_at' => null])->InProgress()->count();
+        $pendingConsultationCount = LcsCase::where('citizen_id', $id)->where(['deleted_at' => null])->Initial()->count();
+        $cancelConsultationCount = LcsCase::where('citizen_id', $id)->where(['deleted_at' => null])->Cancel()->count();
 
         $topConsultant = User::select('id', 'name', 'profile_image', 'current_profession')
             ->Consultant()->Status()->Approval()->orderBy('rates', 'desc')
@@ -42,6 +42,7 @@ class CitizenInformationController extends Controller
         $complete = DB::table('lcs_cases')
             ->where('citizen_id', $id)
             ->where('status', 2)
+            ->where(['deleted_at' => null])
             ->selectRaw("DATE_FORMAT(updated_at, '%m') as month")
             ->selectRaw("COUNT(updated_at) as complete")
             ->orderBy('updated_at', 'ASC')
@@ -126,10 +127,10 @@ class CitizenInformationController extends Controller
         $data = [];
         $id = auth()->user()->id;
 
-        $activeServiceCount = LcsCase::where('citizen_id', $id)->InProgress()->count();
-        $waitForPaymentCount = LcsCase::where('citizen_id', $id)->Accepted()->count();
-        $cancelConsultationCount = LcsCase::where('citizen_id', $id)->Cancel()->count();
-        $serviceRequestCount = LcsCase::where('citizen_id', $id)->Initial()->count();
+        $activeServiceCount = LcsCase::where('citizen_id', $id)->where(['deleted_at' => null])->InProgress()->count();
+        $waitForPaymentCount = LcsCase::where('citizen_id', $id)->where(['deleted_at' => null])->Accepted()->count();
+        $cancelConsultationCount = LcsCase::where('citizen_id', $id)->where(['deleted_at' => null])->Cancel()->count();
+        $serviceRequestCount = LcsCase::where('citizen_id', $id)->where(['deleted_at' => null])->Initial()->count();
 
         //  -------------- Start For Filter Information ----------
         $type = auth()->user()->type;
@@ -183,14 +184,12 @@ class CitizenInformationController extends Controller
 
         $params = $request->all();
 
-
         foreach ($params as $key => $param) {
 
             if ($key === 'active') {
                 $totalConsultantationDataCount = $caseData->where('lcs_cases.status', $param)->count();
                 $caseData = $caseData->where('lcs_cases.status', $param);
-            }
-            elseif ($key === 'waitForPayment') {
+            } elseif ($key === 'waitForPayment') {
                 $totalConsultantationDataCount = $caseData->where('lcs_cases.status', $param)->count();
                 $caseData = $caseData->where('lcs_cases.status', $param);
             } elseif ($key === 'cancelConsultation') {
@@ -210,8 +209,7 @@ class CitizenInformationController extends Controller
 
         $Cards = [$activeService, $waitForPayment, $cancelConsultation, $serviceRequest];
 
-
-        $ItemAll=[];
+        $ItemAll = [];
         if (isset($params['limit'])) {
             if (isset($params['offset'])) {
                 $ItemAll['totalConsultantation'] = $totalConsultantationDataCount;
