@@ -7,6 +7,7 @@ use App\Http\Helper\FileHandler;
 use App\Http\Requests\CaseRequest;
 use App\Models\LcsCase;
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 use App\Traits\ResponseTrait;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
@@ -177,7 +178,7 @@ class CaseController extends Controller
                 'service_id' => 'required',
                 'title' => 'required|string',
                 'document_link' => 'nullable',
-                'document_file' => 'required|string',
+                'document_file' => 'nullable|string',
                 'description' => 'nullable',
             ]);
 
@@ -195,7 +196,7 @@ class CaseController extends Controller
                 'consultant_review_comment' => $request->consultant_review_comment,
                 'citizen_review_comment' => $request->citizen_review_comment,
                 'case_code' => $case_code,
-                'document_file' => $case_file_path,
+                'document_file' => $case_file_path ?? '',
             ]);
 
             DB::commit();
@@ -222,6 +223,7 @@ class CaseController extends Controller
                     'rating' => $request->rating ?? $caseData->rating,
                     'citizen_review_comment' => $request->citizen_review_comment ?? $caseData->citizen_review_comment,
                 ]);
+                
 
                 if ($request->rating) {
                     $consultant_id = $caseData->consultant_id;
@@ -365,6 +367,15 @@ class CaseController extends Controller
             ->join('services', 'lcs_cases.service_id', '=', 'services.id')
             ->first();
 
+
+        // if ($caseData->citizen_id == auth()->user()->id || $caseData->consultant_id == auth()->user()->id) {
+        //     $message = "Consultation details data succesfully shown";
+        //     return $this->responseSuccess(200, true, $message, $caseData);
+        // } else {
+        //     $message = "No Data Found";
+        //     return $this->responseError(404, false, $message);
+        // }
+
         if ($caseData) {
             $message = "Consultation details data succesfully shown";
             return $this->responseSuccess(200, true, $message, $caseData);
@@ -380,10 +391,12 @@ class CaseController extends Controller
         $caseData = LcsCase::with(['citizen', 'consultant', 'service'])
             ->where('lcs_cases.id', $case_id)->first();
 
-        if ($caseData) {
+        if (Auth::check() && Auth::user()->type == 'admin' || $caseData->citizen_id == Auth::user()->id || $caseData->consultant_id == Auth::user()->id){
             $message = "Consultation details data succesfully shown";
             return $this->responseSuccess(200, true, $message, $caseData);
-        } else {
+        }
+
+         else {
             $message = "No Data Found";
             return $this->responseError(404, false, $message);
         }

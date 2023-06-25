@@ -123,7 +123,7 @@ class ProfileController extends Controller
                     $unique = uniqid();
                     if (isset($image_parts[1])) {
                         $nid_back_image_path = FileHandler::uploadImage($request->nid_back, $request->type, $unique, $imageType, 'nid_back');
-                        //  return $nid_back_image_path;
+
                         if (File::exists(public_path($user->nid_back))) {
                             File::delete(public_path($user->nid_back));
                         }
@@ -135,7 +135,7 @@ class ProfileController extends Controller
                 }
 
                 $user->services()->sync($request->services);
-                // return $user->services()->sync($request->services);
+
             }
 
             $user->update([
@@ -292,7 +292,7 @@ class ProfileController extends Controller
                 //  return $requestpassword;
                 //  return auth()->user()->password;
                 // if ($requestpassword == auth()->user()->password) {
-                //     $message = "Your current password can't be with new password";
+                //     $message = "Your current password can't be new password";
                 //     return $this->responseError(400, false, $message);
                 // }
                 ///  return auth()->user()->password;
@@ -355,25 +355,97 @@ class ProfileController extends Controller
 
     public function profile($id)
     {
-        if($id==auth()->user()->id){
-        $user = User::with('experiances', 'academics', 'services')->where('id', $id)->first();
-        
-        if ($user != null) {
-            $data = [
-                'user' => $user,
-                'role' => $user->getRoleNames(),
-                'permissions' => $user->getAllPermissions()->pluck('name'),
-            ];
 
-            $message = "";
-            return $this->responseSuccess(200, true, $message, $data);
+        $user = User::with(
+            'experiances',
+            'academics',
+            'services'
+        )
+            ->where('id', $id)
+            ->first();
+
+        $authUser = Auth::user();
+
+        // if($authUser->type== 'citizen' && $user->type == 'consultant' && $user->approval == 0){
+        //     $message = "No Data Found";
+        //     return $this->responseError(404, false, $message);
+        // }
+
+        if ($id == $authUser->id) {
+            $searchUserType = $user->type;
         }
-    }
-        else {
+        if ($id != $authUser->id) {
+            $searchUserType = $user->type;
+            $searchUserApproval = $user->approval;
+        }
+
+        if (Auth::check() && $authUser->id == $id) {
+
+            if ($user != null) {
+                $data = [
+                    'user' => $user,
+                    'role' => $user->getRoleNames(),
+                    'permissions' => $user->getAllPermissions()->pluck('name'),
+                ];
+
+                $message = "";
+                return $this->responseSuccess(200, true, $message, $data);
+            }
+        } elseif (Auth::check() && $authUser->type == 'admin') {
+
+            if ($user != null) {
+                $data = [
+                    'user' => $user,
+                    'role' => $user->getRoleNames(),
+                    'permissions' => $user->getAllPermissions()->pluck('name'),
+                ];
+
+                $message = "";
+                return $this->responseSuccess(200, true, $message, $data);
+            }
+        } elseif (Auth::check()
+            && $authUser->id != $id
+            && $authUser->type == 'citizen'
+            && $searchUserType == 'consultant'
+            && $searchUserApproval == 1) {
+
+            if ($user != null) {
+                $data = [
+                    'user' => $user,
+                    'role' => $user->getRoleNames(),
+                    'permissions' => $user->getAllPermissions()->pluck('name'),
+                ];
+
+                $message = "";
+                return $this->responseSuccess(200, true, $message, $data);
+            }
+        } else {
             $message = "No Data Found";
             return $this->responseError(404, false, $message);
         }
     }
+
+    // public function profile($id)
+    // {
+
+    //     $user = User::with('experiances', 'academics', 'services')->where('id', $id)->first();
+
+    //     if ($user != null) {
+    //         $data = [
+    //             'user' => $user,
+    //             'role' => $user->getRoleNames(),
+    //             'permissions' => $user->getAllPermissions()->pluck('name'),
+    //         ];
+
+    //         $message = "";
+    //         return $this->responseSuccess(200, true, $message, $data);
+    //     }
+
+    //     else {
+    //         $message = "No Data Found";
+    //         return $this->responseError(404, false, $message);
+    //     }
+    // }
 
     public function approved(Request $request)
     {

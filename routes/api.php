@@ -90,7 +90,7 @@ Route::group(["middleware" => ["auth:api"]], function () {
     Route::get('/services/all', [ServiceController::class, 'allServices']);
     Route::get('/services/index', [ServiceController::class, 'index']);
     Route::get('/services/{id}/retrieve', [ServiceController::class, 'retrieve']);
-    Route::post('/services/{id}/update', [ServiceController::class, 'update']);
+    Route::post('/services/{id}/update', [ServiceController::class, 'serviceUpdate']);
     Route::post('/services/{id}/delete', [ServiceController::class, 'destroy']);
 
     ////////  Education Qualification   /////////////

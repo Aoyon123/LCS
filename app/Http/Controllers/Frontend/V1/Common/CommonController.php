@@ -2,16 +2,13 @@
 
 namespace App\Http\Controllers\Frontend\V1\Common;
 
-use App\Models\User;
-use App\Models\LcsCase;
-use App\Models\Service;
-use Illuminate\Http\Request;
-use App\Traits\ResponseTrait;
-use Illuminate\Http\Response;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Database\Eloquent\Builder;
 use App\Http\Controllers\Controller;
 use App\Models\FrequentlyAskedQuestion;
+use App\Models\Service;
+use App\Models\User;
+use App\Traits\ResponseTrait;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class CommonController extends Controller
 {
@@ -21,7 +18,7 @@ class CommonController extends Controller
         $service = DB::table('services')->where('status', 1)->get();
         // $service = User::serviceList()->get();
         //  return $service;
-        $consultants_selected_fields = ['id', 'name', 'phone', 'email', 'address', 'code', 'type', 'profile_image', 'district_id', 'gender', 'rates','totalRating', 'active_status', 'years_of_experience', 'schedule'];
+        $consultants_selected_fields = ['id', 'name', 'phone', 'email', 'address', 'code', 'type', 'profile_image', 'district_id', 'gender', 'rates', 'totalRating', 'active_status', 'years_of_experience', 'schedule'];
 
         $active = User::with(
             [
@@ -30,7 +27,6 @@ class CommonController extends Controller
                 'serviceLatest',
             ]
         )->select($consultants_selected_fields)->approval()->consultant()->status()->active()->get();
-
 
         $topRated = User::with(
             [
@@ -43,7 +39,7 @@ class CommonController extends Controller
             $data = [
                 'active' => $active,
                 'topRated' => $topRated,
-                'services' => $service
+                'services' => $service,
             ];
         }
 
@@ -75,9 +71,10 @@ class CommonController extends Controller
             'rates',
             'totalRating',
             'years_of_experience',
-            'schedule'
+            'schedule',
         ];
         $params = $request->all();
+        // return  $request->services;
 
         $consultant = User::with(
             [
@@ -93,68 +90,46 @@ class CommonController extends Controller
         foreach ($params as $key => $param) {
 
             if ($key === 'services') {
-                $ids = $request->input('services',[]);
-                // return $ids;
-                if (is_array($ids)) {
+            if ($request->has('services') && $request->filled('services')){
+                $ids = $request->services;
                     $consultant = $consultant->whereHas('services', function ($q) use ($ids) {
-                        $q->whereIn('services.id', $ids);
+                        $q->whereIn('services.id', [$ids]);
+
                     });
-
-                    $totalConsultant = $consultant->whereHas('services', function ($q) use ($ids) {
-                        $q->whereIn('services.id', $ids);
-                    })->count();
-                }
-                // $response = new \Symfony\Component\HttpFoundation\Response();
-                // $response->setContent($consultant->toJson());
-                // return $consultant;
-
             }
+        }
 
             elseif ($key === 'active') {
                 $totalConsultant = $consultant->where('active_status', $param)->count();
                 $consultant = $consultant->where('active_status', $param);
 
-            }
-             elseif ($key === 'ratingValue') {
+            } elseif ($key === 'ratingValue') {
                 $totalConsultant = $consultant->where('rates', $param)->count();
                 $consultant = $consultant->where('rates', $param);
-            }
-
-            elseif ($key === 'consultantRating') {
+            } elseif ($key === 'consultantRating') {
                 $totalConsultant = $consultant->where('users.rates', $param)->count();
 
                 $consultant = $consultant->where('users.rates', $param);
-            }
-
-            elseif ($key === 'popularity') {
-                $totalConsultant =  $consultant->orderBy('users.rates', $param)
-                                               ->count();
+            } elseif ($key === 'popularity') {
+                $totalConsultant = $consultant->orderBy('users.rates', $param)
+                    ->count();
                 $consultant = $consultant->orderBy('users.rates', $param);
-            }
+            } elseif ($key === 'yearsOfExperience') {
 
-            elseif ($key === 'yearsOfExperience') {
-
-                $totalConsultant =$consultant->orderBy('users.years_of_experience', $param)->count();
+                $totalConsultant = $consultant->orderBy('users.years_of_experience', $param)->count();
 
                 $consultant = $consultant->orderBy('users.years_of_experience', $param);
-            }
-
-            elseif ($key === 'ranking') {
-                $totalConsultant =  $consultant->orderBy('users.totalRating', $param)
-                                               ->count();
+            } elseif ($key === 'ranking') {
+                $totalConsultant = $consultant->orderBy('users.totalRating', $param)
+                    ->count();
 
                 $consultant = $consultant->orderBy('users.totalRating', $param);
 
-            }
-
-            elseif ($key === 'search') {
+            } elseif ($key === 'search') {
                 $userSearchFields = [
                     'name',
-                    'email',
                     'address',
                     'code',
-                    'schedule',
-                    'years_of_experience'
                 ];
 
                 $servicesSearchFields = ['title'];
@@ -167,7 +142,6 @@ class CommonController extends Controller
                     }
                 })->count();
 
-
                 $totalConsultant = $consultant->orWhereHas('academics', function ($query) use ($academicSearchFields, $param) {
                     foreach ($academicSearchFields as $academicSearchField) {
                         $query->where($academicSearchField, 'like', '%' . $param . '%');
@@ -179,7 +153,6 @@ class CommonController extends Controller
                         $query->where($experienceSearchField, 'like', '%' . $param . '%');
                     }
                 })->count();
-
 
                 $consultant = $consultant->where(function ($query) use ($userSearchFields, $param) {
                     foreach ($userSearchFields as $userSearchField) {
@@ -204,7 +177,6 @@ class CommonController extends Controller
                             $query->where($academicSearchField, 'like', '%' . $param . '%');
                         }
                     });
-                // $data[$key] = $consultant->get();
             } elseif ($key === 'ratingTop') {
                 $totalConsultant = $consultant->orderBy('users.rates', $param)->count();
                 $consultant = $consultant->orderBy('users.rates', $param);
@@ -230,7 +202,6 @@ class CommonController extends Controller
         return $this->responseSuccess(200, true, $message, $data);
     }
 
-
     public function consultationSelf(Request $request)
     {
         $params = $request->all();
@@ -247,71 +218,66 @@ class CommonController extends Controller
             $search = null;
         }
 
-            $detailsInfo = DB::table('users')
-             ->where(['users.status' => 1, 'users.approval' => 1, 'users.type' => 'consultant'])
-             ->join('academic_qualifications', 'users.id', '=', 'academic_qualifications.user_id')
-             ->join('experiences', 'users.id', '=', 'experiences.user_id')
-             ->join('service_user', 'users.id', '=', 'service_user.user_id')
-             ->join('services', 'service_user.service_id', '=', 'services.id')
+        $detailsInfo = DB::table('users')
+            ->where(['users.status' => 1, 'users.approval' => 1, 'users.type' => 'consultant'])
+            ->join('academic_qualifications', 'users.id', '=', 'academic_qualifications.user_id')
+            ->join('experiences', 'users.id', '=', 'experiences.user_id')
+            ->join('service_user', 'users.id', '=', 'service_user.user_id')
+            ->join('services', 'service_user.service_id', '=', 'services.id')
 
-             ->when($services, function ($query) use ($services) {
-                 $query->where('service_user.service_id', 'like', '%' . $services . '%');
-             })
+            ->when($services, function ($query) use ($services) {
+                $query->where('service_user.service_id', 'like', '%' . $services . '%');
+            })
 
-             ->when($active, function ($query) use ($active) {
-                 $query->where('users.active_status', 'like', '%' . $active . '%');
-             })
+            ->when($active, function ($query) use ($active) {
+                $query->where('users.active_status', 'like', '%' . $active . '%');
+            })
 
-             ->when($ratingValue, function ($query) use ($ratingValue) {
-                 $query->where('users.rates', '<', $ratingValue + 1);
-                 $query->where('users.rates', '>=', $ratingValue);
-             })
+            ->when($ratingValue, function ($query) use ($ratingValue) {
+                $query->where('users.rates', '<', $ratingValue + 1);
+                $query->where('users.rates', '>=', $ratingValue);
+            })
 
-             ->when($search, function ($query) use ($search) {
-                 $query->where('users.name', 'like', '%' . $search . '%');
-                 $query->orWhere('users.address', 'like', '%' . $search . '%');
-                 $query->orWhere('users.years_of_experience', 'like', '%' . $search . '%');
-                 $query->orWhere('academic_qualifications.education_level', 'like', '%' . $search . '%');
-                 $query->orWhere('experiences.institute_name', 'like', '%' . $search . '%');
-             })
+            ->when($search, function ($query) use ($search) {
+                $query->where('users.name', 'like', '%' . $search . '%');
+                $query->orWhere('users.address', 'like', '%' . $search . '%');
+                $query->orWhere('users.years_of_experience', 'like', '%' . $search . '%');
+                $query->orWhere('academic_qualifications.education_level', 'like', '%' . $search . '%');
+                $query->orWhere('experiences.institute_name', 'like', '%' . $search . '%');
+            })
 
-             ->select(
-                 'users.id',
-                 'users.name',
-                 'users.active_status',
-                 'users.phone',
-                 'users.email',
-                 'users.address',
-                 'users.code',
-                 'users.type',
-                 'users.district_id',
-                 'users.profile_image',
-                 'users.gender',
-                 'users.rates',
-                 'users.totalRating',
-                 'users.years_of_experience',
-                 'users.schedule',
+            ->select(
+                'users.id',
+                'users.name',
+                'users.active_status',
+                'users.phone',
+                'users.email',
+                'users.address',
+                'users.code',
+                'users.type',
+                'users.district_id',
+                'users.profile_image',
+                'users.gender',
+                'users.rates',
+                'users.totalRating',
+                'users.years_of_experience',
+                'users.schedule',
 
-                 'academic_qualifications.education_level',
-                 'experiences.institute_name',
-                 'service_user.service_id',
-                 'services.title',
-                 'services.status as services_status',
-             )
+                'academic_qualifications.education_level',
+                'experiences.institute_name',
+                'service_user.service_id',
+                'services.title',
+                'services.status as services_status',
+            )
             ->groupBy('users.id')
             ->get();
-             // ->latest();
-           // ->get();
+        // ->latest();
+        // ->get();
 
-            $message = "Successfully Data Shown";
-            return $this->responseSuccess(200, true, $message, $detailsInfo);
+        $message = "Successfully Data Shown";
+        return $this->responseSuccess(200, true, $message, $detailsInfo);
 
     }
-
-
-
-
-
 
     public function activeServiceList()
     {

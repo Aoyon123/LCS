@@ -2,15 +2,14 @@
 
 namespace App\Http\Controllers\Consultant;
 
-use Illuminate\Support\Facades\DB;
-use App\Models\Service;
-use Illuminate\Http\Request;
-use App\Traits\ResponseTrait;
-use App\Http\Helper\FileHandler;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\ServiceRequest;
+use App\Http\Helper\FileHandler;
+use App\Models\Service;
+use App\Traits\ResponseTrait;
 use Illuminate\Database\QueryException;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 
 class ServiceController extends Controller
@@ -47,21 +46,23 @@ class ServiceController extends Controller
 
         DB::beginTransaction();
         try {
-            // if ($request->service_image) {
-            //     $image_parts = explode(";base64,", $request->service_image);
-            //     $unique = random_int(100000, 999999);
-            //     $imageType = explode("/", $image_parts[0])[1];
-            //     $type = "service-icon";
-            //     if (isset($image_parts[1])) {
-            //         $service_image_path = FileHandler::uploadImage($request->service_image, $type, $unique, $imageType, 'service');
-            //     }
-            // }
+
+            if ($request->service_image) {
+                $image_parts = explode(";base64,", $request->service_image);
+                $unique = random_int(100000, 999999);
+                $imageType = explode("/", $image_parts[0])[1];
+                $type = "service-icon";
+                if (isset($image_parts[1])) {
+                    $service_image_path = FileHandler::uploadImage($request->service_image, $type, $unique, $imageType, 'service');
+                }
+            }
+            // return $service_image_path;
 
             $data = Service::create([
                 'title' => $request->title,
                 'description' => $request->description,
                 'status' => $request->status,
-                'service_image' => 'demo',
+                'service_image' => $service_image_path ?? '',
                 'remark' => $request->remark,
             ]);
 
@@ -92,35 +93,38 @@ class ServiceController extends Controller
         }
     }
 
-    public function update(Request $request, $id)
+    public function serviceUpdate(Request $request, $id)
     {
 
         $serviceData = Service::findOrFail($id);
 
-        // if ($request->service_image) {
+        if ($request->service_image) {
 
-        //     $image_parts = explode(";base64,", $request->service_image);
+            $image_parts = explode(";base64,", $request->service_image);
 
-        //     $imageType = explode("/", $image_parts[0])[1];
-        //     // return explode("/", $request->title)[0];
-        //     $type = "service-icon";
-        //     if (isset($image_parts[1])) {
-        //         $service_image_path = FileHandler::uploadImage($request->service_image, $type, $request->id, $imageType, 'service');
+            $imageType = explode("/", $image_parts[0])[1];
+            $unique = random_int(100000, 999999);
+            $type = "service-icon";
 
-        //         if (File::exists($service_image_path)) {
-        //             File::delete($service_image_path);
-        //         }
-        //     } else {
-        //         $service_image_path = $serviceData->service_image;
-        //     }
-        // }
+            if (isset($image_parts[1])) {
+                $service_image_path = FileHandler::uploadImage($request->service_image, $type, $unique, $imageType, 'service');
+
+                if (File::exists(public_path($serviceData->service_image))) {
+                    File::delete(public_path($serviceData->service_image));
+                }
+            } else {
+                $service_image_path = $serviceData->service_image;
+            }
+        } else {
+            $service_image_path = $serviceData->service_image;
+        }
 
         if ($serviceData) {
             $serviceData->update([
                 'title' => $request->title ?? $serviceData->title,
                 'description' => $request->description ?? $serviceData->description,
                 'status' => $request->status ?? $serviceData->status,
-                'service_image' => 'demo',
+                'service_image' => $service_image_path,
                 'remark' => $request->remark ?? $serviceData->remark,
             ]);
             DB::commit();
