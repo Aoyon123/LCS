@@ -177,8 +177,8 @@ class CaseController extends Controller
             $request->validate([
                 'service_id' => 'required',
                 'title' => 'required|string',
-                'document_link' => 'nullable',
-                'document_file' => 'nullable|string',
+                'document_link' => 'nullable|url',
+                'document_file' => 'nullable',
                 'description' => 'nullable',
             ]);
 
@@ -223,7 +223,7 @@ class CaseController extends Controller
                     'rating' => $request->rating ?? $caseData->rating,
                     'citizen_review_comment' => $request->citizen_review_comment ?? $caseData->citizen_review_comment,
                 ]);
-                
+
 
                 if ($request->rating) {
                     $consultant_id = $caseData->consultant_id;

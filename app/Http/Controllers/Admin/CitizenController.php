@@ -18,7 +18,7 @@ class CitizenController extends Controller
         DB::beginTransaction();
 
         try {
-            $citizen = User::where('type', 'citizen')->get();
+            $citizen = User::where('type', 'citizen')->where('is_phone_verified', 1)->get();
             if ($citizen != null) {
                 $message = "Citizen Data Succesfully Shown";
                 DB::commit();
@@ -37,7 +37,7 @@ class CitizenController extends Controller
 
         $data = [];
         $params = $request->all();
-        
+
         $citizenData = User::where('type', 'citizen')->orderBy('id', 'DESC');
 
         $totalCitizenCount = User::where('type', 'citizen')->count();

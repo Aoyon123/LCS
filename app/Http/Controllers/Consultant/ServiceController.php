@@ -122,7 +122,7 @@ class ServiceController extends Controller
         if ($serviceData) {
             $serviceData->update([
                 'title' => $request->title ?? $serviceData->title,
-                'description' => $request->description ?? $serviceData->description,
+                'description' => $request->description ?? '',
                 'status' => $request->status ?? $serviceData->status,
                 'service_image' => $service_image_path,
                 'remark' => $request->remark ?? $serviceData->remark,
