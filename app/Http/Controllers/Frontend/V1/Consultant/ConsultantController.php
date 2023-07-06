@@ -119,10 +119,11 @@ class ConsultantController extends Controller
 
         $totalCitizenRating = LcsCase::where('consultant_id', $consultant_id)
             ->where('rating', '>=', '0.0')
-            ->distinct('lcs_cases.citizen_id')
+            ->distinct('lcs_cases.id')
             ->Completed()->count();
+        // return $totalCitizenRating;
 
-        //return $totalCitizenRating;
+
         $citizenReviewData = DB::table('lcs_cases')
             ->where('lcs_cases.consultant_id', $consultant_id)
             ->select(
@@ -138,7 +139,7 @@ class ConsultantController extends Controller
             )
             ->where(['lcs_cases.status' => 2])
             ->join('users', 'lcs_cases.citizen_id', '=', 'users.id')
-            ->groupBy('lcs_cases.citizen_id');
+            ->groupBy('lcs_cases.id');
         // ->distinct('lcs_cases.citizen_id');
         // ->limit(20)
         //   ->get();

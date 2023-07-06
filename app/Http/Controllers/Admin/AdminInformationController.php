@@ -62,7 +62,7 @@ class AdminInformationController extends Controller
         $totalRegisterCitizenCount = User::where(['type' => 'citizen'])
             ->where('is_phone_verified', 1)
             ->count();
-        $onlineConsultantCount = User::Consultant()->Status()->Approval()->Active()->count();
+        $onlineConsultantCount = User::Consultant()->Approval()->Active()->count();
 
         // $topRatedConsulatntCount = User::Consultant()->Status()->Approval()
         //     ->where('users.rates', '>=', 4.0)->count();

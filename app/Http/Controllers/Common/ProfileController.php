@@ -366,11 +366,6 @@ class ProfileController extends Controller
 
         $authUser = Auth::user();
 
-        // if($authUser->type== 'citizen' && $user->type == 'consultant' && $user->approval == 0){
-        //     $message = "No Data Found";
-        //     return $this->responseError(404, false, $message);
-        // }
-
         if ($id == $authUser->id) {
             $searchUserType = $user->type;
         }
@@ -425,27 +420,7 @@ class ProfileController extends Controller
         }
     }
 
-    // public function profile($id)
-    // {
 
-    //     $user = User::with('experiances', 'academics', 'services')->where('id', $id)->first();
-
-    //     if ($user != null) {
-    //         $data = [
-    //             'user' => $user,
-    //             'role' => $user->getRoleNames(),
-    //             'permissions' => $user->getAllPermissions()->pluck('name'),
-    //         ];
-
-    //         $message = "";
-    //         return $this->responseSuccess(200, true, $message, $data);
-    //     }
-
-    //     else {
-    //         $message = "No Data Found";
-    //         return $this->responseError(404, false, $message);
-    //     }
-    // }
 
     public function approved(Request $request)
     {

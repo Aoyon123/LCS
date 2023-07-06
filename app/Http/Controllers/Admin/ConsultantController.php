@@ -44,6 +44,18 @@ class ConsultantController extends Controller
                 'approved_by' => auth()->user()->id,
             ]);
 
+            if($request->approvalStatus == 3){
+                $consultantData->update([
+                    'active_status' => 0,
+                ]);
+            }
+
+            if($request->approvalStatus == 2){
+                $consultantData->update([
+                    'active_status' => 0,
+                ]);
+            }
+
             $messageSuccess = SMSHelper::sendSMS($consultantData->phone, $request->message);
 
             if ($messageSuccess && $consultantData) {
@@ -59,7 +71,8 @@ class ConsultantController extends Controller
     {
 
         $data = [];
-        $totalConsultantationDataCount = User::Consultant()->count();
+        $totalConsultantationDataCount = User::Consultant()->where('is_phone_verified', 1)->count();
+        // $totalConsultantationDataCount = 35;
         $totalActiveConsulatntCount = User::Consultant()->Status()->Approval()->count();
         $totalWaitingConsultantCount = User::Consultant()->Initial()->count();
         $totalRejectedConsultantCount = User::Consultant()->Rejected()->count();

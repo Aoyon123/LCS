@@ -231,21 +231,17 @@ class CaseController extends Controller
                     $averageRating = LcsCase::where(['consultant_id' => $consultant_id, 'status' => 2])
                         ->avg('rating');
 
-                    // $totalRating = LcsCase::where([
-                    //     'consultant_id' => $consultant_id,
-                    //     'status' => 2,
-                    // ])->where('rating', '>=', '0.0')->count('rating');
-
                     $totalRating = LcsCase::where([
                         'consultant_id' => $consultant_id,
                         'status' => 2,
                     ])->whereNotNull('rating')->count('rating');
 
-                    if ($totalRating > 1) {
-                        $totalRatingSum = $totalRating + 1;
-                    }
+                    // if(!empty($totalRating)){
+                    //     $fixedCount = 1;
+                    // }
+                // return $totalRating;
                     $roundRating = round($averageRating, 1);
-                    User::find($consultant_id)->update(['rates' => $roundRating, 'totalRating' => $totalRatingSum ?? 1]);
+                    User::find($consultant_id)->update(['rates' => $roundRating, 'totalRating' => $totalRating ?? 1]);
                 }
 
                 $message = "This Consultation data has been updated";

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Frontend\V1\Common;
 
 use App\Http\Controllers\Controller;
 use App\Models\FrequentlyAskedQuestion;
+use Illuminate\Support\Facades\Auth;
 use App\Models\Service;
 use App\Models\User;
 use App\Traits\ResponseTrait;
@@ -16,8 +17,7 @@ class CommonController extends Controller
     public function dashboardMobile()
     {
         $service = DB::table('services')->where('status', 1)->get();
-        // $service = User::serviceList()->get();
-        //  return $service;
+        
         $consultants_selected_fields = ['id', 'name', 'phone', 'email', 'address', 'code', 'type', 'profile_image', 'district_id', 'gender', 'rates', 'totalRating', 'active_status', 'years_of_experience', 'schedule'];
 
         $active = User::with(
@@ -91,14 +91,13 @@ class CommonController extends Controller
 
             if ($key === 'services') {
             if ($request->has('services') && $request->filled('services')){
-                $ids = $request->services;
+                $ids = explode(',', $request->services);
                     $consultant = $consultant->whereHas('services', function ($q) use ($ids) {
-                        $q->whereIn('services.id', [$ids]);
+                        $q->whereIn('services.id', $ids);
 
                     });
             }
         }
-
             elseif ($key === 'active') {
                 $totalConsultant = $consultant->where('active_status', $param)->count();
                 $consultant = $consultant->where('active_status', $param);
@@ -106,11 +105,13 @@ class CommonController extends Controller
             } elseif ($key === 'ratingValue') {
                 $totalConsultant = $consultant->where('rates', $param)->count();
                 $consultant = $consultant->where('rates', $param);
-            } elseif ($key === 'consultantRating') {
-                $totalConsultant = $consultant->where('users.rates', $param)->count();
+            }
+            elseif ($key === 'consultantRating') {
+                $totalConsultant = $consultant->where('users.rates','>=', $param)->orderBy('users.rates', 'asc')->count();
+                $consultant = $consultant->where('users.rates','>=', $param)->orderBy('users.rates', 'asc');
+            }
 
-                $consultant = $consultant->where('users.rates', $param);
-            } elseif ($key === 'popularity') {
+            elseif ($key === 'popularity') {
                 $totalConsultant = $consultant->orderBy('users.rates', $param)
                     ->count();
                 $consultant = $consultant->orderBy('users.rates', $param);
@@ -306,7 +307,6 @@ class CommonController extends Controller
 
     public function faqAll(Request $request)
     {
-
         $data = [];
         $faq_selected_fields = [
             'id',
@@ -316,6 +316,16 @@ class CommonController extends Controller
             'answer_image',
             'status',
         ];
+
+        $token = $request->bearerToken();
+        if($token){
+            $authUserType = auth()->user()->type;
+            if($authUserType == 'admin'){
+                $faqData = FrequentlyAskedQuestion::all();
+                $message = "Successfully FAQ Data Shown";
+                return $this->responseSuccess(200, true, $message, $faqData);
+            }
+        }
 
         $params = $request->all();
         $faqData = FrequentlyAskedQuestion::select($faq_selected_fields)
