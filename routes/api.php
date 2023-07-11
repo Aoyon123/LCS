@@ -156,6 +156,8 @@ Route::group(["middleware" => ["auth:api"]], function () {
     Route::get('/frequentlyAskedQuestion/{faq_id}/retrieve', [FrequentlyAskedQuestionController::class, 'retrieve']);
     Route::put('/frequentlyAskedQuestion/{faq_id}/update', [FrequentlyAskedQuestionController::class, 'update']);
     Route::delete('/frequentlyAskedQuestion/{faq_id}/delete', [FrequentlyAskedQuestionController::class, 'destroy']);
+    Route::get('/frequentlyAskedQuestion/admin/all', [FrequentlyAskedQuestionController::class, 'adminFaqAll']);
+
 
     ////////////////  Banner Controller  /////////////
     Route::get("banner/all", [BannerController::class, 'bannerList']);

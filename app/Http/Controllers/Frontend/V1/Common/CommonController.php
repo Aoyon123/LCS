@@ -17,7 +17,7 @@ class CommonController extends Controller
     public function dashboardMobile()
     {
         $service = DB::table('services')->where('status', 1)->get();
-        
+
         $consultants_selected_fields = ['id', 'name', 'phone', 'email', 'address', 'code', 'type', 'profile_image', 'district_id', 'gender', 'rates', 'totalRating', 'active_status', 'years_of_experience', 'schedule'];
 
         $active = User::with(

@@ -16,6 +16,21 @@ use Illuminate\Support\Facades\File;
 class FrequentlyAskedQuestionController extends Controller
 {
     use ResponseTrait;
+
+    public function adminFaqAll()
+    {
+        $faqData = FrequentlyAskedQuestion::orderBy('frequently_asked_questions.id', 'desc')->get();
+
+
+        if ($faqData) {
+            $message = "Succesfully Data Shown";
+            return $this->responseSuccess(200, true, $message, $faqData);
+        } else {
+            $message = "Invalid credentials";
+            return $this->responseError(403, false, $message);
+        }
+    }
+
     public function index()
     {
         $faqData = FrequentlyAskedQuestion::activefrequentlyaskedquestion()->orderBy('frequently_asked_questions.id', 'desc')->get();
@@ -48,7 +63,7 @@ class FrequentlyAskedQuestionController extends Controller
         }
     }
 
-    public function store(FrequentlyAskedQuestionRequest $request)
+    public function store(Request $request)
     {
         DB::beginTransaction();
         try {

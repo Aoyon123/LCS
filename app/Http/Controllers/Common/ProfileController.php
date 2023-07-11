@@ -138,6 +138,12 @@ class ProfileController extends Controller
 
             }
 
+            if (strtolower($user->type) === 'consultant') {
+                $user->update([
+                    'approval' => 0,
+                ]);
+            }
+
             $user->update([
                 'name' => $request->name,
                 'phone' => $request->phone ?? $user->phone,
@@ -355,6 +361,10 @@ class ProfileController extends Controller
 
     public function profile($id)
     {
+        if (!User::where('id', $id)->exists()){
+            $message = "No Data Found";
+            return $this->responseError(404, false, $message);
+        }
 
         $user = User::with(
             'experiances',
@@ -500,16 +510,25 @@ class ProfileController extends Controller
     {
         $consultantData = User::findOrFail($consultant_id);
 
-        if ($consultantData && $consultantData->active_status == 1) {
+        if($consultantData->approval == 2 || $consultantData->approval == 3){
             $consultantData->update([
                 'active_status' => 0,
-
             ]);
-        } else if ($consultantData && $consultantData->active_status == 0) {
-            $consultantData->update([
-                'active_status' => 1,
+        }
 
-            ]);
+        else{
+            if ($consultantData && $consultantData->active_status == 1) {
+                $consultantData->update([
+                    'active_status' => 0,
+
+                ]);
+            } else if ($consultantData && $consultantData->active_status == 0) {
+                $consultantData->update([
+                    'active_status' => 1,
+
+                ]);
+            }
+
         }
 
         if (!empty($consultantData)) {
@@ -519,23 +538,6 @@ class ProfileController extends Controller
             $message = "Invalid credentials";
             return $this->responseError(403, false, $message);
         }
-
-        // return $consultantData;
-
-        // if ($consultantData) {
-        //     $consultantData->update([
-        //         'active_status' => $request->active_status,
-        //     ]);
-        //     if ($request->active_status == 0) {
-        //         $activeStatus = 'InActive';
-        //     } else if ($request->active_status == 1) {
-        //         $activeStatus = 'Active';
-        //     }
-        // }
-
-        // $message = "This Consultant " . $activeStatus;
-        // return $this->responseSuccess(200, true, $message, $consultantData);
-
     }
 
     public function getDownload(Request $request)
