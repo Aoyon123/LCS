@@ -397,4 +397,48 @@ class CaseController extends Controller
             return $this->responseError(404, false, $message);
         }
     }
+
+    public function initialCaseList()
+    {
+         $data = LcsCase::where('status', 0)
+            ->whereDate('case_initial_date', '>=', date('Y-m-d H:i:s', strtotime('-30 days')))
+            ->with(['citizen:id,name,profile_image', 'consultant:id,name,profile_image', 'service:id,title'])
+            ->orderBy('id', 'DESC')
+            ->get();
+
+        if (!empty($data)) {
+            $message = "Succesfully Data Shown";
+            return $this->responseSuccess(200, true, $message, $data);
+        } else {
+            $message = "Invalid credentials";
+            return $this->responseError(403, false, $message);
+        }
+    }
+
+
+    public function initialCaseUpdate($case_id,$consultant_id)
+    {
+         $data = LcsCase::where('status', 0)
+            ->whereDate('case_initial_date', '>=', date('Y-m-d H:i:s', strtotime('-30 days')))
+            ->with(['citizen:id,name,profile_image', 'consultant:id,name,profile_image', 'service:id,title'])
+            ->get();
+
+
+        if($data){
+            $caseData = LcsCase::findOrFail($case_id);
+            if($caseData){
+            $caseData->update([
+                'consultant_id' => (int)$consultant_id
+            ]);
+        }
+        }
+
+        if (!empty($caseData)) {
+            $message = "Succesfully Data Updated";
+            return $this->responseSuccess(200, true, $message, $caseData);
+        } else {
+            $message = "Invalid credentials";
+            return $this->responseError(403, false, $message);
+        }
+    }
 }

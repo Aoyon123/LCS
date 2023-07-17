@@ -149,6 +149,8 @@ Route::group(["middleware" => ["auth:api"]], function () {
     Route::post('/case/statusUpdate', [CaseController::class, 'statusUpdate']);
     Route::get('/case/{consultant_id}/rating', [CaseController::class, 'consultantRating']);
     Route::get('/admin/case/{type}/{user_id}/list', [CaseController::class, 'adminCaseList']);
+    Route::get('/initial/case/list', [CaseController::class, 'initialCaseList']);
+    Route::get('/initial/{case_id}/{consultant_id}/update', [CaseController::class, 'initialCaseUpdate']);
 
     /////////////// Frequently Asked Question  ////////////////////
     Route::post('/frequentlyAskedQuestion/store', [FrequentlyAskedQuestionController::class, 'store']);

@@ -209,20 +209,20 @@ class ProfileController extends Controller
 
                 if (is_array($request->academics)) {
                     foreach ($request->academics as $key => $academic) {
-                        //   return $request->academics[$key]['id'];
-                        // return $academic['passing_year'];
+
                         $existId = isset($request->academics[$key]['id']);
+                    //  return $request->academics[$key]['id'];
                         //   return $existId; //if found then 1 paoua jabe
                         if ($existId) {
                             $academicsId = $request->academics[$key]['id'];
+                            // return $academicsId;
                             $academicFound = AcademicQualification::where('id', $academicsId)->first();
 
-                            if (File::exists(public_path($academicFound->certification_copy))) {
-                                File::delete(public_path($academicFound->certification_copy));
-                            }
+                            // if (File::exists(public_path($academicFound->certification_copy))) {
+                            //     File::delete(public_path($academicFound->certification_copy));
+                            // }
                         }
-
-                        // return $request->academics[$key]['certification_copy'];
+                        // return $academicFound;
 
                         if ($request->academics[$key]['certification_copy']) {
                             $image_parts = explode(";base64,", $request->academics[$key]['certification_copy']);
@@ -238,9 +238,9 @@ class ProfileController extends Controller
                                     'certificate'
                                 );
 
-                                // if (File::exists(public_path($academic->certification_copy))) {
-                                //     File::delete(public_path($academic->certification_copy));
-                                // }
+                                if (File::exists(public_path($academicFound->certification_copy))) {
+                                    File::delete(public_path($academicFound->certification_copy));
+                                }
                             } else {
                                 $certificateImage = $academic['certification_copy'];
                             }
