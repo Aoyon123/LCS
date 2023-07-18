@@ -141,6 +141,7 @@ class ProfileController extends Controller
             if (strtolower($user->type) === 'consultant') {
                 $user->update([
                     'approval' => 0,
+                    'active_status' => 0
                 ]);
             }
 
@@ -510,19 +511,19 @@ class ProfileController extends Controller
     {
         $consultantData = User::findOrFail($consultant_id);
 
-        if($consultantData->approval == 2 || $consultantData->approval == 3){
+        if($consultantData->approval == 0 || $consultantData->approval == 2 || $consultantData->approval == 3){
             $consultantData->update([
                 'active_status' => 0,
             ]);
         }
 
         else{
-            if ($consultantData && $consultantData->active_status == 1) {
+            if ($consultantData && $consultantData->approval == 1 && $consultantData->active_status == 1) {
                 $consultantData->update([
                     'active_status' => 0,
 
                 ]);
-            } else if ($consultantData && $consultantData->active_status == 0) {
+            } else if ($consultantData && $consultantData->approval == 1 && $consultantData->active_status == 0) {
                 $consultantData->update([
                     'active_status' => 1,
 

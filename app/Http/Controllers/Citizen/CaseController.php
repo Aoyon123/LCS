@@ -2,18 +2,19 @@
 
 namespace App\Http\Controllers\Citizen;
 
-use App\Http\Controllers\Controller;
+use App\Models\User;
+use App\Models\LcsCase;
+use Illuminate\Http\Request;
+use App\Traits\ResponseTrait;
+use Illuminate\Http\Response;
+use App\Http\Helper\SMSHelper;
+use Illuminate\Support\Carbon;
 use App\Http\Helper\FileHandler;
 use App\Http\Requests\CaseRequest;
-use App\Models\LcsCase;
-use App\Models\User;
-use Illuminate\Support\Facades\Auth;
-use App\Traits\ResponseTrait;
-use Illuminate\Database\QueryException;
-use Illuminate\Http\Request;
-use Illuminate\Http\Response;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Database\QueryException;
 
 class CaseController extends Controller
 {
@@ -113,6 +114,10 @@ class CaseController extends Controller
     {
         DB::beginTransaction();
         try {
+
+            $consultantData = User::where(['id' => $request->consultant_id])->first();
+            // return $consultantData->phone;
+
             $case = LcsCase::where('citizen_id', auth()->user()->id)
                 ->where('consultant_id', $request->consultant_id)
                 ->latest()->first();
@@ -155,7 +160,7 @@ class CaseController extends Controller
                 $extension = '';
                 $file_parts = explode(";base64,", $request->document_file);
                 $extension_part = $file_parts[0];
-                // return $extension_part;
+
                 if (str_contains($extension_part, 'text/plain')) {
                     $extension = '.txt';
                 } elseif (str_contains($extension_part, 'application/pdf')) {
@@ -198,6 +203,10 @@ class CaseController extends Controller
                 'case_code' => $case_code,
                 'document_file' => $case_file_path ?? '',
             ]);
+
+            $smsMessage = 'Dear Consultant A Citizen Sent You A New Service Request';
+            $messageSuccess = SMSHelper::sendSMS($consultantData->phone, $smsMessage);
+
 
             DB::commit();
             $message = "Consultation Created Successfull";

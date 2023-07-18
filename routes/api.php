@@ -205,6 +205,7 @@ Route::group(["prefix" => "/frontend/common/", 'namespace' => 'Frontend/V1/'], f
     Route::get("frequentlyAskedQuestion/all", [CommonController::class, 'faqAll']);
     Route::get("serviceList", [CommonController::class, 'activeServiceList']);
     Route::get("district/list", [CommonController::class, 'allDistricts']);
+    Route::post("store/general/question", [CommonController::class, 'storeGeneralAskingQuestion']);
 });
 
 

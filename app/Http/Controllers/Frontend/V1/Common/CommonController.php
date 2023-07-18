@@ -2,14 +2,17 @@
 
 namespace App\Http\Controllers\Frontend\V1\Common;
 
-use App\Http\Controllers\Controller;
-use App\Models\FrequentlyAskedQuestion;
-use Illuminate\Support\Facades\Auth;
-use App\Models\Service;
 use App\Models\User;
-use App\Traits\ResponseTrait;
+use App\Models\Service;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use App\Traits\ResponseTrait;
 use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
+use App\Models\GeneralAskingQuestion;
+use App\Models\FrequentlyAskedQuestion;
+use Illuminate\Database\QueryException;
 
 class CommonController extends Controller
 {
@@ -357,5 +360,32 @@ class CommonController extends Controller
             return $this->responseError(403, false, $message);
         }
     }
+
+
+    public function storeGeneralAskingQuestion(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            $data = GeneralAskingQuestion::create([
+                'name' => $request->name ?? '',
+                'phone' => $request->phone ?? '',
+                'question' => $request->question ?? '',
+                'question_answer' =>$request->question_answer ?? '',
+                'email' => $request->email ?? '',
+                'status' => 0,
+                'registration_status' => 0,
+            ]);
+
+            DB::commit();
+            $message = "General Asking Question Created Successfull";
+            return $this->responseSuccess(200, true, $message, $data);
+
+        } catch (QueryException $e) {
+            DB::rollBack();
+            return $this->responseError(Response::HTTP_INTERNAL_SERVER_ERROR, false, $e->getMessage());
+        }
+    }
+
+
 
 }
