@@ -410,8 +410,8 @@ class CaseController extends Controller
     public function initialCaseList()
     {
          $data = LcsCase::where('status', 0)
-            ->whereDate('case_initial_date', '>=', date('Y-m-d H:i:s', strtotime('-30 days')))
-            ->with(['citizen:id,name,profile_image', 'consultant:id,name,profile_image', 'service:id,title'])
+            ->whereDate('updated_at', '<=', date('Y-m-d H:i:s', strtotime('-3 days')))
+            ->with(['citizen:id,name,phone,profile_image', 'consultant:id,name,phone,profile_image', 'service:id,title'])
             ->orderBy('id', 'DESC')
             ->get();
 
@@ -425,25 +425,31 @@ class CaseController extends Controller
     }
 
 
-    public function initialCaseUpdate($case_id,$consultant_id)
+    public function transferableConsultationUpdate(Request $request)
     {
+
+        $consultantData = User::where('id', $request->consultant_id)->first();
+
          $data = LcsCase::where('status', 0)
-            ->whereDate('case_initial_date', '>=', date('Y-m-d H:i:s', strtotime('-30 days')))
-            ->with(['citizen:id,name,profile_image', 'consultant:id,name,profile_image', 'service:id,title'])
+            ->whereDate('case_initial_date', '>=', date('Y-m-d H:i:s', strtotime('-3 days')))
+            ->with(['citizen:id,name,phone,profile_image', 'consultant:id,name,phone,profile_image', 'service:id,title'])
             ->get();
 
 
         if($data){
-            $caseData = LcsCase::findOrFail($case_id);
+            $caseData = LcsCase::where('id', $request->consultation_id)->first();;
             if($caseData){
             $caseData->update([
-                'consultant_id' => (int)$consultant_id
+                'consultant_id' => $request->consultant_id
             ]);
         }
         }
 
+       // $smsMessage = 'Dear Consultant A New Service Request Admin Forwaded to You';
+        $messageSuccess = SMSHelper::sendSMS($consultantData->phone, $request->message);
+
         if (!empty($caseData)) {
-            $message = "Succesfully Data Updated";
+            $message = "This Consultation Transfer successfully";
             return $this->responseSuccess(200, true, $message, $caseData);
         } else {
             $message = "Invalid credentials";

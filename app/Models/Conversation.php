@@ -29,4 +29,11 @@ class Conversation extends Model
     {
         return $this->belongsTo(User::class, 'sender_id', 'id');
     }
+
+    public function caseInfo()
+    {
+        return $this->belongsTo(LcsCase::class, 'purpose_id', 'id');
+    }
+
+
 }

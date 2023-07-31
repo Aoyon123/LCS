@@ -156,4 +156,31 @@ class ConversationController extends Controller
         $message = "Conversion Data Shown Successfull";
         return $this->responseSuccess(200, true, $message, $data);
     }
+
+
+
+    public function chatBoardMessage()
+    {
+       $conversationData = Conversation:: with('sender:id,name,profile_image')
+                          ->select('id','sender_id', 'receiver_id','purpose_id','message')
+                          ->where(['receiver_id' => auth()->user()->id, 'seen_status' => 0])
+                          ->groupBy('purpose_id')
+                          ->latest()
+                          ->get();
+
+        $message = "Chat Board Message Seen Successfully";
+        return $this->responseSuccess(200, true, $message, $conversationData);
+    }
+
+    public function chatBoardMessageCount()
+    {
+        $chatBoardMessageCount = Conversation::where(['receiver_id' => auth()->user()->id, 'seen_status' => 0])
+        ->distinct('purpose_id')->count('purpose_id');
+
+        $message = "Chat Board Message Count Shown Successfully";
+        return $this->responseSuccess(200, true, $message, $chatBoardMessageCount);
+    }
+
+
+
 }

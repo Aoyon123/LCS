@@ -2,15 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Helper\SMSHelper;
 use App\Models\User;
+use App\Models\Conversation;
 use Illuminate\Http\Request;
 use App\Traits\ResponseTrait;
 use Illuminate\Http\Response;
+use App\Http\Helper\SMSHelper;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
 use Tymon\JWTAuth\Facades\JWTAuth;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Database\QueryException;

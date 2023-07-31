@@ -57,11 +57,20 @@ class ServiceController extends Controller
                 }
             }
             // return $service_image_path;
+            if($request->status == 1){
+                $status=1;
+            }
+            else if($request->status == 0){
+                $status = 0;
+            }
+            else{
+                $status = 0;
+            }
 
             $data = Service::create([
                 'title' => $request->title,
                 'description' => $request->description,
-                'status' => $request->status,
+                'status' => $status,
                 'service_image' => $service_image_path ?? '',
                 'remark' => $request->remark,
             ]);

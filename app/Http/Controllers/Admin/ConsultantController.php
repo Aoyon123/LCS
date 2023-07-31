@@ -214,6 +214,14 @@ class ConsultantController extends Controller
         return $this->responseSuccess(200, true, $message, $data);
     }
 
+    public function transferableConsultantList(Request $request)
+    {
+        $consultantData = User::select('id','name')->Consultant()->Status()->Approval()->withCount('initialConsultation','inprogressConsultation')->get();
+
+        $message = "Citizen Data Succesfully Shown";
+        return $this->responseSuccess(200, true, $message, $consultantData);
+    }
+
     /**
      * Show the form for creating a new resource.
      *

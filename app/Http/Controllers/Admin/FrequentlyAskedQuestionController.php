@@ -77,12 +77,22 @@ class FrequentlyAskedQuestionController extends Controller
                 }
             }
 
+            if($request->status == 1){
+                $status=1;
+            }
+            else if($request->status == 0){
+                $status = 0;
+            }
+            else{
+                $status = 0;
+            }
+
             $data = FrequentlyAskedQuestion::create([
                 'category_name' => $request->category_name,
                 'question' => $request->question,
                 'answer' => $request->answer,
                 'answer_image' => $answer_image_path ?? '',
-                'status' => $request->status,
+                'status' => $status,
             ]);
 
             DB::commit();

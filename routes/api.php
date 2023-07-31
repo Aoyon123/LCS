@@ -59,7 +59,7 @@ Route::group(["middleware" => ["auth:api"]], function () {
     Route::get('/admin/consultants', [AdminConsultantController::class, 'index']);
     Route::post("/consultant/approval", [AdminConsultantController::class, 'approvalConsultant']);
     Route::get('/admin/consultants/information', [AdminConsultantController::class, 'adminConsultantInformation']);
-
+    Route::get('/receverable/consultants', [AdminConsultantController::class, 'transferableConsultantList']);
 
     ////////// Citizen List ///////////
     Route::get('/admin/citizens', [AdminCitizenController::class, 'index']);
@@ -89,6 +89,9 @@ Route::group(["middleware" => ["auth:api"]], function () {
     Route::get('/conversation/{purpose_id}/allMessage/mobile', [ConversationController::class, 'allMessageMobile']);
     Route::post('/conversation/store', [ConversationController::class, 'store']);
     Route::post('/conversation/{id}/delete', [ConversationController::class, 'destroy']);
+    Route::get('/chat_board/messages', [ConversationController::class, 'chatBoardMessage']);
+    Route::get('/chat_board/messages/count', [ConversationController::class, 'chatBoardMessageCount']);
+
 
     /////////////  Service //////////////
     Route::post('/services/store', [ServiceController::class, 'store']);
@@ -149,8 +152,8 @@ Route::group(["middleware" => ["auth:api"]], function () {
     Route::post('/case/statusUpdate', [CaseController::class, 'statusUpdate']);
     Route::get('/case/{consultant_id}/rating', [CaseController::class, 'consultantRating']);
     Route::get('/admin/case/{type}/{user_id}/list', [CaseController::class, 'adminCaseList']);
-    Route::get('/initial/case/list', [CaseController::class, 'initialCaseList']);
-    Route::get('/initial/{case_id}/{consultant_id}/update', [CaseController::class, 'initialCaseUpdate']);
+    Route::get('/transferable/consultations', [CaseController::class, 'initialCaseList']);
+    Route::post('/transferable-consultations/update', [CaseController::class, 'transferableConsultationUpdate']);
 
     /////////////// Frequently Asked Question  ////////////////////
     Route::post('/frequentlyAskedQuestion/store', [FrequentlyAskedQuestionController::class, 'store']);

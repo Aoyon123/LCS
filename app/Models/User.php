@@ -66,6 +66,14 @@ class User extends Authenticatable implements JWTSubject
         return $this->belongsToMany(Service::class)->withTimestamps();
     }
 
+    public function initialConsultation(){
+        return $this->hasMany(LcsCase::class, 'consultant_id')->where('status', 0);
+    }
+
+    public function inprogressConsultation(){
+        return $this->hasMany(LcsCase::class, 'consultant_id')->where('status', 1);
+    }
+
     public function serviceLatest()
     {
         return $this->belongsToMany(Service::class)->where(['status' => 1])

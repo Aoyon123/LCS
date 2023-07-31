@@ -22,6 +22,11 @@ class ProfileController extends Controller
     public function update(Request $request)
     {
 
+        $authUser = Auth::user();
+        if (Auth::check() && $authUser->type == 'admin') {
+            $message = "No Data Found";
+            return $this->responseError(404, false, $message);
+        }
         // return $number;
         //  return $request->all();
         DB::beginTransaction();
@@ -285,9 +290,16 @@ class ProfileController extends Controller
 
     public function updatePassword(Request $request)
     {
+        $authUser = Auth::user();
+        if (Auth::check() && $authUser->type == 'admin') {
+            $message = "No Data Found";
+            return $this->responseError(404, false, $message);
+        }
+
+
         DB::beginTransaction();
         try {
-            //  return "tttt";
+
             $user = User::findOrFail($request->id);
             if ($request->id) {
 
@@ -295,11 +307,11 @@ class ProfileController extends Controller
                     'old_password' => 'required|min:8',
                     'new_password' => 'required|min:8',
                 ]);
-                //$requestpassword=Hash::make($request->new_password);
-                //  return $requestpassword;
-                //  return auth()->user()->password;
+
+                // $requestpassword=Hash::make($request->new_password);
+
                 // if ($requestpassword == auth()->user()->password) {
-                //     $message = "Your current password can't be new password";
+                //     $message = "Your current password can't be your new password";
                 //     return $this->responseError(400, false, $message);
                 // }
                 ///  return auth()->user()->password;
