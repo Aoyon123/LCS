@@ -20,7 +20,7 @@ class Service extends Model
 
     protected $hidden = [
         'pivot',
-        'created_at'
+        'created_at',
     ];
 
     public function consultants()
@@ -38,5 +38,9 @@ class Service extends Model
         return $query->where(['status' => 1]);
     }
 
+    public function lcsCases()
+    {
+        return $this->hasMany(LcsCase::class, 'service_id', 'id');
+    }
 
 }

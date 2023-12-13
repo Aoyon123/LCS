@@ -26,7 +26,8 @@ class LcsCase extends Model
         'consultant_review_comment',
         'citizen_review_comment',
         'case_code',
-        // 'deleted_at'
+        'device_log',
+        'case_complete_date',
     ];
 
     protected $casts = [
@@ -76,4 +77,13 @@ class LcsCase extends Model
         return $this->belongsTo(Service::class,'service_id','id');
     }
 
+    public function user()
+    {
+        return $this->belongsTo(User::class, $this->type . '_id', 'id');
+    }
+
+    // public function user()
+    // {
+    //     return $this->belongsTo(User::class, 'citizen_id', 'id');
+    // }
 }

@@ -91,7 +91,7 @@ class FrequentlyAskedQuestionController extends Controller
                 'category_name' => $request->category_name,
                 'question' => $request->question,
                 'answer' => $request->answer,
-                'answer_image' => $answer_image_path ?? '',
+                'answer_image' => '',
                 'status' => $status,
             ]);
 
@@ -149,7 +149,7 @@ class FrequentlyAskedQuestionController extends Controller
                 'category_name' => $request->category_name ?? $faqData->category_name,
                 'question' => $request->question ?? $faqData->question,
                 'answer' => $request->answer ?? $faqData->answer,
-                'answer_image' => $answer_image_path,
+                'answer_image' => '',
                 'status' => $request->status ?? $faqData->status,
             ]);
 
@@ -177,4 +177,6 @@ class FrequentlyAskedQuestionController extends Controller
             DB::rollBack();
         }
     }
+
+ 
 }

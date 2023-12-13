@@ -26,7 +26,7 @@ class ConversationRequest extends FormRequest
         $rules = [
             'sender_id' => 'nullable',
             'receiver_id' => 'nullable',
-            'message' => 'required',
+            'message' => 'nullable',
             'purpose_id' => 'nullable',
             'purpose_type' => 'nullable',
             'time' => 'nullable',

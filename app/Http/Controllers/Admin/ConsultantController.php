@@ -3,34 +3,57 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Helper\SendNotification;
 use App\Http\Helper\SMSHelper;
 use App\Models\User;
 use App\Traits\ResponseTrait;
-use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\DB;
 
 class ConsultantController extends Controller
 {
     use ResponseTrait;
+    // public function index()
+    // {
+    //     $consultants = User::where('type', 'consultant')->get();
+    //     if ($consultants != null) {
+    //         $message = "";
+    //         return $this->responseSuccess(200, true, $message, $consultants);
+    //     } else {
+    //         $message = "No Data Found";
+    //         return $this->responseError(404, false, $message);
+    //     }
+    // }
+
     public function index()
     {
-        DB::beginTransaction();
+        $consultants = User::where('type', 'consultant')
+            ->where('is_phone_verified', 1)
+            ->get();
 
-        try {
-            $consultants = User::where('type', 'consultant')->get();
-            // info($consultants);
-            if ($consultants != null) {
-                $message = "";
-                DB::commit();
-                return $this->responseSuccess(200, true, $message, $consultants);
-            } else {
-                $message = "No Data Found";
-                return $this->responseError(404, false, $message);
-            }
-        } catch (QueryException $e) {
-            DB::rollBack();
+        if ($consultants->isEmpty()) {
+            $message = "No Data Found";
+            return $this->responseError(404, false, $message);
+        }
+
+        $message = "";
+        return $this->responseSuccess(200, true, $message, $consultants);
+    }
+
+    public function approveConlsultantList()
+    {
+        $consultants_selected_fields = ['id', 'name', 'phone', 'type', 'profile_image', 'rates', 'schedule', 'serialize', 'fee'];
+        $consultant = User::
+            select($consultants_selected_fields)
+            ->withCount(['consultation as consultationCount'])
+            ->approval()->consultant()->status()->get();
+
+        if (!empty($consultant)) {
+            $message = "Succesfully Data Shown";
+            return $this->responseSuccess(200, true, $message, $consultant);
+        } else {
+            $message = "Invalid credentials";
+            return $this->responseError(403, false, $message);
         }
     }
 
@@ -44,21 +67,52 @@ class ConsultantController extends Controller
                 'approved_by' => auth()->user()->id,
             ]);
 
-            if($request->approvalStatus == 3){
+            if ($request->approvalStatus == 3) {
                 $consultantData->update([
                     'active_status' => 0,
                 ]);
             }
 
-            if($request->approvalStatus == 2){
+            if ($request->approvalStatus == 2) {
                 $consultantData->update([
                     'active_status' => 0,
                 ]);
             }
 
-            $messageSuccess = SMSHelper::sendSMS($consultantData->phone, $request->message);
+            $deviceToken = ['device_token' => User::where('id', $consultantData->id)->first()->device_token];
 
-            if ($messageSuccess && $consultantData) {
+            // if ($deviceToken['device_token'] == null) {
+            //     $messageSuccess = SMSHelper::sendSMS($consultantData->phone, $request->message);
+            // }
+
+            // $deviceToken = ['fj_yFKzTTlKDnS2Ky03yyW:APA91bFtzXG2Vz7pv_UrMuTL2M-Bl4qP-W9sXPiEy7ElVwny4Ddh5o3DUE7pTmxCR4R3QKjCb7T_4lirviGkfnXlN40UM4KFedZkJQ8peYk1M9n84PkQ7CXQSoCkPQAQEZtKeUDs776a'];
+
+            // Fetch user data
+            $userData = $consultantData->name;
+            // Create a new instance of the SendNotification class
+            $sendNotification = new SendNotification();
+            // Check if device token and userData and approvalStatus are present in the request
+            if (!empty($userData) && $deviceToken['device_token'] != null && !empty($request->approvalStatus)) {
+                // Set the FCM token, title, and body based on the approvalStatus
+                $FcmToken = [$deviceToken['device_token']];
+                $title = $userData;
+
+                if ($request->approvalStatus == 1) {
+                    $body = 'আপনার প্রোফাইলটি অনুমোদন করা হল।';
+                }
+                if ($request->approvalStatus == 2) {
+                    $body = 'আপনার প্রোফাইলটি বাতিল করা হয়েছে পুনরায় আবেদন করুন।';
+                }
+                if ($request->approvalStatus == 3) {
+                    $body = 'আপনার প্রোফাইলটি পুনরায় অনুমোদনের জন্য অপেক্ষা করুন।';
+                }
+
+                if ($this->responseSuccess(200, true, 'Success', $consultantData)) {
+                    $sendNotification->sendNotification($FcmToken, $title, $body);
+                 }
+            }
+
+            if ($consultantData) {
                 $message = "Consultant Approval Update And Message Send Successfully";
                 return $this->responseSuccess(200, true, $message, $consultantData);
             } else {
@@ -69,118 +123,98 @@ class ConsultantController extends Controller
 
     public function adminConsultantInformation(Request $request)
     {
-
         $data = [];
-        $totalConsultantationDataCount = User::Consultant()->where('is_phone_verified', 1)->count();
-        // $totalConsultantationDataCount = 35;
-        $totalActiveConsulatntCount = User::Consultant()->Status()->Approval()->count();
-        $totalWaitingConsultantCount = User::Consultant()->Initial()->count();
-        $totalRejectedConsultantCount = User::Consultant()->Rejected()->count();
+        $consultacts = User::Consultant()->PhoneVerified();
 
-        $highestRatingConsultantCount = User::Consultant()->Approval()->Status()
+        $totalConsultantDataCount = User::Consultant()->PhoneVerified()->count();
+
+        $totalApprovedConsulatntCount = User::Consultant()->Status()->PhoneVerified()->Approval()->count();
+        $totalWaitingConsultantCount = User::Consultant()->PhoneVerified()->Initial()->count();
+        $totalRejectedConsultantCount = User::Consultant()->PhoneVerified()->Rejected()->count();
+        $highestRatingConsultantCount = User::Consultant()->PhoneVerified()->Approval()->Status()
             ->where('rates', '>=', '4.0')->count();
-            // return $highestRatingConsultantCount;
-        // $newRegisterCitizen = User::where(['type' => 'citizen'])
-        //     ->whereDate('created_at', '>=', date('Y-m-d H:i:s', strtotime('-7 days')))
-        //     ->count();
-        $totalDeactivatedConsultantCount = User::Consultant()->Deactivated()->count();
+        $totalDeactivatedConsultantCount = User::Consultant()->PhoneVerified()->Deactivated()->count();
         $highestPaidConsultantCount = 0;
-        $highestConsultationConsultantCount = 15;
-        // $highestConsultationConsultantCount = User::Consultant()->Approval()->Status()
-        //     ->where('totalRating', '>=', '100')->count();
-
-        // $type = auth()->user()->type;
-        // $userType = $type === 'consultant' ? 'consultant' : 'citizen';
-
-
-        // $takingConsultation = LcsCase::with('service:id,title')
-        //     ->select('id', 'service_id', 'citizen_id')
-
-        //     ->orderBy('id', 'desc')
-        //     ->groupBy('service_id')
-        //     ->get();
-
-
-
-
-        //  return $highestConsultationConsultantCount;
-
+        $highestConsultationConsultantCount = User::Consultant()->Status()->PhoneVerified()->Approval()->withCount(['consultation as consultationCount'])->orderByDesc('consultationCount')->count();
 
         $params = $request->all();
 
-        $consultantData = User::where('type', 'consultant')->orderBy('id', 'DESC');
+        $consultantData = User::PhoneVerified()->orderBy('id', 'ASC');
+        if ($params) {
+            foreach ($params as $key => $param) {
 
-        foreach ($params as $key => $param) {
+                if ($key === 'totalConsultant') {
 
-            if ($key === 'active') {
-                //active=1
-                $totalConsultantationDataCount = $consultantData
-                    ->where('users.status', $param)
-                    ->where('users.approval', $param)->count();
-                $consultantData = $consultantData
-                    ->where('users.status', $param)
-                    ->where('users.approval', $param);
-            } else if ($key === 'waitingConsultant') {
-                //waitingConsultant=0
-                $totalConsultantationDataCount = $consultantData
-                    ->where('users.approval', $param)->count();
-                $consultantData = $consultantData
-                    ->where('users.approval', $param);
-            } else if ($key === 'rejectedConsultant') {
-                //rejectedConsultant=2
-                $totalConsultantationDataCount = $consultantData
-                    ->where('users.approval', $param)->count();
-                $consultantData = $consultantData
-                    ->where('users.approval', $param);
-            } else if ($key === 'highestRatingConsultant') {
-                //highestRatingConsultant=4.0
-                $totalConsultantationDataCount = $consultantData
-                    ->where('users.approval', '1')
-                    ->where('users.status', '1')
-                    ->where('users.rates', '>=', $param)
-                    ->count();
-                $consultantData = $consultantData
-                    ->where('users.approval', '1')
-                    ->where('users.status', '1')
-                    ->where('users.rates', '>=', $param);
+                    $totalConsultantDataCount = $consultantData
+                        ->where('users.type', $param)->count();
 
-            } else if ($key === 'deactivatedConsultant') {
-                //deactivatedConsultant=3
-                $totalConsultantationDataCount = $consultantData
-                    ->where('users.approval', '>=', $param)
-                    ->count();
+                    $consultantData = $consultantData
+                        ->where('users.type', $param);
+                } else if ($key === 'approvedConsultant') {
 
-                $consultantData = $consultantData
-                    ->where('users.approval', '>=', $param);
+                    $totalConsultantDataCount = $consultantData
+                        ->Consultant()
+                        ->where('users.approval', $param)->count();
 
-            } else if ($key === 'highestConsultationConsultant') {
+                    $consultantData = $consultantData
+                        ->Consultant()
 
-                    $consultantData = DB::table('lcs_cases')
-                    ->where('lcs_cases.status',2)
-                    ->where(['deleted_at' => null])
-                    ->select(
-                        (DB::raw('COUNT(lcs_cases.consultant_id) AS caseCount')),
-                        'users.name',
-                        'users.profile_image',
-                        'users.code',
-                        'users.phone',
-                        'users.email',
-                        'users.approval',
-                        'users.address',
-                        'users.district_id',
-                    )->join('users', 'lcs_cases.' . $param . '_id', '=', 'users.id')
-                    ->join('services', 'lcs_cases.service_id', '=', 'services.id')
-                    ->groupBy('consultant_id')
-                    ->orderBy('caseCount', 'DESC')
-                    ->limit(15);
-                    // ->get();
+                        ->where('users.approval', $param);
+                } else if ($key === 'waitingConsultant') {
+
+                    $totalConsultantDataCount = $consultantData
+                        ->Consultant()
+
+                        ->where('users.approval', $param)->count();
+
+                    $consultantData = $consultantData
+                        ->Consultant()
+
+                        ->where('users.approval', $param);
+                } else if ($key === 'rejectedConsultant') {
+
+                    $totalConsultantDataCount = $consultantData
+                        ->Consultant()
+                        ->where('users.approval', $param)->count();
+
+                    $consultantData = $consultantData
+                        ->Consultant()
+                        ->where('users.approval', $param);
+                } else if ($key === 'highestRatingConsultant') {
+                    //highestRatingConsultant=4.0
+                    $totalConsultantDataCount = $consultantData
+                        ->Consultant()->Status()->Approval()
+                        ->where('users.rates', '>=', $param)
+                        ->count();
+                    $consultantData = $consultantData
+                        ->Consultant()->Status()->Approval()
+                        ->where('users.rates', '>=', $param);
+
+                } else if ($key === 'deactivatedConsultant') {
+                    //deactivatedConsultant=3
+                    $totalConsultantDataCount = $consultantData
+                        ->Consultant()
+                        ->where('users.approval', $param)
+                        ->count();
+
+                    $consultantData = $consultantData
+                        ->Consultant()
+                        ->where('users.approval', $param);
+
+                } else if ($key === 'highestConsultationConsultant') {
+
+                    $totalConsultantDataCount = 15;
+                    // $consultantData
+                    //     ->Consultant()->Status()->PhoneVerified()->Approval()->withCount(['consultation as consultationCount'])->orderByDesc('consultationCount')->count();
+                    $consultantData = $consultantData
+                        ->Consultant()->Status()->PhoneVerified()->Approval()->withCount(['consultation as consultationCount'])->orderByDesc('consultationCount')->take($param);
+                }
 
             }
-
         }
 
-        $totalConsultant['totalConsultantCount'] = $totalConsultantationDataCount;
-        $totalActiveConsulatnt['totalActiveConsulatntCount'] = $totalActiveConsulatntCount;
+        $totalConsultant['totalConsultantCount'] = $totalConsultantDataCount;
+        $totalActiveConsulatnt['totalApprovedConsulatntCount'] = $totalApprovedConsulatntCount;
         $totalWaitingConsultant['totalWaitingConsultantCount'] = $totalWaitingConsultantCount;
         $totalRejectedConsultant['totalRejectedConsultantCount'] = $totalRejectedConsultantCount;
 
@@ -195,7 +229,7 @@ class ConsultantController extends Controller
 
         if (isset($params['limit'])) {
             if (isset($params['offset'])) {
-                $ItemAll['totalConsultantation'] = $totalConsultantationDataCount;
+                $ItemAll['totalConsultant'] = $totalConsultantDataCount;
                 $ItemAll['offset'] = $params['offset'];
                 $ItemAll['limit'] = $params['limit'];
                 $ItemAll['consultation'] = $consultantData->offset($params['offset'])->limit($params['limit'])->get();
@@ -204,7 +238,7 @@ class ConsultantController extends Controller
                 $ItemAll['consultation'] = $consultantData->limit($params['limit'])->get();
             }
         } else {
-            $ItemAll['totalConsultantation'] = $totalConsultantationDataCount;
+            $ItemAll['totalConsultant'] = $totalConsultantDataCount;
             $ItemAll['consultation'] = $consultantData->get();
         }
         $data['cardInformation'] = $Cards;
@@ -216,11 +250,182 @@ class ConsultantController extends Controller
 
     public function transferableConsultantList(Request $request)
     {
-        $consultantData = User::select('id','name')->Consultant()->Status()->Approval()->withCount('initialConsultation','inprogressConsultation')->get();
+        // $params = $request->all();
+        // foreach ($params as $key => $param) {
+
+        // }
+
+        $consultantData = User::select('id', 'name')->Consultant()->Status()->Approval()->withCount('initialConsultation', 'inprogressConsultation')->get();
+
+        //     $caseIds = $request->input('case_id');
+
+        //     if (!is_array($caseIds)) {
+        //         $caseIds = [$caseIds];
+        //     }
+
+        //     $services = Service::whereHas('lcsCases', function ($query) use ($caseIds) {
+        //         $query->whereIn('id', $caseIds);
+        //     })->get();
+
+        //     // return $services;
+        //     // $serviceIds = [];
+
+        //     // foreach ($services as $service) {
+        //     //     $serviceIds[] = $service->id;
+        //     // }
+
+        //    $consultant = $consultantData->whereHas('services', function ($q) use ($services) {
+        //     $q->whereIn('services.id', $services);
+        //    });
+
+        //     $consultantData = $consultant->get();
+        //     // return $consultantData;
+
+        //     //   return $consultant;
+        //     //   if ($request->has('case_id') && $request->filled('case_id')) {
+        //     //     $ids = explode(',', $request->services);
+        //     //   return $ids;
+        //     // }
+
+        //     // $consultant = $consultant->whereHas('services', function ($q) use ($serviceId) {
+        //     //     $q->where('services.id', $serviceId);
+        //     // });
 
         $message = "Citizen Data Succesfully Shown";
         return $this->responseSuccess(200, true, $message, $consultantData);
     }
+
+    public function changeConsultant()
+    {
+
+        $consultants_selected_fields = ['id', 'name', 'phone', 'email', 'address', 'code', 'type', 'profile_image', 'district_id', 'gender', 'rates', 'totalRating', 'active_status', 'years_of_experience', 'schedule'];
+
+        $consultantData = User::select($consultants_selected_fields)
+            ->Consultant()->Status()->Approval()
+            ->withCount('initialConsultation', 'newMessageCount')
+            ->get();
+
+        // $consultantData = $consultantData->filter(function ($item) {
+        //     if ($item->initial_consultation_count > 0 || $item->new_message_count_count > 0) {
+        //         return $item;
+        //     }
+        // });
+
+        $message = "Consultant Data Succesfully Shown";
+        return $this->responseSuccess(200, true, $message, $consultantData);
+    }
+
+    // public function consultantCaseCardInformation(Request $request)
+    // {
+    //     $data = [];
+    //     $id = auth()->user()->id;
+    //     // Count all waiting Consultation->status(0)
+    //     $data['waitingConsultation'] = LcsCase::Initial()
+    //         ->where('consultant_id', $id)->count();
+
+    //     // Count all running Consultation->status(1)
+    //     $data['runningConsultation'] = LcsCase::InProgress()
+    //         ->where('consultant_id', $id)->count();
+    //     // Count all complete Consultation->status(2)
+    //     $data['completeConsultation'] = LcsCase::Completed()
+    //         ->where('consultant_id', $id)->count();
+
+    //     // Count all cancel Consultation->status(3)
+    //     $data['cancelConsultation'] = LcsCase::Cancel()
+    //         ->where('consultant_id', $id)->count();
+
+    //     $message = "Successfully Data Shown";
+    //     return $this->responseSuccess(200, true, $message, $data);
+    // }
+    // public function consultantCaseList(Request $request)
+    // {
+    //     $type = auth()->user()->type;
+    //     $userType = $type === 'citizen' ? 'consultant' : 'citizen';
+    //     $caseData = DB::table('lcs_cases')
+    //         ->where('lcs_cases.' . $type . '_id', auth()->user()->id)
+    //         ->where(['deleted_at' => null])
+    //         ->select(
+    //             'lcs_cases.id as case_id',
+    //             'lcs_cases.consultant_id',
+    //             'lcs_cases.title',
+    //             'lcs_cases.document_file',
+    //             'lcs_cases.rating',
+    //             'lcs_cases.document_link',
+    //             'lcs_cases.case_initial_date',
+    //             'lcs_cases.case_status_date',
+    //             'lcs_cases.description',
+    //             'lcs_cases.case_code',
+    //             'lcs_cases.status',
+    //             'lcs_cases.created_at',
+    //             'lcs_cases.updated_at',
+    //             'users.name',
+    //             'users.code',
+    //             'users.profile_image',
+    //             'services.id as service_id',
+    //             'services.title as service_title'
+    //         )->join('users', 'lcs_cases.' . $userType . '_id', '=', 'users.id')
+    //         ->join('services', 'lcs_cases.service_id', '=', 'services.id')
+    //         ->orderBy('updated_at', 'DESC');
+
+    //     if ($caseData->exists()) {
+    //         // all waiting Consultation->status(0)
+    //         if ($request->has('initial')) {
+    //             $caseData = $caseData->where('lcs_cases.status', 0);
+    //         }
+    //         // all running Consultation->status(1)
+    //         if ($request->has('running')) {
+    //             $caseData = $caseData->where('lcs_cases.status', 1);
+    //         }
+    //         // all complete Consultation->status(2)
+    //         if ($request->has('complete')) {
+    //             $caseData = $caseData->where('lcs_cases.status', 2);
+    //         }
+    //         // all cancel Consultation->status(3)
+    //         if ($request->has('rejected')) {
+    //             $caseData = $caseData->where('lcs_cases.status', 3);
+    //         }
+
+    //         // service wise filter
+    //         if ($request->has('service')) {
+    //             $serviceId = $request->input('service');
+    //             $caseData = $caseData->where('service_id', $serviceId);
+    //         }
+
+    //         // date wise filter
+    //         if ($request->has('dateToDate')) {
+    //             $dates = explode(' to ', str_replace('/', '-', $request->input('dateToDate')));
+    //             // $startDate = Carbon::parse(trim($dates[0]))
+    //             //     ->toDateTimeString();
+    //             // $endDate = Carbon::parse(trim($dates[1]))
+    //             //     ->toDateTimeString();
+    //             $startDate = trim($dates[0]) . ' 00:00:00';
+    //             $endDate = trim($dates[1]) . ' 23:59:59';
+
+    //             $caseData = $caseData->whereBetween('created_at', [$startDate, $endDate]);
+
+    //         }
+
+    //         // rating wise filter
+    //         if ($request->has('rating')) {
+    //             $rating = $request->input('rating');
+    //             if ($rating) {
+    //                 $caseData = $caseData->where('lcs_cases.rating', $rating);
+    //             }
+    //         }
+    //         // }
+
+    //         $limit = $request->limit;
+    //         $allCaseData = $caseData->paginate($limit ?? 20);
+
+    //         if ($allCaseData) {
+    //             $message = "Case list data succesfully shown";
+    //             return $this->responseSuccess(200, true, $message, $allCaseData);
+    //         }
+    //     } else {
+    //         $message = "No Data Found";
+    //         return $this->responseError(404, false, $message);
+    //     }
+    // }
 
     /**
      * Show the form for creating a new resource.

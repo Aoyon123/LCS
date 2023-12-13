@@ -2,13 +2,12 @@
 
 namespace App\Http\Controllers\Frontend\V1\Consultant;
 
-use App\Models\User;
-use App\Models\Service;
-use Illuminate\Http\Request;
-use App\Traits\ResponseTrait;
-use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Models\LcsCase;
+use App\Models\User;
+use App\Traits\ResponseTrait;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ConsultantController extends Controller
 {
@@ -18,17 +17,19 @@ class ConsultantController extends Controller
     {
 
         $data = [];
-        $consultants_selected_fields = ['id', 'name', 'active_status', 'phone', 'email', 'address', 'code', 'type','rates','totalRating','profile_image', 'gender', 'rates', 'years_of_experience', 'schedule'];
+        $consultants_selected_fields = ['id', 'name', 'active_status', 'phone', 'district_id', 'email', 'address', 'code', 'type', 'rates', 'totalRating', 'profile_image', 'gender', 'rates', 'years_of_experience', 'schedule'];
         $params = $request->all();
-        //  return $params;
+
         $consultant = User::with(
             [
-                'experianceLatest:user_id,institute_name',
+                'experianceLatest:user_id,institute_name,designation',
                 'academicLatest:user_id,education_level',
                 'serviceLatest',
+                'services',
             ]
 
-        )->select($consultants_selected_fields)->status()->approval()->consultant();
+        )->withCount(['consultation as consultationCount'])
+            ->status()->approval()->consultant();
 
         foreach ($params as $key => $param) {
 
@@ -36,10 +37,11 @@ class ConsultantController extends Controller
                 $consultant = $consultant->whereHas('services', function ($q) use ($param) {
                     $q->where('services.id', $param);
                 });
-            }
-             elseif ($key === 'active') {
+            } elseif ($key === 'active') {
                 $consultant = $consultant->where('active_status', $param);
-                // return $consultant;
+
+            } elseif ($key === 'district') {
+                $consultant = $consultant->where('users.district_id', $param);
             } elseif ($key === 'search') {
                 $userSearchFields = ['name', 'phone', 'email', 'address', 'code', 'schedule', 'years_of_experience'];
                 $servicesSearchFields = ['title'];
@@ -68,7 +70,7 @@ class ConsultantController extends Controller
                             $query->where($academicSearchField, 'like', '%' . $param . '%');
                         }
                     });
-                // $data[$key] = $consultant->get();
+
             } elseif ($key === 'rating') {
                 $consultant = $consultant->orderBy('users.rates', $param);
             }
@@ -91,16 +93,18 @@ class ConsultantController extends Controller
         return $this->responseSuccess(200, true, $message, $data);
     }
 
-
     public function consultantDetails($consultant_id)
     {
-        // $consultant = User::where('id', $consultant_id)
         $consultant = User::where('id', $consultant_id)
             ->with(['academics', 'experiances', 'services'])
+        // ->withCount('consultation')
+            ->withCount(['consultation as consultationCount'])
             ->status()
             ->approval()
             ->consultant()
             ->get();
+
+        // return $consultant;
 
         if (!empty($consultant)) {
             $message = "Succesfully Data Shown";
@@ -115,14 +119,12 @@ class ConsultantController extends Controller
     {
         $data = [];
         $params = $request->all();
-        // return $params;
 
         $totalCitizenRating = LcsCase::where('consultant_id', $consultant_id)
-            ->where('rating', '>=', '0.0')
+            ->where('status', 2)
+            ->whereNotNull('rating')
             ->distinct('lcs_cases.id')
-            ->Completed()->count();
-        // return $totalCitizenRating;
-
+            ->count();
 
         $citizenReviewData = DB::table('lcs_cases')
             ->where('lcs_cases.consultant_id', $consultant_id)
@@ -138,6 +140,8 @@ class ConsultantController extends Controller
                 'lcs_cases.created_at'
             )
             ->where(['lcs_cases.status' => 2])
+            ->whereNotNull('lcs_cases.rating')
+            ->orderBy('id', 'DESC')
             ->join('users', 'lcs_cases.citizen_id', '=', 'users.id')
             ->groupBy('lcs_cases.id');
         // ->distinct('lcs_cases.citizen_id');
@@ -162,7 +166,6 @@ class ConsultantController extends Controller
             $data['list'] = $citizenReviewData->get();
         }
 
-
         // return $citizenReviewData;
         if (!empty($data)) {
             $message = "Successfully Review List Data Shown";
@@ -172,8 +175,6 @@ class ConsultantController extends Controller
             return $this->responseError(403, false, $message);
         }
     }
-
-
 
     // public function dashboard()
     // {
@@ -229,7 +230,6 @@ class ConsultantController extends Controller
 //             $query->select($services_selected_fields)->get();
 //         },
 //     ],
-
 
 // // [
 // //     'academics' => function ($query) use ($academics_selected_fields) {
@@ -341,13 +341,6 @@ class ConsultantController extends Controller
 // }
 
 // }
-
-
-
-
-
-
-
 
 //     public function active()
 //     {

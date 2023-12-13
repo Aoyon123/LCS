@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": ".."
+		},
+		{
+			"path": "../../../nextjs/land-consultancy-web"
+		},
+		{
+			"path": "../../../nextjs/-land-consultancy-portal"
+		}
+	],
+	"settings": {}
+}

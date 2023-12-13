@@ -4,7 +4,8 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
     /**
      * Run the migrations.
      *
@@ -52,6 +53,7 @@ return new class extends Migration {
             $table->tinyInteger('active_status', 2)->default(0);
             $table->tinyInteger('terms_conditions', 2)->default(0);
             $table->integer('otp_code', 10)->nullable();
+            $table->string('cv_attachment', 255)->nullable();
             $table->rememberToken();
             $table->timestamps();
         });

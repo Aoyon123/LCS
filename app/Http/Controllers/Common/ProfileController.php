@@ -27,21 +27,18 @@ class ProfileController extends Controller
             $message = "No Data Found";
             return $this->responseError(404, false, $message);
         }
-        // return $number;
-        //  return $request->all();
+
         DB::beginTransaction();
         try {
 
             $user = User::findOrFail($request->id);
-            // return $request->services;
-            // return $user->services()->sync($request->services);
+
             if (!preg_match('#^(\d{2})/(\d{2})/(\d{4})$#', $request->dob, $matches)) {
                 $message = "Date Format Not Valid";
                 return $this->responseError(403, false, $message);
             }
 
             $dob = mktime(0, 0, 0, $matches[2], $matches[1], $matches[3]);
-            // return $dob;
 
             if (date('d/m/Y', $dob) != $request->dob) {
                 $message = "Date Format Not Valid";
@@ -65,7 +62,6 @@ class ProfileController extends Controller
                 $imageType = explode("/", $image_parts[0])[1];
                 $unique = uniqid();
                 if (isset($image_parts[1])) {
-                    // return $request->profile_image;
                     $profile_image_path = FileHandler::uploadImage($request->profile_image, $user->type, $unique, $imageType, 'profile');
                     if (File::exists(public_path($user->profile_image))) {
                         File::delete(public_path($user->profile_image));
@@ -80,6 +76,7 @@ class ProfileController extends Controller
             if (strtolower($request->type) === 'citizen') {
                 $request->validate([
                     'email' => 'nullable|email|unique:users,email,' . $user->id,
+                    'nid' => 'unique:users,nid,' . $user->id,
                 ]);
             }
 
@@ -90,6 +87,7 @@ class ProfileController extends Controller
                     'general_info' => 'required',
                     'email' => 'required|email|unique:users,email,' . $user->id,
                     'nid' => 'required|unique:users,nid,' . $user->id,
+                    'cv_attachment' => 'nullable|string',
                 ]);
 
                 if ($request->nid_front) {
@@ -104,14 +102,64 @@ class ProfileController extends Controller
                     ]);
                 }
 
+                // if ($request->hasFile('cv_attachment')) {
+                //     $file = $request->file('cv_attachment');
+                //     $filenameWithExt = $file->getClientOriginalName();
+                //     $filename = pathinfo($filenameWithExt, PATHINFO_FILENAME);
+                //     $extension = $file->getClientOriginalExtension();
+                //     $fileNameToStore = $filename . '_' . time() . '.' . $extension;
+
+                //     $relativePath = '/uploads/cvAttachment/' . $fileNameToStore;
+
+                //     $file->move(public_path('/uploads/cvAttachment'), $fileNameToStore);
+                //     $attachmentConversation = $relativePath;
+
+                // } else {
+                //     $attachmentConversation = null;
+                // }
+
+                if ($request->cv_attachment) {
+                    $extension = '';
+                    $uniqueCode = uniqid();
+
+                    $file_parts = explode(";base64,", $request->cv_attachment);
+                    $extension_part = $file_parts[0];
+                    // return $extension_part;
+                    if (isset($file_parts[1])) {
+
+                        if (str_contains($extension_part, 'application/pdf')) {
+                            $extension = '.pdf';
+                        } elseif (str_contains($extension_part, 'application/msword')) {
+                            $extension = '.doc';
+                        } else {
+                            $message = "This type of file not accepted.";
+                            return $this->responseError(404, false, $message);
+                        }
+                        if (isset($file_parts[1])) {
+
+                            $cvAttachment = FileHandler::uploadFile($request->cv_attachment, $extension, $uniqueCode, 'cvAttachment');
+
+                            if (File::exists(public_path($user->cv_attachment))) {
+                                File::delete(public_path($user->cv_attachment));
+                            }
+                        }
+                        // else {
+                        //     $cvAttachment = $user->cv_attachment;
+                        // }
+                    } else {
+                        $cvAttachment = $user->cv_attachment;
+                    }
+                } else {
+
+                    $cvAttachment = $user->cv_attachment;
+                }
+
                 if ($request->nid_front) {
                     $image_parts = explode(";base64,", $request->nid_front);
                     $imageType = explode("/", $image_parts[0])[1];
                     $unique = uniqid();
-                    // return $imageType;
                     if (isset($image_parts[1])) {
                         $nid_front_image_path = FileHandler::uploadImage($request->nid_front, $request->type, $unique, $imageType, 'nid_front');
-                        //   return $nid_front_image_path;
                         if (File::exists(public_path($user->nid_front))) {
                             File::delete(public_path($user->nid_front));
                         }
@@ -140,13 +188,12 @@ class ProfileController extends Controller
                 }
 
                 $user->services()->sync($request->services);
-
             }
 
             if (strtolower($user->type) === 'consultant') {
                 $user->update([
                     'approval' => 0,
-                    'active_status' => 0
+                    'active_status' => 0,
                 ]);
             }
 
@@ -162,13 +209,17 @@ class ProfileController extends Controller
                 'status' => 1,
                 'gender' => strtolower($request->gender) ?? $user->gender,
                 'profile_image' => $profile_image_path,
+                'division_id' => $request->division_id ?? $user->division_id,
                 'district_id' => $request->district_id ?? $user->district_id,
+                'upazila_id' => $request->upazila_id ?? $user->upazila_id,
+                'union_id' => $request->union_id ?? $user->union_id,
                 'years_of_experience' => $request->years_of_experience ?? $user->years_of_experience,
                 'current_profession' => $request->current_profession ?? $user->current_profession,
                 'general_info' => $request->general_info ?? $user->general_info,
                 'nid_front' => $nid_front_image_path ?? $user->nid_front,
                 'nid_back' => $nid_back_image_path ?? $user->nid_back,
                 'schedule' => $request->schedule ?? $user->schedule,
+                'cv_attachment' => $cvAttachment ?? null,
             ]);
 
             if (strtolower($user->type) === 'consultant') {
@@ -217,7 +268,7 @@ class ProfileController extends Controller
                     foreach ($request->academics as $key => $academic) {
 
                         $existId = isset($request->academics[$key]['id']);
-                    //  return $request->academics[$key]['id'];
+                        //  return $request->academics[$key]['id'];
                         //   return $existId; //if found then 1 paoua jabe
                         if ($existId) {
                             $academicsId = $request->academics[$key]['id'];
@@ -244,9 +295,9 @@ class ProfileController extends Controller
                                     'certificate'
                                 );
 
-                                if (File::exists(public_path($academicFound->certification_copy))) {
-                                    File::delete(public_path($academicFound->certification_copy));
-                                }
+                                // if (File::exists(public_path($academicFound->certification_copy))) {
+                                //     File::delete(public_path($academicFound->certification_copy));
+                                // }
                             } else {
                                 $certificateImage = $academic['certification_copy'];
                             }
@@ -295,7 +346,6 @@ class ProfileController extends Controller
             $message = "No Data Found";
             return $this->responseError(404, false, $message);
         }
-
 
         DB::beginTransaction();
         try {
@@ -374,7 +424,7 @@ class ProfileController extends Controller
 
     public function profile($id)
     {
-        if (!User::where('id', $id)->exists()){
+        if (!User::where('id', $id)->exists()) {
             $message = "No Data Found";
             return $this->responseError(404, false, $message);
         }
@@ -383,7 +433,7 @@ class ProfileController extends Controller
             'experiances',
             'academics',
             'services'
-        )
+        )->withCount(['consultation as consultationCount'])
             ->where('id', $id)
             ->first();
 
@@ -398,6 +448,10 @@ class ProfileController extends Controller
         }
 
         if (Auth::check() && $authUser->id == $id) {
+
+            if ($user->unions && $user->upazilas && $user->districts) {
+                $user->address = $user->getFullAddressAttribute();
+            }
 
             if ($user != null) {
                 $data = [
@@ -421,11 +475,13 @@ class ProfileController extends Controller
                 $message = "";
                 return $this->responseSuccess(200, true, $message, $data);
             }
-        } elseif (Auth::check()
+        } elseif (
+            Auth::check()
             && $authUser->id != $id
             && $authUser->type == 'citizen'
             && $searchUserType == 'consultant'
-            && $searchUserApproval == 1) {
+            && $searchUserApproval == 1
+        ) {
 
             if ($user != null) {
                 $data = [
@@ -442,8 +498,6 @@ class ProfileController extends Controller
             return $this->responseError(404, false, $message);
         }
     }
-
-
 
     public function approved(Request $request)
     {
@@ -519,38 +573,45 @@ class ProfileController extends Controller
         }
     }
 
-    public function activeStatusChange(Request $request, $consultant_id)
+    public function activeStatusChange($consultant_id)
     {
         $consultantData = User::findOrFail($consultant_id);
 
-        if($consultantData->approval == 0 || $consultantData->approval == 2 || $consultantData->approval == 3){
+        if ($consultantData->approval == 0 || $consultantData->approval == 2 || $consultantData->approval == 3) {
             $consultantData->update([
                 'active_status' => 0,
             ]);
-        }
-
-        else{
+        } else {
             if ($consultantData && $consultantData->approval == 1 && $consultantData->active_status == 1) {
                 $consultantData->update([
                     'active_status' => 0,
-
                 ]);
+
+                // data_forget($consultantData, 'data.*.a_password');
+                unset($consultantData->a_password);
+                if (!empty($consultantData)) {
+                    $message = "Consultant online inactive status successfully updated";
+                    return $this->responseSuccess(200, true, $message, $consultantData);
+                }
             } else if ($consultantData && $consultantData->approval == 1 && $consultantData->active_status == 0) {
                 $consultantData->update([
                     'active_status' => 1,
-
                 ]);
+                unset($consultantData->a_password);
+                if (!empty($consultantData)) {
+                    $message = "Consultant online active status successfully updated";
+                    return $this->responseSuccess(200, true, $message, $consultantData);
+                }
             }
-
         }
 
-        if (!empty($consultantData)) {
-            $message = "Consultant Active Status Successfully Updated";
-            return $this->responseSuccess(200, true, $message, $consultantData);
-        } else {
-            $message = "Invalid credentials";
-            return $this->responseError(403, false, $message);
-        }
+        // if (!empty($consultantData)) {
+        //     $message = "Consultant Active Status Successfully Updated";
+        //     return $this->responseSuccess(200, true, $message, $consultantData);
+        // } else {
+        //     $message = "Invalid credentials";
+        //     return $this->responseError(403, false, $message);
+        // }
     }
 
     public function getDownload(Request $request)
@@ -566,14 +627,30 @@ class ProfileController extends Controller
             ->select(['id', 'name', 'type', 'phone', 'profile_image'])
             ->first();
 
+        // if ($request->profile_image) {
+        //     $image_parts = explode(";base64,", $request->profile_image);
+        //     $imageType = explode("/", $image_parts[0])[1];
+        //     if (isset($image_parts[1])) {
+        //         $profile_image_path = FileHandler::uploadImage($request->profile_image, $userExist->type, $userExist->phone, $imageType, 'profile');
+        //         if (File::exists($profile_image_path)) {
+        //             File::delete($profile_image_path);
+        //         }
+        //     }
+        // } else {
+        //     $profile_image_path = $userExist->profile_image;
+        // }
+
         if ($request->profile_image) {
             $image_parts = explode(";base64,", $request->profile_image);
             $imageType = explode("/", $image_parts[0])[1];
+            $unique = uniqid();
             if (isset($image_parts[1])) {
-                $profile_image_path = FileHandler::uploadImage($request->profile_image, $userExist->type, $userExist->phone, $imageType, 'profile');
-                if (File::exists($profile_image_path)) {
-                    File::delete($profile_image_path);
+                $profile_image_path = FileHandler::uploadImage($request->profile_image, $userExist->type, $unique, $imageType, 'profile');
+                if (File::exists(public_path($userExist->profile_image))) {
+                    File::delete(public_path($userExist->profile_image));
                 }
+            } else {
+                $profile_image_path = $userExist->profile_image;
             }
         } else {
             $profile_image_path = $userExist->profile_image;
@@ -586,5 +663,83 @@ class ProfileController extends Controller
             $message = "Profile Image Updated Successfully.";
             return $this->responseSuccess(200, true, $message, $userExist);
         }
+    }
+
+    public function divisionList()
+    {
+        $divisions = DB::table('divisions')->select(['id', 'name_bn', 'name_en'])->get();
+        // return $divisions;
+        if (!empty($divisions)) {
+            $message = "Successfully Divisions Data Shown";
+            return $this->responseSuccess(200, true, $message, $divisions);
+        } else {
+            $message = "Invalid Credentials";
+            return $this->responseError(403, false, $message);
+        }
+    }
+
+    public function divisionWiseDistrict($divisionId)
+    {
+        $districts = DB::table('districts')
+            ->where('division_id', $divisionId)
+            ->select(['id', 'division_id', 'name_bn', 'name_en'])
+            ->get();
+        if (!empty($districts)) {
+            $message = "Successfully Districts Data Shown";
+            return $this->responseSuccess(200, true, $message, $districts);
+        } else {
+            $message = "Invalid Credentials";
+            return $this->responseError(403, false, $message);
+        }
+    }
+
+    public function districtWiseUpazila($districtId)
+    {
+        $upazila = DB::table('upazilas')
+            ->where('district_id', $districtId)
+            ->select(['id', 'district_id', 'division_id', 'name_bn', 'name_en'])
+            ->get();
+
+        if (!empty($upazila)) {
+            $message = "Successfully Upazilas Data Shown";
+            return $this->responseSuccess(200, true, $message, $upazila);
+        } else {
+            $message = "Invalid Credentials";
+            return $this->responseError(403, false, $message);
+        }
+    }
+
+    public function upazilaWiseUnion($upazilaId)
+    {
+        $union = DB::table('unions')
+            ->where('upazila_id', $upazilaId)
+        // ->whereNotNull('municipality_bbs_code')
+            ->where('municipality_bbs_code', '')
+            ->select(['id', 'upazila_id', 'district_id', 'division_id', 'name_bn', 'name_en'])
+            ->get();
+
+        if (!empty($union)) {
+            $message = "Successfully unions Data Shown";
+            return $this->responseSuccess(200, true, $message, $union);
+        } else {
+            $message = "Invalid Credentials";
+            return $this->responseError(403, false, $message);
+        }
+    }
+
+    public function consultantSerialize(Request $request)
+    {
+
+        foreach ($request->consultants as $info) {
+            User::where('id', $info['id'])
+                ->where('type', 'consultant')
+                ->update([
+                    'serialize' => $info['serialize'] ?? 0,
+                    'fee' => $info['fee'] ?? 0
+                ]);
+        }
+
+        $message = "Successfully Updated";
+        return $this->responseSuccess(200, true, $message, '');
     }
 }

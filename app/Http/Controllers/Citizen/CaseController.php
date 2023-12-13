@@ -2,19 +2,19 @@
 
 namespace App\Http\Controllers\Citizen;
 
-use App\Models\User;
-use App\Models\LcsCase;
-use Illuminate\Http\Request;
-use App\Traits\ResponseTrait;
-use Illuminate\Http\Response;
-use App\Http\Helper\SMSHelper;
-use Illuminate\Support\Carbon;
-use App\Http\Helper\FileHandler;
-use App\Http\Requests\CaseRequest;
-use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Auth;
+use App\Http\Helper\FileHandler;
+use App\Http\Helper\SendNotification;
+use App\Http\Requests\CaseRequest;
+use App\Models\LcsCase;
+use App\Models\User;
+use App\Traits\ResponseTrait;
 use Illuminate\Database\QueryException;
+use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class CaseController extends Controller
 {
@@ -32,15 +32,13 @@ class CaseController extends Controller
         }
     }
 
-    public function caseList()
+    public function caseList(Request $request)
     {
         $type = auth()->user()->type;
-        //  return $type;
         $userType = $type === 'citizen' ? 'consultant' : 'citizen';
         $caseData = DB::table('lcs_cases')
             ->where('lcs_cases.' . $type . '_id', auth()->user()->id)
             ->where(['deleted_at' => null])
-        //    ->where('lcs_cases.status', '2')
             ->select(
                 'lcs_cases.id as case_id',
                 'lcs_cases.consultant_id',
@@ -53,6 +51,7 @@ class CaseController extends Controller
                 'lcs_cases.description',
                 'lcs_cases.case_code',
                 'lcs_cases.status',
+                'lcs_cases.updated_at',
                 'users.name',
                 'users.code',
                 'users.profile_image',
@@ -60,8 +59,92 @@ class CaseController extends Controller
                 'services.title as service_title'
             )->join('users', 'lcs_cases.' . $userType . '_id', '=', 'users.id')
             ->join('services', 'lcs_cases.service_id', '=', 'services.id')
-            ->orderBy('case_id', 'DESC')->get();
-        // return $caseData;
+            ->orderBy('updated_at', 'DESC');
+
+        $params = $request->all();
+        if ($params) {
+            foreach ($params as $key => $param) {
+                if ($key === 'status') {
+
+                    $caseData = $caseData->where('lcs_cases.status', $param);
+
+                } else if ($request->has('search') && $request->filled('search')) {
+
+                    $searchTerm = $request->search;
+                    $caseSearchFields = ['users.name', 'users.code', 'lcs_cases.case_code'];
+
+                    $caseData = $caseData->where(function ($query) use ($caseSearchFields, $searchTerm) {
+                        foreach ($caseSearchFields as $userSearchField) {
+                            $query->orWhere($userSearchField, 'like', '%' . $searchTerm . '%');
+                        }
+                    });
+                }
+            }
+        }
+
+        $allCaseData = $caseData->get();
+
+        if ($allCaseData) {
+            $message = "Case list data succesfully shown";
+            return $this->responseSuccess(200, true, $message, $allCaseData);
+        } else {
+            $message = "No Data Found";
+            return $this->responseError(404, false, $message);
+        }
+    }
+
+    public function caseListMobile(Request $request)
+    {
+        $type = auth()->user()->type;
+        $userType = $type === 'citizen' ? 'consultant' : 'citizen';
+
+        $caseData = DB::table('lcs_cases')
+            ->where('lcs_cases.' . $type . '_id', auth()->user()->id)
+            ->where(['deleted_at' => null])
+            ->select(
+                'lcs_cases.id as case_id',
+                'lcs_cases.consultant_id',
+                'lcs_cases.title',
+                'lcs_cases.document_file',
+                'lcs_cases.rating',
+                'lcs_cases.document_link',
+                'lcs_cases.case_initial_date',
+                'lcs_cases.case_status_date',
+                'lcs_cases.description',
+                'lcs_cases.case_code',
+                'lcs_cases.status',
+                'lcs_cases.updated_at',
+                'users.name',
+                'users.code as userCode',
+                'users.profile_image',
+                'services.id as service_id',
+                'services.title as service_title'
+            )->join('users', 'lcs_cases.' . $userType . '_id', '=', 'users.id')
+            ->join('services', 'lcs_cases.service_id', '=', 'services.id')
+            ->orderBy('updated_at', 'DESC');
+
+        $params = $request->all();
+        if ($params) {
+            foreach ($params as $key => $param) {
+                if ($key === 'status') {
+
+                    $caseData = $caseData->where('lcs_cases.status', $param);
+
+                } else if ($request->has('search') && $request->filled('search')) {
+
+                    $searchTerm = $request->search;
+                    $caseSearchFields = ['users.name', 'users.code', 'lcs_cases.case_code'];
+
+                    $caseData = $caseData->where(function ($query) use ($caseSearchFields, $searchTerm) {
+                        foreach ($caseSearchFields as $userSearchField) {
+                            $query->orWhere($userSearchField, 'like', '%' . $searchTerm . '%');
+                        }
+                    });
+                }
+            }
+        }
+
+        $allCaseData = $caseData->get();
 
         if ($caseData) {
             $message = "Case list data succesfully shown";
@@ -72,10 +155,51 @@ class CaseController extends Controller
         }
     }
 
+    // public function caseList()
+    // {
+    //     $user = auth()->user();
+    //     $type = $user->type;
+    //     $userType = $type === 'citizen' ? 'consultant' : 'citizen';
+    //     // return $userType;
+    //     // $case = LcsCase::with('user', 'service')->find(4);
+    //     // return $case;
+    //     $caseData = LcsCase::where($type . '_id', $user->id)
+    //         ->whereNull('deleted_at')
+    //         ->with([
+    //             'user' => function ($query) use ($userType) {
+    //                 $query->select('id', 'name', 'code', 'profile_image');
+    //             },
+    //             'service' => function ($query) {
+    //                 $query->select('id', 'title');
+    //             },
+    //         ])
+    //         ->select(
+    //             'id as case_id',
+    //             'consultant_id',
+    //             'title',
+    //             'document_file',
+    //             'rating',
+    //             'document_link',
+    //             'case_initial_date',
+    //             'case_status_date',
+    //             'description',
+    //             'case_code',
+    //             'status'
+    //         )
+    //         ->orderBy('case_id', 'DESC')
+    //         ->get();
+
+    //     if ($caseData->isEmpty()) {
+    //         $message = "No Data Found";
+    //         return $this->responseError(404, false, $message);
+    //     }
+
+    //     $message = "Case list data successfully shown";
+    //     return $this->responseSuccess(200, true, $message, $caseData);
+    // }
+
     public function adminCaseList($type, $user_id)
     {
-        //$type = $request->type;
-        //  return $type;
         $userType = $type === 'citizen' ? 'consultant' : 'citizen';
         $caseData = DB::table('lcs_cases')
             ->where('lcs_cases.' . $type . '_id', $user_id)
@@ -112,12 +236,8 @@ class CaseController extends Controller
 
     public function store(Request $request)
     {
-        DB::beginTransaction();
         try {
-
             $consultantData = User::where(['id' => $request->consultant_id])->first();
-            // return $consultantData->phone;
-
             $case = LcsCase::where('citizen_id', auth()->user()->id)
                 ->where('consultant_id', $request->consultant_id)
                 ->latest()->first();
@@ -126,35 +246,6 @@ class CaseController extends Controller
 
             $now = Carbon::now();
             $case_code = $now->format('Hsu');
-
-            // if ($case) {
-            //     $caseCode = $case->case_code;
-            //     $output = substr($caseCode, 0, strrpos($caseCode, '-'));
-            //     // return $output;
-            //     $codeNumber = explode("-", $caseCode)[4] + 1;
-            //     $case_code = $output . '-' . $codeNumber;
-            // } else {
-
-            //     $citizenInfo = User::where('id', auth()->user()->id)->first();
-
-            //     $citizenCode = $citizenInfo->code;
-
-            //     $citizenLastCodeNumber = explode("-", $citizenCode)[2];
-
-            //     $consultantInfo = User::where('id', $request->consultant_id)->first();
-
-            //     $consultantCode = $consultantInfo->code;
-
-            //     $consultantLastCodeNumber = explode("-", $consultantCode)[2];
-
-            //     $codeTotalData = LcsCase::select(DB::raw('count(id) as total'))
-            //         ->where('id', auth()->user()->id)
-            //         ->first();
-
-            //     $citizenData = $codeTotalData->total + 1;
-
-            //     $case_code = 'case' . '-' . date('dmy') . '-' . $citizenLastCodeNumber . '-' . $consultantLastCodeNumber . '-' . $citizenData;
-            // }
 
             if ($request->document_file) {
                 $extension = '';
@@ -173,7 +264,6 @@ class CaseController extends Controller
                     $message = "This type of file not accepted.";
                     return $this->responseError(404, false, $message);
                 }
-
                 if (isset($file_parts[1])) {
                     $case_file_path = FileHandler::uploadFile($request->document_file, $extension, $case_code, 'caseFile');
                 }
@@ -186,6 +276,14 @@ class CaseController extends Controller
                 'document_file' => 'nullable',
                 'description' => 'nullable',
             ]);
+
+            $userAgent = $request->header('User-Agent');
+
+            if (strpos($userAgent, 'Mobile') !== false) {
+                $deviceLog = 1;
+            } else {
+                $deviceLog = 2;
+            }
 
             $data = LcsCase::create([
                 'service_id' => $request->service_id,
@@ -202,29 +300,74 @@ class CaseController extends Controller
                 'citizen_review_comment' => $request->citizen_review_comment,
                 'case_code' => $case_code,
                 'document_file' => $case_file_path ?? '',
+                'device_log' => $deviceLog ?? null,
             ]);
 
-            $smsMessage = 'Dear Consultant A Citizen Sent You A New Service Request';
-            $messageSuccess = SMSHelper::sendSMS($consultantData->phone, $smsMessage);
+            // $deviceToken = ['device_token' => User::where('id', $data->consultant_id)->first()->device_token];
+            // // $deviceToken = ['fj_yFKzTTlKDnS2Ky03yyW:APA91bFtzXG2Vz7pv_UrMuTL2M-Bl4qP-W9sXPiEy7ElVwny4Ddh5o3DUE7pTmxCR4R3QKjCb7T_4lirviGkfnXlN40UM4KFedZkJQ8peYk1M9n84PkQ7CXQSoCkPQAQEZtKeUDs776a'];
 
+            // // Fetch user data based on the citizen_id from the database
+            // $userData = User::where('id', $data->citizen_id)->select('name')->first();
 
-            DB::commit();
+            // // Create a new instance of the SendNotification class
+            // $sendNotification = new SendNotification();
+
+            // // Check if title and device token and userData are present in the request
+            // if (!empty($request->title) && $deviceToken['device_token'] != null && !empty($userData)) {
+            //     // Set the FCM token, title, and body based on the status
+            //     $FcmToken = [$deviceToken['device_token']];
+            //     $title = $userData->name;
+            //     $body = $request->title;
+
+            //     $sendNotification->sendNotification($request, $FcmToken, $title, $body);
+            // }
+
             $message = "Consultation Created Successfull";
+            // Check if the response status is 200
+            if ($this->responseSuccess(200, true, $message, $data)) {
+                $deviceToken = ['device_token' => User::where('id', $data->consultant_id)->first()->device_token];
+
+                // Fetch user data based on the citizen_id from the database
+                $userData = User::where('id', $data->citizen_id)->select('name')->first();
+
+                // Create a new instance of the SendNotification class
+                $sendNotification = new SendNotification();
+
+                // Check if title and device token and userData are present in the request
+                if (!empty($request->title) && $deviceToken['device_token'] != null && !empty($userData)) {
+                    // Set the FCM token, title, and body based on the status
+                    $FcmToken = [$deviceToken['device_token']];
+                    $title = $userData->name;
+                    $body = $request->title;
+
+                    $sendNotification->sendNotification($FcmToken, $title, $body);
+                }
+            }
+
             return $this->responseSuccess(200, true, $message, $data);
         } catch (QueryException $e) {
-            DB::rollBack();
             return $this->responseError(Response::HTTP_INTERNAL_SERVER_ERROR, false, $e->getMessage());
         }
     }
 
     public function update(CaseRequest $request)
     {
-        DB::beginTransaction();
 
         $caseData = LcsCase::findOrFail($request->id);
         // return $caseData;
         try {
             if ($caseData) {
+
+                $deviceToken = ['device_token' => User::where('id', $caseData->citizen_id)->first()->device_token];
+                // $deviceToken = ['fj_yFKzTTlKDnS2Ky03yyW:APA91bFtzXG2Vz7pv_UrMuTL2M-Bl4qP-W9sXPiEy7ElVwny4Ddh5o3DUE7pTmxCR4R3QKjCb7T_4lirviGkfnXlN40UM4KFedZkJQ8peYk1M9n84PkQ7CXQSoCkPQAQEZtKeUDs776a'];
+
+                // Fetch user data based on the consultant_id from the database
+                $userData = User::where('id', $caseData->citizen_id)->select('name')->first();
+
+                // Create a new instance of the SendNotification class
+                $sendNotification = new SendNotification();
+
+                // Update the relevant fields in the $caseData object based on the incoming request
                 $caseData->update([
                     'status' => $request->status ?? $caseData->status,
                     'consultant_review_comment' => $request->consultant_review_comment ?? $caseData->consultant_review_comment,
@@ -233,10 +376,47 @@ class CaseController extends Controller
                     'citizen_review_comment' => $request->citizen_review_comment ?? $caseData->citizen_review_comment,
                 ]);
 
+                // Check if the response is successful (status 200)
+                $message = "This Consultation data has been updated";
+                if ($this->responseSuccess(200, true, $message, $caseData)) {
 
+                    if ($request->status == 2) {
+                        // when $request has 2 then update the case_complete_date
+                        $caseData->update(['case_complete_date' => Carbon::now()->addHours(72)->toDateTimeString()]);
+                    }
+                    // Check if status and device token are present in the request
+                    if (!empty($request->status) && $deviceToken['device_token'] != null) {
+                        // Set the FCM token, title, and body based on the status
+                        // $FcmToken = $deviceToken;
+
+                        $FcmToken = [$deviceToken['device_token']];
+
+                        $title = $userData->name;
+                        if ($request->status == 1) {
+                            $body = 'আপনার আবেদনটি অপেক্ষমাণ থেকে চলমান করা হয়েছে।';
+                        }
+                        if ($request->status == 2) {
+                            $body = 'আপনার আবেদনটি চলমান থেকে নিস্পন্ন করা হয়েছে। আগামী ৭২ ঘণ্টা পর্যন্ত পরামর্শকের সাথে সমস্যা সম্পর্কিত আলোচনা করতে পারবেন।';
+                        }
+                        if ($request->status == 3) {
+                            $body = 'আপনার আবেদনটি অপেক্ষমাণ থেকে বাতিল করা হয়েছে। অনুগ্রহপূর্বক সঠিক তথ্য দিয়ে আবার আবেদন করুন।';
+                        }
+
+                        $sendNotification->sendNotification($FcmToken, $title, $body);
+                    }
+                }
+
+                // // update "case_complete_date" field based on case completion
+                // if ($request->status == 2) {
+                //     // $message = "This Consultation data has been updated";
+                //     // if ($this->responseSuccess(200, true, $message, $caseData)) {
+                //         $caseData->update(['case_complete_date' => Carbon::now()->toDateTimeString()]);
+                //     //}
+                // }
+
+                // Calculate the average rating for the consultant
                 if ($request->rating) {
                     $consultant_id = $caseData->consultant_id;
-                    //  return $consultant_id;
                     $averageRating = LcsCase::where(['consultant_id' => $consultant_id, 'status' => 2])
                         ->avg('rating');
 
@@ -245,20 +425,17 @@ class CaseController extends Controller
                         'status' => 2,
                     ])->whereNotNull('rating')->count('rating');
 
-                    // if(!empty($totalRating)){
-                    //     $fixedCount = 1;
-                    // }
-                // return $totalRating;
                     $roundRating = round($averageRating, 1);
                     User::find($consultant_id)->update(['rates' => $roundRating, 'totalRating' => $totalRating ?? 1]);
                 }
 
+                $caseUpdateData = $caseData->orderByDesc('id');
                 $message = "This Consultation data has been updated";
-                DB::commit();
+
                 return $this->responseSuccess(200, true, $message, $caseData);
             }
         } catch (QueryException $e) {
-            DB::rollBack();
+            // DB::rollBack();
         }
     }
 
@@ -372,7 +549,6 @@ class CaseController extends Controller
             ->join('services', 'lcs_cases.service_id', '=', 'services.id')
             ->first();
 
-
         // if ($caseData->citizen_id == auth()->user()->id || $caseData->consultant_id == auth()->user()->id) {
         //     $message = "Consultation details data succesfully shown";
         //     return $this->responseSuccess(200, true, $message, $caseData);
@@ -396,12 +572,10 @@ class CaseController extends Controller
         $caseData = LcsCase::with(['citizen', 'consultant', 'service'])
             ->where('lcs_cases.id', $case_id)->first();
 
-        if (Auth::check() && Auth::user()->type == 'admin' || $caseData->citizen_id == Auth::user()->id || $caseData->consultant_id == Auth::user()->id){
+        if (Auth::check() && Auth::user()->type == 'admin' || $caseData->citizen_id == Auth::user()->id || $caseData->consultant_id == Auth::user()->id) {
             $message = "Consultation details data succesfully shown";
             return $this->responseSuccess(200, true, $message, $caseData);
-        }
-
-         else {
+        } else {
             $message = "No Data Found";
             return $this->responseError(404, false, $message);
         }
@@ -409,8 +583,9 @@ class CaseController extends Controller
 
     public function initialCaseList()
     {
-         $data = LcsCase::where('status', 0)
-            ->whereDate('updated_at', '<=', date('Y-m-d H:i:s', strtotime('-3 days')))
+        $data = LcsCase::where('status', 0)
+        // ->whereDate('updated_at', '<=', date('Y-m-d H:i:s', strtotime('-3 days')))
+            ->whereDate('updated_at', '<=', date('Y-m-d H:i:s', strtotime('+5 seconds')))
             ->with(['citizen:id,name,phone,profile_image', 'consultant:id,name,phone,profile_image', 'service:id,title'])
             ->orderBy('id', 'DESC')
             ->get();
@@ -424,29 +599,27 @@ class CaseController extends Controller
         }
     }
 
-
     public function transferableConsultationUpdate(Request $request)
     {
 
         $consultantData = User::where('id', $request->consultant_id)->first();
 
-         $data = LcsCase::where('status', 0)
+        $data = LcsCase::where('status', 0)
             ->whereDate('case_initial_date', '>=', date('Y-m-d H:i:s', strtotime('-3 days')))
             ->with(['citizen:id,name,phone,profile_image', 'consultant:id,name,phone,profile_image', 'service:id,title'])
             ->get();
 
-
-        if($data){
-            $caseData = LcsCase::where('id', $request->consultation_id)->first();;
-            if($caseData){
-            $caseData->update([
-                'consultant_id' => $request->consultant_id
-            ]);
+        if ($data) {
+            $caseData = LcsCase::where('id', $request->consultation_id)->first();
+            if ($caseData) {
+                $caseData->update([
+                    'consultant_id' => $request->consultant_id,
+                ]);
+            }
         }
-        }
 
-       // $smsMessage = 'Dear Consultant A New Service Request Admin Forwaded to You';
-        $messageSuccess = SMSHelper::sendSMS($consultantData->phone, $request->message);
+        // $smsMessage = 'Dear Consultant A New Service Request Admin Forwaded to You';
+        // $messageSuccess = SMSHelper::sendSMS($consultantData->phone, $request->message);
 
         if (!empty($caseData)) {
             $message = "This Consultation Transfer successfully";
@@ -456,4 +629,98 @@ class CaseController extends Controller
             return $this->responseError(403, false, $message);
         }
     }
+
+    public function citizenRating()
+    {
+        $data = DB::table('lcs_cases')
+            ->select(
+                DB::raw('ROUND(AVG(CASE WHEN status = 2 THEN rating ELSE NULL END), 1) AS average_rating'),
+                DB::raw('SUM(CASE WHEN status = 2 AND rating = 5 THEN 1 ELSE 0 END) AS count_5_rating'),
+                DB::raw('SUM(CASE WHEN status = 2 AND rating = 4 THEN 1 ELSE 0 END) AS count_4_rating'),
+                DB::raw('SUM(CASE WHEN status = 2 AND rating = 3 THEN 1 ELSE 0 END) AS count_3_rating'),
+                DB::raw('SUM(CASE WHEN status = 2 AND rating = 2 THEN 1 ELSE 0 END) AS count_2_rating'),
+                DB::raw('SUM(CASE WHEN status = 2 AND rating = 1 THEN 1 ELSE 0 END) AS count_1_rating'))
+            ->where('status', 2)
+            ->first();
+
+        $data->count_5_rating = intval($data->count_5_rating);
+        $data->count_4_rating = intval($data->count_4_rating);
+        $data->count_3_rating = intval($data->count_3_rating);
+        $data->count_2_rating = intval($data->count_2_rating);
+        $data->count_1_rating = intval($data->count_1_rating);
+
+        if (!empty($data)) {
+            $message = "Succesfully Data Shown";
+            return $this->responseSuccess(200, true, $message, $data);
+        } else {
+            $message = "Invalid credentials";
+            return $this->responseError(403, false, $message);
+        }
+    }
+
+    public function serviceWiseConsultant(Request $request, $serviceId)
+    {
+        $consultant = User::select('id', 'name', 'fee')
+            ->status()
+            ->approval()
+            ->consultant();
+
+        // Filter consultants based on the service ID
+        $consultant = $consultant->whereHas('services', function ($q) use ($serviceId) {
+            $q->where('services.id', $serviceId);
+        });
+
+        $consultantList = $consultant->get();
+
+        if (!empty($consultantList)) {
+            $message = "Succesfully consultant list data shown";
+            return $this->responseSuccess(200, true, $message, $consultantList);
+
+        }
+    }
+
+    public function pushNotification(Request $request)
+    {
+        $url = 'https://fcm.googleapis.com/fcm/send';
+
+        // Replace with your actual FCM tokens
+        $registrationTokens = ['ce8zVo0TR0SCkvQZopQ5Bn:APA91bFmriDbzNa2uB3kOgKp4hx2yWpc3I27nRtieN7_J6QjHuPI1Yb1h7_7uhvsUi-ztBmkybdbZ0eemsAMs45rAWGxsHB5jw3xC8e_2j0XIifrapPugSfnDcNpqW8zqHntakRL4mw0'];
+
+        $serverKey = 'AAAAHIIT-Uo:APA91bE7DqaZnkugFtk7o7VjxkgrwvZbaO-21hmVy96Jn4XdGy9s8mvD-zgEV7JHq6-5vmWL8h5-r3x5dGRxoLSPf9pjNiD8oa2gUFvW07BqXhZ5YnwTS9Vqgpfl8gXMhfyHH8p-83TC';
+
+        $data = [
+            'registration_ids' => $registrationTokens,
+            'notification' => [
+                'title' => 'Vumiseba',
+                'body' => 'Push Notification',
+            ],
+        ];
+
+        $dataString = json_encode($data);
+
+        $headers = [
+            'Content-Type: application/json',
+            'Authorization:key=' . $serverKey,
+        ];
+
+        $ch = curl_init();
+
+        curl_setopt($ch, CURLOPT_URL, 'https://fcm.googleapis.com/fcm/send');
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $dataString);
+
+        $result = curl_exec($ch);
+        if ($result === false) {
+            die('Oops! FCM Send Error: ' . curl_error($ch));
+        }
+
+        curl_close($ch);
+        // dd($result);
+
+    }
+
 }
